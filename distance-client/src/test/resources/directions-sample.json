@@ -1,0 +1,58 @@
+{
+  "geocoded_waypoints": [],
+  "routes": [
+    {
+      "bounds": {},
+      "copyrights": "Map data ©2025 Google",
+      "legs": [
+        {
+          "distance": {
+            "text": "250 km",
+            "value": 250000
+          },
+          "duration": {
+            "text": "3 hours 15 mins",
+            "value": 11700
+          },
+          "end_address": "Intermedio, Argentina",
+          "end_location": {
+            "lat": -32.0,
+            "lng": -65.0
+          },
+          "start_address": "Córdoba, Argentina",
+          "start_location": {
+            "lat": -31.4167,
+            "lng": -64.1833
+          },
+          "steps": []
+        },
+        {
+          "distance": {
+            "text": "320 km",
+            "value": 320000
+          },
+          "duration": {
+            "text": "4 hours 10 mins",
+            "value": 15000
+          },
+          "end_address": "Mendoza, Argentina",
+          "end_location": {
+            "lat": -32.8908,
+            "lng": -68.8272
+          },
+          "start_address": "Intermedio, Argentina",
+          "start_location": {
+            "lat": -32.0,
+            "lng": -65.0
+          },
+          "steps": []
+        }
+      ],
+      "overview_polyline": {},
+      "summary": "Ruta 20 y Ruta 7",
+      "warnings": [],
+      "waypoint_order": []
+    }
+  ],
+  "status": "OK"
+}

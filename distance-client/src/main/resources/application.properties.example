@@ -1,0 +1,3 @@
+# Google Maps API Configuration
+# Reemplaza YOUR_API_KEY_HERE con tu clave de Google Cloud Platform
+google.maps.api.key=YOUR_API_KEY_HERE
