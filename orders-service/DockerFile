@@ -1,0 +1,23 @@
+# Etapa de build
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY . .
+RUN mvn -q -DskipTests package
+
+# Etapa runtime
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+
+# Instalar Postgres dentro del contenedor
+RUN apt-get update && apt-get install -y postgresql postgresql-contrib && rm -rf /var/lib/apt/lists/*
+
+# Copiar jar de la app
+ARG JAR_FILE=target/*-SNAPSHOT.jar
+COPY --from=build /app/${JAR_FILE} app.jar
+
+# Copiar script de arranque
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+EXPOSE 8080
+ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
