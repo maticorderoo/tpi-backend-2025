@@ -1,0 +1,84 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+          routes:
+            - id: orders
+              uri: http://orders-service:8080
+              predicates:
+                - Path=/api/orders/**
+              filters:
+                - StripPrefix=1
+            - id: logistics
+              uri: http://logistics-service:8080
+              predicates:
+                - Path=/api/logistics/**
+              filters:
+                - StripPrefix=1
+            - id: fleet
+              uri: http://fleet-service:8080
+              predicates:
+                - Path=/api/fleet/**
+              filters:
+                - StripPrefix=1
+            - id: orders-swagger-ui
+              uri: http://orders-service:8080
+              predicates:
+                - Path=/api/orders/swagger-ui/**
+              filters:
+                - StripPrefix=2
+            - id: orders-openapi
+              uri: http://orders-service:8080
+              predicates:
+                - Path=/api/orders/v3/api-docs/**
+              filters:
+                - StripPrefix=2
+            - id: logistics-swagger-ui
+              uri: http://logistics-service:8080
+              predicates:
+                - Path=/api/logistics/swagger-ui/**
+              filters:
+                - StripPrefix=2
+            - id: logistics-openapi
+              uri: http://logistics-service:8080
+              predicates:
+                - Path=/api/logistics/v3/api-docs/**
+              filters:
+                - StripPrefix=2
+            - id: fleet-swagger-ui
+              uri: http://fleet-service:8080
+              predicates:
+                - Path=/api/fleet/swagger-ui/**
+              filters:
+                - StripPrefix=2
+            - id: fleet-openapi
+              uri: http://fleet-service:8080
+              predicates:
+                - Path=/api/fleet/v3/api-docs/**
+              filters:
+                - StripPrefix=2
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/tpi-2025
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.gateway.api_gateway.filter: INFO
