@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tpibackend.distance.DistanceClient;
+import com.tpibackend.distance.model.DistanceData;
 import com.tpibackend.logistics.client.FleetClient;
 import com.tpibackend.logistics.client.FleetClient.TruckInfo;
 import com.tpibackend.logistics.client.OrdersClient;
@@ -36,15 +38,18 @@ public class TramoService {
     private final DepositoRepository depositoRepository;
     private final FleetClient fleetClient;
     private final OrdersClient ordersClient;
+    private final DistanceClient distanceClient;
 
     public TramoService(TramoRepository tramoRepository,
             DepositoRepository depositoRepository,
             FleetClient fleetClient,
-            OrdersClient ordersClient) {
+            OrdersClient ordersClient,
+            DistanceClient distanceClient) {
         this.tramoRepository = tramoRepository;
         this.depositoRepository = depositoRepository;
         this.fleetClient = fleetClient;
         this.ordersClient = ordersClient;
+        this.distanceClient = distanceClient;
     }
 
     public TramoResponse asignarCamion(Long tramoId, AsignarCamionRequest request) {
@@ -94,6 +99,11 @@ public class TramoService {
         tramo.setFechaHoraInicio(inicio);
         tramoRepository.save(tramo);
 
+        Ruta ruta = tramo.getRuta();
+        if (ruta.getSolicitudId() != null) {
+            ordersClient.actualizarEstado(ruta.getSolicitudId(), "EN_TRANSITO");
+        }
+
         log.info("Tramo {} iniciado", tramoId);
         return LogisticsMapper.toTramoResponse(tramo);
     }
@@ -108,7 +118,8 @@ public class TramoService {
         }
 
         tramo.setFechaHoraFin(request.fechaHoraFin() != null ? request.fechaHoraFin() : OffsetDateTime.now());
-        tramo.setDistanciaKmReal(request.kmReal());
+        double distanciaReal = resolverDistanciaReal(tramo, request);
+        tramo.setDistanciaKmReal(distanciaReal);
         tramo.setDiasEstadia(request.diasEstadia());
 
         BigDecimal costoEstadiaDia = tramo.getCostoEstadiaDia();
@@ -120,7 +131,7 @@ public class TramoService {
             }
         }
 
-        BigDecimal distancia = BigDecimal.valueOf(request.kmReal());
+        BigDecimal distancia = BigDecimal.valueOf(distanciaReal);
         BigDecimal costoEstadia = costoEstadiaDia.multiply(BigDecimal.valueOf(request.diasEstadia()));
         tramo.setCostoEstadia(costoEstadia);
 
@@ -138,7 +149,7 @@ public class TramoService {
 
         if (ruta.getSolicitudId() != null &&
                 ruta.getTramos().stream().allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO)) {
-            ordersClient.actualizarEstado(ruta.getSolicitudId(), "ENTREGADO");
+            ordersClient.actualizarEstado(ruta.getSolicitudId(), "ENTREGADA");
             ordersClient.actualizarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal());
         }
 
@@ -148,5 +159,33 @@ public class TramoService {
     private Tramo obtenerTramo(Long tramoId) {
         return tramoRepository.findById(tramoId)
                 .orElseThrow(() -> new NotFoundException("Tramo " + tramoId + " no encontrado"));
+    }
+
+    private double resolverDistanciaReal(Tramo tramo, FinTramoRequest request) {
+        double fallback = request.kmReal() != null ? request.kmReal()
+                : tramo.getDistanciaKmEstimada() != null ? tramo.getDistanciaKmEstimada() : 0d;
+
+        if (tramo.getOrigenLat() == null || tramo.getOrigenLng() == null
+                || tramo.getDestinoLat() == null || tramo.getDestinoLng() == null) {
+            log.warn("Tramo {} sin coordenadas persistidas, usando distancia alternativa {} km", tramo.getId(), fallback);
+            return fallback;
+        }
+
+        try {
+            DistanceData data = distanceClient.getDistance(
+                    tramo.getOrigenLat(), tramo.getOrigenLng(),
+                    tramo.getDestinoLat(), tramo.getDestinoLng());
+            double distancia = data.distanceKm();
+            if (distancia <= 0 && fallback > 0) {
+                log.warn("Distancia calculada <= 0 para tramo {}, aplicando fallback {} km", tramo.getId(), fallback);
+                return fallback;
+            }
+            log.info("Distancia real para tramo {} calculada en {} km", tramo.getId(), distancia);
+            return distancia;
+        } catch (Exception ex) {
+            log.warn("No se pudo calcular distancia real con distance-client para tramo {}. Usando fallback {} km",
+                    tramo.getId(), fallback, ex);
+            return fallback;
+        }
     }
 }

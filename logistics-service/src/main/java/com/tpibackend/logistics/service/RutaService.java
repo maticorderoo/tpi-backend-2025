@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,8 +85,12 @@ public class RutaService {
             Tramo tramo = new Tramo();
             tramo.setOrigenTipo(origen.tipo());
             tramo.setOrigenId(origen.referenciaId());
+            tramo.setOrigenLat(origen.lat());
+            tramo.setOrigenLng(origen.lng());
             tramo.setDestinoTipo(destino.tipo());
             tramo.setDestinoId(destino.referenciaId());
+            tramo.setDestinoLat(destino.lat());
+            tramo.setDestinoLng(destino.lng());
             tramo.setTipo(TramoTipo.TRASLADO);
             tramo.setEstado(TramoEstado.ESTIMADO);
 
@@ -145,7 +150,7 @@ public class RutaService {
         rutaRepository.save(ruta);
 
         log.info("Ruta {} asignada a la solicitud {}", ruta.getId(), request.solicitudId());
-        ordersClient.actualizarEstado(request.solicitudId(), "RUTA_ASIGNADA");
+        ordersClient.actualizarEstado(request.solicitudId(), "PROGRAMADA");
 
         return LogisticsMapper.toRutaResponse(ruta);
     }
@@ -153,6 +158,11 @@ public class RutaService {
     public Ruta obtenerRuta(Long rutaId) {
         return rutaRepository.findById(rutaId)
                 .orElseThrow(() -> new NotFoundException("Ruta " + rutaId + " no encontrada"));
+    }
+
+    public Optional<RutaResponse> obtenerRutaPorSolicitud(Long solicitudId) {
+        return rutaRepository.findBySolicitudId(solicitudId)
+                .map(LogisticsMapper::toRutaResponse);
     }
 
     private ResolvedLocation resolveLocation(LocationPointRequest location, DepositStopRequest depositStop) {

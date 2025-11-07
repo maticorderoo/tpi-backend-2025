@@ -2,6 +2,7 @@ package com.tpibackend.logistics.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Profile("!(dev | dev-docker)")
 public class SecurityConfig {
 
     @Bean
@@ -22,12 +24,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/logistics/rutas", "/api/logistics/rutas/*/asignar",
-                                "/api/logistics/tramos/*/asignar-camion",
-                                "/api/logistics/contenedores/pendientes")
-                        .hasRole("OPERADOR")
                         .requestMatchers("/api/logistics/tramos/*/inicio", "/api/logistics/tramos/*/fin")
                         .hasRole("TRANSPORTISTA")
+                        .requestMatchers("/api/logistics/tramos/**").hasRole("OPERADOR")
+                        .requestMatchers("/api/logistics/rutas/**").hasRole("OPERADOR")
+                        .requestMatchers("/api/logistics/contenedores/**").hasRole("OPERADOR")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));

@@ -1,8 +1,9 @@
-package com.gateway.api_gateway.config;
+package com.tpibackend.gateway.config;
 
-import com.gateway.api_gateway.security.KeycloakRealmRoleConverter;
+import com.tpibackend.gateway.security.KeycloakRealmRoleConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Mono;
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
+@Profile("!(dev | dev-docker)")
 public class SecurityConfig {
 
     @Bean

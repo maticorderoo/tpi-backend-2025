@@ -1,4 +1,4 @@
-package com.gateway.api_gateway.security;
+package com.tpibackend.gateway.security;
 
 import java.util.Collection;
 import java.util.Collections;

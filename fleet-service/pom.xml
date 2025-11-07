@@ -8,7 +8,7 @@
         <version>3.5.6</version>
         <relativePath/>
     </parent>
-    <groupId>com.tpibackend</groupId>
+    <groupId>com.tpibackend.fleet</groupId>
     <artifactId>fleet-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>fleet-service</name>
@@ -16,7 +16,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <springdoc.version>2.6.0</springdoc.version>
+        <springdoc.version>2.7.0</springdoc.version>
     </properties>
 
     <dependencies>
@@ -75,7 +75,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 

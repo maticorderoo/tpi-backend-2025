@@ -1,14 +1,15 @@
 package com.tpibackend.distance;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
 import com.tpibackend.distance.mapper.DistanceResponseMapper;
 import com.tpibackend.distance.model.DirectionsApiResponse;
 import com.tpibackend.distance.model.DistanceData;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -52,9 +53,25 @@ public class DistanceClient {
     public DistanceData getDistance(double fromLat, double fromLng,
                                     double toLat, double toLng,
                                     String mode) {
-        String origin = fromLat + "," + fromLng;
-        String destination = toLat + "," + toLng;
-        
+        return getDistance(formatPoint(fromLat, fromLng), formatPoint(toLat, toLng), mode);
+    }
+
+    /**
+     * Calcula distancia y duración entre dos ubicaciones representadas como texto. Permite recibir
+     * direcciones libres o pares "lat,lng".
+     */
+    public DistanceData getDistance(String origin, String destination) {
+        return getDistance(origin, destination, "driving");
+    }
+
+    public DistanceData getDistance(String origin, String destination, String mode) {
+        if (!StringUtils.hasText(origin) || !StringUtils.hasText(destination)) {
+            throw new IllegalArgumentException("Origin and destination are required to calculate distance");
+        }
+        return invokeDirections(origin.trim(), destination.trim(), mode);
+    }
+
+    private DistanceData invokeDirections(String origin, String destination, String mode) {
         log.info("Solicitando ruta: origin={}, destination={}, mode={}", origin, destination, mode);
 
         try {
@@ -66,7 +83,7 @@ public class DistanceClient {
                             .queryParam("key", apiKey)
                             .build())
                     .retrieve()
-                    .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> 
+                    .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
                         clientResponse.bodyToMono(String.class)
                             .flatMap(body -> {
                                 log.error("Error 4xx en Google Directions API: {}", body);
@@ -78,7 +95,7 @@ public class DistanceClient {
                                     "Error del cliente (4xx): " + body));
                             })
                     )
-                    .onStatus(HttpStatusCode::is5xxServerError, serverResponse -> 
+                    .onStatus(HttpStatusCode::is5xxServerError, serverResponse ->
                         serverResponse.bodyToMono(String.class)
                             .flatMap(body -> {
                                 log.error("Error 5xx en Google Directions API: {}", body);
@@ -94,16 +111,14 @@ public class DistanceClient {
                 throw new IllegalStateException("La respuesta de Google Directions API está vacía");
             }
 
-            // Usar el mapper para convertir la respuesta
             DistanceData result = DistanceResponseMapper.from(response);
-            
-            log.info("Ruta calculada exitosamente: {:.2f} km, {:.2f} min", 
-                result.distanceKm(), result.durationMinutes());
-            
+
+            log.info("Ruta calculada exitosamente: {} km, {} min", result.distanceKm(), result.durationMinutes());
+
             return result;
 
         } catch (WebClientResponseException e) {
-            log.error("Error HTTP al llamar a Google Directions API: status={}, body={}", 
+            log.error("Error HTTP al llamar a Google Directions API: status={}, body={}",
                 e.getStatusCode(), e.getResponseBodyAsString());
             throw new IllegalStateException(
                 "Error al conectar con Google Directions API: " + e.getMessage(), e);
@@ -112,5 +127,9 @@ public class DistanceClient {
             throw new IllegalStateException(
                 "Error al calcular distancia: " + e.getMessage(), e);
         }
+    }
+
+    private String formatPoint(double lat, double lng) {
+        return lat + "," + lng;
     }
 }

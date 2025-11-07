@@ -1,0 +1,12 @@
+target/
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+.settings
+.project
+.classpath
+*.log
+*.md
+docker-entrypoint.sh

@@ -1,0 +1,13 @@
+{
+  "realm": "tpi-2025",
+  "enabled": true,
+  "users": [],
+  "clients": [],
+  "roles": {
+    "realm": [
+      { "name": "CLIENTE" },
+      { "name": "OPERADOR" },
+      { "name": "TRANSPORTISTA" }
+    ]
+  }
+}

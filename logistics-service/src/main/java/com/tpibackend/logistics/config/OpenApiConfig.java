@@ -2,6 +2,7 @@ package com.tpibackend.logistics.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -13,7 +14,18 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI logisticsOpenAPI() {
+    @Profile({"dev", "dev-docker"})
+    public OpenAPI logisticsOpenAPIDev() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Logistics Service API")
+                        .description("Gestión de rutas, tramos y depósitos")
+                        .version("v1"));
+    }
+
+    @Bean
+    @Profile("!(dev | dev-docker)")
+    public OpenAPI logisticsOpenAPIProd() {
         final String securitySchemeName = "bearerAuth";
         return new OpenAPI()
                 .info(new Info()

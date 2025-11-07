@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class SolicitudResponseDto {
     Long id;
     SolicitudEstado estado;
@@ -23,4 +23,5 @@ public class SolicitudResponseDto {
     ClienteResponseDto cliente;
     ContenedorResponseDto contenedor;
     List<SolicitudEventoResponseDto> eventos;
+    RutaResumenDto rutaResumen;
 }

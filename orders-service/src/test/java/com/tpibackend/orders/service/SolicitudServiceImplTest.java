@@ -7,8 +7,10 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.tpibackend.orders.client.DistanceClient;
+import com.tpibackend.distance.DistanceClient;
+import com.tpibackend.distance.model.DistanceData;
 import com.tpibackend.orders.client.FleetMetricsClient;
+import com.tpibackend.orders.client.LogisticsClient;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.request.ClienteRequestDto;
@@ -49,6 +51,9 @@ class SolicitudServiceImplTest {
     @Mock
     private DistanceClient distanceClient;
 
+    @Mock
+    private LogisticsClient logisticsClient;
+
     private SolicitudMapper solicitudMapper = Mappers.getMapper(SolicitudMapper.class);
 
     private SolicitudServiceImpl solicitudService;
@@ -62,7 +67,8 @@ class SolicitudServiceImplTest {
             solicitudRepository,
             solicitudMapper,
             fleetMetricsClient,
-            distanceClient
+            distanceClient,
+            logisticsClient
         );
     }
 
@@ -122,8 +128,8 @@ class SolicitudServiceImplTest {
         solicitud.setContenedor(new Contenedor());
 
         when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-        when(distanceClient.calculateDistance("Buenos Aires", "Rosario"))
-            .thenReturn(new DistanceClient.DistanceResponse(new BigDecimal("300"), 360L));
+        when(distanceClient.getDistance("Buenos Aires", "Rosario"))
+            .thenReturn(new DistanceData(300.0, 360.0));
         when(fleetMetricsClient.getFleetAverages())
             .thenReturn(new FleetMetricsClient.FleetAveragesResponse(new BigDecimal("15"), new BigDecimal("0.3")));
         when(solicitudRepository.save(any(Solicitud.class))).thenAnswer(invocation -> invocation.getArgument(0));

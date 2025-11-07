@@ -1,0 +1,364 @@
+{
+  "info": {
+    "name": "TPI Backend 2025",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección de humo para el flujo end-to-end del TPI Backend 2025"
+  },
+  "item": [
+    {
+      "name": "Orders",
+      "description": "Endpoints del servicio de órdenes. Requieren rol CLIENTE u OPERADOR salvo donde se indique lo contrario.",
+      "item": [
+        {
+          "name": "Crear solicitud",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"Córdoba\",\n  \"estadiaEstimada\": 2.5\n}"
+            },
+            "url": {
+              "raw": "{{orders_base_url}}/solicitudes",
+              "host": [
+                "{{orders_base_url}}"
+              ],
+              "path": [
+                "solicitudes"
+              ]
+            },
+            "description": "Requiere rol CLIENTE u OPERADOR. Crea una solicitud generando cliente y contenedor si no existen."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener solicitud",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orders_base_url}}/solicitudes/{{solicitud_id}}",
+              "host": [
+                "{{orders_base_url}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitud_id}}"
+              ]
+            },
+            "description": "Requiere rol CLIENTE u OPERADOR. Recupera el detalle completo de la solicitud."
+          },
+          "response": []
+        },
+        {
+          "name": "Seguimiento por contenedor",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orders_base_url}}/seguimiento/{{contenedor_id}}",
+              "host": [
+                "{{orders_base_url}}"
+              ],
+              "path": [
+                "seguimiento",
+                "{{contenedor_id}}"
+              ]
+            },
+            "description": "Requiere rol CLIENTE. Devuelve el historial de eventos para el contenedor."
+          },
+          "response": []
+        },
+        {
+          "name": "Calcular estimación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"combustiblePrecioLitro\": 750,\n  \"tiempoCargaHoras\": 4\n}"
+            },
+            "url": {
+              "raw": "{{orders_base_url}}/solicitudes/{{solicitud_id}}/estimacion",
+              "host": [
+                "{{orders_base_url}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitud_id}}",
+                "estimacion"
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Calcula el costo y tiempo estimados usando distance-client y métricas de flota."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fleet",
+      "description": "Gestión del parque automotor.",
+      "item": [
+        {
+          "name": "Crear camión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patente\": \"AA123BB\",\n  \"capacidadPeso\": 25000,\n  \"capacidadVolumen\": 60,\n  \"costoKm\": 950,\n  \"consumoKm\": 0.32\n}"
+            },
+            "url": {
+              "raw": "{{fleet_base_url}}/camiones",
+              "host": [
+                "{{fleet_base_url}}"
+              ],
+              "path": [
+                "camiones"
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Da de alta un camión."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar camiones disponibles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{fleet_base_url}}/camiones?disponible=true",
+              "host": [
+                "{{fleet_base_url}}"
+              ],
+              "path": [
+                "camiones"
+              ],
+              "query": [
+                {
+                  "key": "disponible",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Lista camiones disponibles para asignación."
+          },
+          "response": []
+        },
+        {
+          "name": "Promedios de flota",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{fleet_base_url}}/metrics/promedios",
+              "host": [
+                "{{fleet_base_url}}"
+              ],
+              "path": [
+                "metrics",
+                "promedios"
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Devuelve métricas de consumo y costo promedio."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Logistics",
+      "description": "Flujo logístico y coordinación de tramos.",
+      "item": [
+        {
+          "name": "Crear ruta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": {\n    \"tipo\": \"CLIENTE\",\n    \"descripcion\": \"Planta Pilar\"\n  },\n  \"destino\": {\n    \"tipo\": \"CLIENTE\",\n    \"descripcion\": \"Puerto de Rosario\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": 3,\n      \"diasEstadia\": 1\n    }\n  ],\n  \"costoKmBase\": 950,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750,\n  \"pesoCarga\": 1200,\n  \"volumenCarga\": 28\n}"
+            },
+            "url": {
+              "raw": "{{logistics_base_url}}/rutas",
+              "host": [
+                "{{logistics_base_url}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Sugiere una ruta con tramos estimados."
+          },
+          "response": []
+        },
+        {
+          "name": "Asignar ruta a solicitud",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
+            },
+            "url": {
+              "raw": "{{logistics_base_url}}/rutas/{{ruta_id}}/asignar",
+              "host": [
+                "{{logistics_base_url}}"
+              ],
+              "path": [
+                "rutas",
+                "{{ruta_id}}",
+                "asignar"
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Vincula la ruta sugerida a la solicitud generada en Orders."
+          },
+          "response": []
+        },
+        {
+          "name": "Asignar camión al tramo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1200,\n  \"volumenCarga\": 28\n}"
+            },
+            "url": {
+              "raw": "{{logistics_base_url}}/tramos/{{tramo_id}}/asignar-camion",
+              "host": [
+                "{{logistics_base_url}}"
+              ],
+              "path": [
+                "tramos",
+                "{{tramo_id}}",
+                "asignar-camion"
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Valida capacidad y disponibilidad del camión seleccionado."
+          },
+          "response": []
+        },
+        {
+          "name": "Inicio de tramo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaHoraInicio\": \"2024-06-15T08:30:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{logistics_base_url}}/tramos/{{tramo_id}}/inicio",
+              "host": [
+                "{{logistics_base_url}}"
+              ],
+              "path": [
+                "tramos",
+                "{{tramo_id}}",
+                "inicio"
+              ]
+            },
+            "description": "Requiere rol TRANSPORTISTA. Marca el inicio real del tramo."
+          },
+          "response": []
+        },
+        {
+          "name": "Fin de tramo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaHoraFin\": \"2024-06-15T17:45:00Z\",\n  \"kmReal\": 318.2,\n  \"consumoLitrosKm\": 0.35,\n  \"precioCombustible\": 750,\n  \"costoKmBase\": 950,\n  \"diasEstadia\": 1\n}"
+            },
+            "url": {
+              "raw": "{{logistics_base_url}}/tramos/{{tramo_id}}/fin",
+              "host": [
+                "{{logistics_base_url}}"
+              ],
+              "path": [
+                "tramos",
+                "{{tramo_id}}",
+                "fin"
+              ]
+            },
+            "description": "Requiere rol TRANSPORTISTA. Cierra el tramo calculando costos reales."
+          },
+          "response": []
+        },
+        {
+          "name": "Contenedores pendientes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{logistics_base_url}}/contenedores/pendientes?estado=ASIGNADO",
+              "host": [
+                "{{logistics_base_url}}"
+              ],
+              "path": [
+                "contenedores",
+                "pendientes"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "ASIGNADO"
+                }
+              ]
+            },
+            "description": "Requiere rol OPERADOR. Devuelve los contenedores con tramos pendientes."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: orders
+          uri: http://orders-service:8080
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=1
+        - id: logistics
+          uri: http://logistics-service:8080
+          predicates:
+            - Path=/api/logistics/**
+          filters:
+            - StripPrefix=1
+        - id: fleet
+          uri: http://fleet-service:8080
+          predicates:
+            - Path=/api/fleet/**
+          filters:
+            - StripPrefix=1
+
+# Deshabilitar seguridad para smoke test
+app:
+  security:
+    enabled: false
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Swagger/OpenAPI (Gateway agrega sus propios endpoints de OpenAPI agregados)
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: Orders Service
+        url: http://localhost:8082/v3/api-docs
+      - name: Logistics Service
+        url: http://localhost:8083/v3/api-docs
+      - name: Fleet Service
+        url: http://localhost:8084/v3/api-docs
+
+# Logging
+logging:
+  level:
+    com.tpibackend.gateway: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: WARN

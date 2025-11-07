@@ -38,12 +38,24 @@ public class Tramo {
     @Column(name = "origen_id")
     private Long origenId;
 
+    @Column(name = "origen_lat")
+    private Double origenLat;
+
+    @Column(name = "origen_lng")
+    private Double origenLng;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "destino_tipo", length = 30)
     private LocationType destinoTipo;
 
     @Column(name = "destino_id")
     private Long destinoId;
+
+    @Column(name = "destino_lat")
+    private Double destinoLat;
+
+    @Column(name = "destino_lng")
+    private Double destinoLng;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo", nullable = false, length = 30)
@@ -115,6 +127,22 @@ public class Tramo {
         this.origenId = origenId;
     }
 
+    public Double getOrigenLat() {
+        return origenLat;
+    }
+
+    public void setOrigenLat(Double origenLat) {
+        this.origenLat = origenLat;
+    }
+
+    public Double getOrigenLng() {
+        return origenLng;
+    }
+
+    public void setOrigenLng(Double origenLng) {
+        this.origenLng = origenLng;
+    }
+
     public LocationType getDestinoTipo() {
         return destinoTipo;
     }
@@ -129,6 +157,22 @@ public class Tramo {
 
     public void setDestinoId(Long destinoId) {
         this.destinoId = destinoId;
+    }
+
+    public Double getDestinoLat() {
+        return destinoLat;
+    }
+
+    public void setDestinoLat(Double destinoLat) {
+        this.destinoLat = destinoLat;
+    }
+
+    public Double getDestinoLng() {
+        return destinoLng;
+    }
+
+    public void setDestinoLng(Double destinoLng) {
+        this.destinoLng = destinoLng;
     }
 
     public TramoTipo getTipo() {

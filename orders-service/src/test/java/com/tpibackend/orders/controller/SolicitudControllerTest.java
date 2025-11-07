@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 @WebMvcTest(controllers = SolicitudController.class)
 @Import(SecurityConfig.class)
@@ -61,7 +61,7 @@ class SolicitudControllerTest {
         request.setContenedor(new com.tpibackend.orders.dto.request.ContenedorRequestDto());
 
         mockMvc.perform(post("/solicitudes")
-                .with(SecurityMockMvcRequestPostProcessors.jwt()
+                .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -86,7 +86,7 @@ class SolicitudControllerTest {
         when(solicitudService.obtenerSeguimientoPorContenedor(2L)).thenReturn(seguimiento);
 
         mockMvc.perform(get("/seguimiento/2")
-                .with(SecurityMockMvcRequestPostProcessors.jwt()
+                .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.estadoActual").value("PROGRAMADA"));
@@ -110,7 +110,7 @@ class SolicitudControllerTest {
         estimacionRequest.setDestino("Rosario");
 
         mockMvc.perform(post("/solicitudes/10/estimacion")
-                .with(SecurityMockMvcRequestPostProcessors.jwt()
+                .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_OPERADOR")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(estimacionRequest)))
@@ -118,7 +118,7 @@ class SolicitudControllerTest {
             .andExpect(jsonPath("$.costoEstimado").value(100.00));
 
         mockMvc.perform(post("/solicitudes/10/estimacion")
-                .with(SecurityMockMvcRequestPostProcessors.jwt()
+                .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(estimacionRequest)))

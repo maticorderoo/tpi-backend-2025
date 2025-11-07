@@ -1,6 +1,7 @@
 package com.tpibackend.logistics.client;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -29,10 +30,14 @@ public class OrdersClient {
 
     public void actualizarEstado(Long solicitudId, String estado) {
         try {
+            String estadoPayload = estado != null ? estado.toUpperCase(Locale.ROOT) : null;
+            if (estadoPayload == null) {
+                return;
+            }
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(Map.of("estado", estado), headers);
-            restTemplate.put(baseUrl + "/api/solicitudes/" + solicitudId + "/estado", entity);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(Map.of("estado", estadoPayload), headers);
+            restTemplate.put(baseUrl + "/solicitudes/" + solicitudId + "/estado", entity);
         } catch (RestClientException ex) {
             log.warn("No se pudo notificar al servicio de Orders sobre el estado {}: {}", estado, ex.getMessage());
         }
@@ -44,7 +49,7 @@ public class OrdersClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(
                     Map.of("costoFinal", costoFinal), headers);
-            restTemplate.put(baseUrl + "/api/solicitudes/" + solicitudId + "/costo", entity);
+            restTemplate.put(baseUrl + "/solicitudes/" + solicitudId + "/costo", entity);
         } catch (RestClientException ex) {
             log.warn("No se pudo actualizar el costo final de la solicitud {}: {}", solicitudId, ex.getMessage());
         }

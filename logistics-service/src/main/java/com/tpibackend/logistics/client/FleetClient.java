@@ -21,7 +21,7 @@ public class FleetClient {
     private final String baseUrl;
 
     public FleetClient(RestTemplate restTemplate,
-            @Value("${clients.fleet.base-url:http://fleet-service:8080}") String baseUrl) {
+            @Value("${clients.fleet.base-url:http://fleet-service:8084}") String baseUrl) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
     }
@@ -29,7 +29,7 @@ public class FleetClient {
     public TruckInfo obtenerCamion(Long camionId) {
         try {
             ResponseEntity<TruckInfo> response = restTemplate
-                    .getForEntity(baseUrl + "/api/camiones/" + camionId, TruckInfo.class);
+                    .getForEntity(baseUrl + "/camiones/" + camionId, TruckInfo.class);
             if (response.getBody() == null) {
                 throw new IllegalStateException("No se obtuvo información del camión " + camionId);
             }

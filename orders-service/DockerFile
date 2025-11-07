@@ -1,23 +1,26 @@
-# Etapa de build
+# Build stage
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY . .
+
+# Copiar y compilar distance-client primero
+COPY distance-client/pom.xml ./distance-client/
+COPY distance-client/src ./distance-client/src
+RUN cd distance-client && mvn -q install -DskipTests
+
+# Copiar y compilar orders-service
+COPY orders-service/pom.xml ./orders-service/
+COPY orders-service/src ./orders-service/src
+WORKDIR /app/orders-service
 RUN mvn -q -DskipTests package
 
-# Etapa runtime
+# Runtime stage
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+COPY --from=build /app/orders-service/target/*-SNAPSHOT.jar app.jar
 
-# Instalar Postgres dentro del contenedor
-RUN apt-get update && apt-get install -y postgresql postgresql-contrib && rm -rf /var/lib/apt/lists/*
-
-# Copiar jar de la app
-ARG JAR_FILE=target/*-SNAPSHOT.jar
-COPY --from=build /app/${JAR_FILE} app.jar
-
-# Copiar script de arranque
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+ENV JAVA_OPTS=""
+ENV SPRING_PROFILES_ACTIVE=dev-docker
 
 EXPOSE 8080
-ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+

@@ -1,12 +1,17 @@
 package com.tpibackend.orders.service.impl;
 
-import com.tpibackend.orders.client.DistanceClient;
+import com.tpibackend.distance.DistanceClient;
+import com.tpibackend.distance.model.DistanceData;
 import com.tpibackend.orders.client.FleetMetricsClient;
+import com.tpibackend.orders.client.LogisticsClient;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
+import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
+import com.tpibackend.orders.dto.request.SolicitudEstadoUpdateRequest;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudEventoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
+import com.tpibackend.orders.dto.response.RutaResumenDto;
 import com.tpibackend.orders.exception.OrdersNotFoundException;
 import com.tpibackend.orders.exception.OrdersValidationException;
 import com.tpibackend.orders.mapper.SolicitudMapper;
@@ -25,6 +30,10 @@ import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.springframework.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +46,12 @@ public class SolicitudServiceImpl implements SolicitudService {
     private static final EnumSet<SolicitudEstado> ESTADOS_ACTIVOS = EnumSet.of(
         SolicitudEstado.BORRADOR, SolicitudEstado.PROGRAMADA, SolicitudEstado.EN_TRANSITO
     );
+    private static final Map<SolicitudEstado, Set<SolicitudEstado>> TRANSICIONES_VALIDAS = Map.of(
+        SolicitudEstado.BORRADOR, EnumSet.of(SolicitudEstado.PROGRAMADA),
+        SolicitudEstado.PROGRAMADA, EnumSet.of(SolicitudEstado.EN_TRANSITO),
+        SolicitudEstado.EN_TRANSITO, EnumSet.of(SolicitudEstado.ENTREGADA),
+        SolicitudEstado.ENTREGADA, EnumSet.noneOf(SolicitudEstado.class)
+    );
 
     private final ClienteRepository clienteRepository;
     private final ContenedorRepository contenedorRepository;
@@ -44,6 +59,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final SolicitudMapper solicitudMapper;
     private final FleetMetricsClient fleetMetricsClient;
     private final DistanceClient distanceClient;
+    private final LogisticsClient logisticsClient;
 
     public SolicitudServiceImpl(
         ClienteRepository clienteRepository,
@@ -51,7 +67,8 @@ public class SolicitudServiceImpl implements SolicitudService {
         SolicitudRepository solicitudRepository,
         SolicitudMapper solicitudMapper,
         FleetMetricsClient fleetMetricsClient,
-        DistanceClient distanceClient
+        DistanceClient distanceClient,
+        LogisticsClient logisticsClient
     ) {
         this.clienteRepository = clienteRepository;
         this.contenedorRepository = contenedorRepository;
@@ -59,6 +76,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         this.solicitudMapper = solicitudMapper;
         this.fleetMetricsClient = fleetMetricsClient;
         this.distanceClient = distanceClient;
+        this.logisticsClient = logisticsClient;
     }
 
     @Override
@@ -89,7 +107,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud guardada = solicitudRepository.save(solicitud);
         contenedor.setSolicitudActiva(guardada);
         log.info("Solicitud {} creada para el contenedor {}", guardada.getId(), contenedor.getId());
-        return solicitudMapper.toDto(guardada);
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -97,7 +115,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     public SolicitudResponseDto obtenerSolicitud(Long solicitudId) {
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
             .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
-        return solicitudMapper.toDto(solicitud);
+        return mapToResponse(solicitud);
     }
 
     @Override
@@ -130,10 +148,16 @@ public class SolicitudServiceImpl implements SolicitudService {
         solicitud.setDestino(destino);
         solicitud.setEstadiaEstimada(request.getEstadiaEstimada());
 
-        var distanceResponse = distanceClient.calculateDistance(origen, destino);
+        DistanceData distanceData;
+        try {
+            distanceData = distanceClient.getDistance(origen, destino);
+        } catch (Exception ex) {
+            log.error("No fue posible obtener la distancia estimada entre {} y {}", origen, destino, ex);
+            throw new OrdersValidationException("No fue posible calcular la distancia estimada: " + ex.getMessage());
+        }
         var fleetResponse = fleetMetricsClient.getFleetAverages();
 
-        BigDecimal kilometros = distanceResponse.distanciaKilometros();
+        BigDecimal kilometros = BigDecimal.valueOf(distanceData.distanceKm()).setScale(2, RoundingMode.HALF_UP);
         BigDecimal costoKilometro = nvl(fleetResponse.costoKilometroPromedio());
         BigDecimal consumoPromedio = nvl(fleetResponse.consumoPromedio());
         BigDecimal precioCombustible = nvl(request.getPrecioCombustible());
@@ -145,7 +169,7 @@ public class SolicitudServiceImpl implements SolicitudService {
             .setScale(2, RoundingMode.HALF_UP);
 
         solicitud.setCostoEstimado(costoEstimado);
-        solicitud.setTiempoEstimadoMinutos(distanceResponse.duracionMinutos());
+        solicitud.setTiempoEstimadoMinutos(Math.round(distanceData.durationMinutes()));
 
         SolicitudEvento evento = new SolicitudEvento();
         evento.setEstado(solicitud.getEstado());
@@ -155,7 +179,65 @@ public class SolicitudServiceImpl implements SolicitudService {
 
         Solicitud actualizada = solicitudRepository.save(solicitud);
         log.info("Estimación actualizada para la solicitud {}", solicitudId);
-        return solicitudMapper.toDto(actualizada);
+        return mapToResponse(actualizada);
+    }
+
+    @Override
+    @Transactional
+    public SolicitudResponseDto actualizarEstado(Long solicitudId, SolicitudEstadoUpdateRequest request) {
+        Solicitud solicitud = solicitudRepository.findById(solicitudId)
+            .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
+
+        SolicitudEstado nuevoEstado = parseEstado(request.estado());
+        SolicitudEstado estadoActual = solicitud.getEstado();
+
+        if (estadoActual == nuevoEstado) {
+            return mapToResponse(solicitud);
+        }
+
+        Set<SolicitudEstado> permitidos = TRANSICIONES_VALIDAS.getOrDefault(
+            estadoActual, EnumSet.noneOf(SolicitudEstado.class)
+        );
+        if (!permitidos.contains(nuevoEstado)) {
+            throw new OrdersValidationException(
+                String.format("No es posible pasar de %s a %s", estadoActual, nuevoEstado));
+        }
+
+        solicitud.setEstado(nuevoEstado);
+        SolicitudEvento evento = new SolicitudEvento();
+        evento.setEstado(nuevoEstado);
+        evento.setFechaEvento(OffsetDateTime.now());
+        String descripcion = StringUtils.hasText(request.descripcion())
+            ? request.descripcion()
+            : "Estado actualizado a " + nuevoEstado;
+        evento.setDescripcion(descripcion);
+        solicitud.agregarEvento(evento);
+
+        Solicitud guardada = solicitudRepository.save(solicitud);
+        log.info("Solicitud {} actualizada al estado {}", solicitudId, nuevoEstado);
+        return mapToResponse(guardada);
+    }
+
+    @Override
+    @Transactional
+    public SolicitudResponseDto actualizarCosto(Long solicitudId, SolicitudCostoUpdateRequest request) {
+        Solicitud solicitud = solicitudRepository.findById(solicitudId)
+            .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
+
+        solicitud.setCostoFinal(request.costoFinal());
+        if (request.tiempoRealMinutos() != null) {
+            solicitud.setTiempoRealMinutos(request.tiempoRealMinutos());
+        }
+
+        SolicitudEvento evento = new SolicitudEvento();
+        evento.setEstado(solicitud.getEstado());
+        evento.setFechaEvento(OffsetDateTime.now());
+        evento.setDescripcion("Costo final actualizado a " + request.costoFinal());
+        solicitud.agregarEvento(evento);
+
+        Solicitud guardada = solicitudRepository.save(solicitud);
+        log.info("Solicitud {} actualizada con costo final {}", solicitudId, request.costoFinal());
+        return mapToResponse(guardada);
     }
 
     private Cliente resolverCliente(SolicitudCreateRequest request) {
@@ -195,6 +277,23 @@ public class SolicitudServiceImpl implements SolicitudService {
         }
         if (!StringUtils.hasText(request.getCliente().getEmail())) {
             throw new OrdersValidationException("El email del cliente es obligatorio");
+        }
+    }
+
+    private SolicitudResponseDto mapToResponse(Solicitud solicitud) {
+        SolicitudResponseDto base = solicitudMapper.toDto(solicitud);
+        Optional<RutaResumenDto> ruta = logisticsClient.obtenerRutaPorSolicitud(solicitud.getId());
+        return ruta.map(resumen -> base.toBuilder().rutaResumen(resumen).build()).orElse(base);
+    }
+
+    private SolicitudEstado parseEstado(String estado) {
+        if (!StringUtils.hasText(estado)) {
+            throw new OrdersValidationException("El estado es obligatorio");
+        }
+        try {
+            return SolicitudEstado.valueOf(estado.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new OrdersValidationException("Estado inválido: " + estado);
         }
     }
 
