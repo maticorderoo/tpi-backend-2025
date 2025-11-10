@@ -1,72 +1,143 @@
-version: "3.8"
-
 services:
-  fleet-service:
-    build:
-      context: .
-      dockerfile: fleet-service/Dockerfile
-    container_name: fleet-service
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16
+    container_name: postgres-tpi
     environment:
-      SPRING_PROFILES_ACTIVE: dev-docker
+      POSTGRES_USER: tpi_admin
+      POSTGRES_PASSWORD: SuperSegura_!2025
+      POSTGRES_DB: postgres
     ports:
-      - "8084:8080"
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./orders-service/initdb:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      test: ["CMD-SHELL", "pg_isready -U tpi_admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tpi-network
 
+  # Keycloak Authentication Server
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: keycloak-tpi
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./keycloak/realm-export:/opt/keycloak/data/import
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - tpi-network
+
+  # Orders Service
   orders-service:
     build:
       context: .
       dockerfile: orders-service/DockerFile
     container_name: orders-service
     environment:
-      SPRING_PROFILES_ACTIVE: dev-docker
+      SPRING_PROFILES_ACTIVE: dev-postgres
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-demo-key}
     ports:
       - "8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
+    networks:
+      - tpi-network
 
+  # Logistics Service
   logistics-service:
     build:
       context: .
       dockerfile: logistics-service/Dockerfile
     container_name: logistics-service
     environment:
-      SPRING_PROFILES_ACTIVE: dev-docker
+      SPRING_PROFILES_ACTIVE: dev-postgres
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-demo-key}
     ports:
       - "8083:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
+    networks:
+      - tpi-network
 
+  # Fleet Service
+  fleet-service:
+    build:
+      context: .
+      dockerfile: fleet-service/Dockerfile
+    container_name: fleet-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev-postgres
+    ports:
+      - "8084:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - tpi-network
+
+  # API Gateway
   api-gateway:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
     container_name: api-gateway
     environment:
-      SPRING_PROFILES_ACTIVE: dev-docker
+      SPRING_PROFILES_ACTIVE: dev-postgres
     ports:
       - "8081:8080"
     depends_on:
-      - orders-service
-      - logistics-service
-      - fleet-service
+      orders-service:
+        condition: service_healthy
+      logistics-service:
+        condition: service_healthy
+      fleet-service:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    networks:
+      - tpi-network
+
+networks:
+  tpi-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

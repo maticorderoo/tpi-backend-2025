@@ -7,97 +7,109 @@ Este repositorio contiene los microservicios Spring Boot que conforman la soluci
 - **fleet-service** (`com.tpibackend.fleet`)
 - **api-gateway** (`com.tpibackend.gateway`)
 - **distance-client** (`com.tpibackend.distance`)
-- **keycloak** (realm `tpi-2025`)
+- **PostgreSQL 16** (3 bases de datos separadas)
+- **Keycloak 23** (realm `tpi-2025`)
 
 ## Requisitos
 
 - Java 21
 - Maven 3.9+
 - **Docker Desktop** (para ejecución en contenedores)
-- Keycloak 22+ (para ejecutar el realm `keycloak/realm-export/tpi-2025-realm.json`)
+- **PostgreSQL 16** (incluido en Docker Compose)
 
-## Ejecución con Docker 🐳 (Recomendado para smoke test)
+## 🚀 Inicio Rápido con Docker + PostgreSQL
 
-### Inicio rápido
+### Levantar el sistema completo
 
 ```bash
-# Construir imágenes
-docker compose build
+# Windows
+start-postgres.bat
 
-# Levantar todos los servicios
+# Linux/Mac
 docker compose up -d
-
-# Ver logs
-docker compose logs -f
-
-# Health checks
-curl http://localhost:8084/actuator/health  # Fleet
-curl http://localhost:8082/actuator/health  # Orders
-curl http://localhost:8083/actuator/health  # Logistics
-curl http://localhost:8080/actuator/health  # Gateway
-
-# Detener servicios
-docker compose down
 ```
 
-### URLs con Docker
+### Verificar estado
+
+```bash
+# Health check de todos los servicios
+health-check.bat
+
+# Verificar PostgreSQL
+verify-postgres.bat
+```
+
+### URLs de Acceso
 
 | Servicio | Health | Swagger UI | Puerto |
 |----------|--------|------------|--------|
-| Fleet | http://localhost:8084/actuator/health | http://localhost:8084/swagger-ui.html | 8084 |
+| API Gateway | http://localhost:8081/actuator/health | N/A | 8081 |
 | Orders | http://localhost:8082/actuator/health | http://localhost:8082/swagger-ui.html | 8082 |
 | Logistics | http://localhost:8083/actuator/health | http://localhost:8083/swagger-ui.html | 8083 |
-| Gateway | http://localhost:8080/actuator/health | N/A | 8080 |
+| Fleet | http://localhost:8084/actuator/health | http://localhost:8084/swagger-ui.html | 8084 |
+| PostgreSQL | localhost:5432 | N/A | 5432 |
 
-**Vía Gateway**:
-- http://localhost:8080/api/fleet/swagger-ui.html
-- http://localhost:8080/api/orders/swagger-ui.html
-- http://localhost:8080/api/logistics/swagger-ui.html
+### 🗄️ Acceso a PostgreSQL
 
-### Perfil `dev-docker`
-
-Los servicios en Docker usan el perfil `dev-docker` que:
-- ✅ Usa H2 in-memory (sin persistencia)
-- ✅ No requiere PostgreSQL
-- ✅ No requiere Keycloak (seguridad deshabilitada)
-- ✅ Ideal para smoke tests y validación rápida
-
-**Nota**: Los datos se pierden al detener los contenedores. Para persistencia, usa el perfil con PostgreSQL.
-
-### Documentación completa
-
-Ver [INTEGRATION_REPORT.md](INTEGRATION_REPORT.md) para:
-- Arquitectura Docker detallada
-- Troubleshooting
-- Diferencias entre perfiles
-- Próximos pasos (agregar PostgreSQL/Keycloak)
-
-## Requisitos
-
-- Java 21
-- Maven 3.9+
-- Keycloak 22+ (para ejecutar el realm `keycloak/realm-export/tpi-2025-realm.json`)
-
-## Build rápido
-
+#### Conexión Rápida
 ```bash
-mvn -q -DskipTests package
+# Script interactivo para conectarse
+connect-postgres.bat
+
+# O directamente:
+docker exec -it postgres-tpi psql -U tpi_admin -d postgres
 ```
 
-## Ejecución local
+#### Credenciales
 
-1. Levantar Keycloak con el realm `tpi-2025` (puerto 8080 por defecto).
-2. Ejecutar los servicios en el siguiente orden para respetar dependencias:
-   1. **fleet-service**
-   2. **orders-service**
-   3. **logistics-service**
-   4. **api-gateway**
+**Administrador:**
+- Usuario: `tpi_admin`
+- Contraseña: `SuperSegura_!2025`
 
-Cada módulo expone scripts de conveniencia:
+**Por servicio:**
+- **orders_service**: `orders_user` / `Orders_!2025`
+- **logistics_service**: `logistics_user` / `Logistics_!2025`  
+- **fleet_service**: `fleet_user` / `Fleet_!2025`
+
+**Ver guía completa**: [POSTGRES_ACCESS.md](POSTGRES_ACCESS.md)
+
+### Perfil `dev-postgres`
+
+Los servicios en Docker usan el perfil `dev-postgres` que:
+- ✅ Usa PostgreSQL 16 con bases de datos separadas
+- ✅ Persistencia de datos en volúmenes Docker
+- ✅ No requiere Keycloak (seguridad deshabilitada)
+- ✅ Hibernate en modo `update` (crea/actualiza tablas automáticamente)
+- ✅ Ideal para desarrollo con datos persistentes
+
+**Nota**: Para eliminar todos los datos: `docker compose down -v`
+
+### Documentación
+
+- **[POSTGRES_ACCESS.md](POSTGRES_ACCESS.md)** - Guía completa de acceso a PostgreSQL
+- **[POSTGRES_INTEGRATION.md](POSTGRES_INTEGRATION.md)** - Arquitectura y configuración
+- **[KEYCLOAK.md](KEYCLOAK.md)** - Configuración de autenticación
+- **[DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md)** - Inicio rápido con Docker
+
+## Ejecución Local (sin Docker)
+
+### Requisitos adicionales
+- PostgreSQL 16 instalado localmente
+- Keycloak 23+ con realm `tpi-2025`
+
+### Setup
+
+1. Crear las bases de datos en PostgreSQL local
+2. Ejecutar scripts de inicialización en `orders-service/initdb/`
+3. Levantar Keycloak con el realm `tpi-2025` (puerto 8080)
+4. Ejecutar servicios con perfil `dev`:
 
 ```bash
-./fleet-service/run-dev            # Ejecuta con seguridad habilitada
-./fleet-service/run-dev-noauth     # Perfil dev sin seguridad
+./fleet-service/run-dev
+./orders-service/run-dev
+./logistics-service/run-dev
+./api-gateway/run-dev
+```
 ./orders-service/run-dev
 ./orders-service/run-dev-noauth
 ./logistics-service/run-dev

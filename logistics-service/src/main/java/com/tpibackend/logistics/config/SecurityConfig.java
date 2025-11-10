@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@Profile("!(dev | dev-docker)")
+@Profile("!(dev | dev-docker | dev-postgres)")
 public class SecurityConfig {
 
     @Bean

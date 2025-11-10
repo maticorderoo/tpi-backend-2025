@@ -1,6 +1,5 @@
 package com.tpibackend.gateway.config;
 
-import com.tpibackend.gateway.security.KeycloakRealmRoleConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -14,12 +13,15 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+
+import com.tpibackend.gateway.security.KeycloakRealmRoleConverter;
+
 import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
-@Profile("!(dev | dev-docker)")
+@Profile("!(dev | dev-docker | dev-postgres)")
 public class SecurityConfig {
 
     @Bean

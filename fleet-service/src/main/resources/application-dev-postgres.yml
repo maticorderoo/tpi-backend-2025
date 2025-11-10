@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: fleet-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/fleet_service
+    username: fleet_user
+    password: Fleet_!2025
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+  flyway:
+    enabled: false
+
+server:
+  port: 8080
+
+# Security deshabilitada para desarrollo
+security:
+  oauth2:
+    enabled: false
+
+# Actuator para health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    defaults:
+      enabled: true
+
+# Springdoc (Swagger)
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

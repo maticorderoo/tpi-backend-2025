@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: orders-service
+          uri: http://orders-service:8080
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=1
+        - id: logistics-service
+          uri: http://logistics-service:8080
+          predicates:
+            - Path=/api/logistics/**
+          filters:
+            - StripPrefix=1
+        - id: fleet-service
+          uri: http://fleet-service:8080
+          predicates:
+            - Path=/api/fleet/**
+          filters:
+            - StripPrefix=1
+
+server:
+  port: 8080
+
+# Security deshabilitada para desarrollo
+security:
+  oauth2:
+    enabled: false
+
+# Actuator para health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  health:
+    defaults:
+      enabled: true
+
+# Springdoc (Swagger)
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: Orders Service
+        url: http://localhost:8082/v3/api-docs
+      - name: Logistics Service
+        url: http://localhost:8083/v3/api-docs
+      - name: Fleet Service
+        url: http://localhost:8084/v3/api-docs

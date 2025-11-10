@@ -7,7 +7,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
-@Profile({"dev", "dev-docker"})
+@Profile({"dev", "dev-docker", "dev-postgres"})
 public class DevSecurityConfig {
 
     @Bean

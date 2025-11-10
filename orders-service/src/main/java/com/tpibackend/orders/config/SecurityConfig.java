@@ -17,7 +17,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@Profile("!(dev | dev-docker)")
+@Profile("!(dev | dev-docker | dev-postgres)")
 @EnableMethodSecurity
 public class SecurityConfig {
 
