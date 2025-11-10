@@ -39,13 +39,21 @@ public class ContenedorController {
     @GetMapping("/pendientes")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Contenedores pendientes",
-            description = "Lista los contenedores que tienen tramos pendientes filtrando opcionalmente por estado y depósito.",
+            description = "Lista los contenedores que tienen tramos pendientes filtrando opcionalmente por estado y depósito. Requiere rol OPERADOR.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Listado obtenido",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = PendingContainerResponse.class),
                                     examples = @ExampleObject(name = "contenedoresPendientes",
-                                            value = "[{\n  \"solicitudId\": 42,\n  \"rutaId\": 21,\n  \"tramoId\": 55,\n  \"estadoTramo\": \"ASIGNADO\",\n  \"depositoDestinoId\": 3,\n  \"depositoDestinoNombre\": \"Depósito Cuyo\"\n}]")))
+                                            value = "[{\n  \"solicitudId\": 42,\n  \"rutaId\": 21,\n  \"tramoId\": 55,\n  \"estadoTramo\": \"ASIGNADO\",\n  \"depositoDestinoId\": 3,\n  \"depositoDestinoNombre\": \"Depósito Cuyo\"\n}]"))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}")))
             })
     public ResponseEntity<List<PendingContainerResponse>> obtenerPendientes(
             @RequestParam(required = false) TramoEstado estado,

@@ -29,7 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/logistics/rutas")
+@RequestMapping({"/api/logistics/rutas", "/api/routes"})
 @Validated
 @Tag(name = "Rutas", description = "Gestión de rutas y asignaciones")
 @SecurityRequirement(name = "bearerAuth")
@@ -47,7 +47,7 @@ public class RutaController {
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(
             summary = "Sugerir ruta",
-            description = "Genera la ruta con tramos estimados entre un origen, depósitos intermedios y destino.",
+            description = "Genera la ruta con tramos estimados entre un origen, depósitos intermedios y destino. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = CrearRutaRequest.class),
                     examples = @ExampleObject(name = "crearRuta",
@@ -58,6 +58,14 @@ public class RutaController {
                                     schema = @Schema(implementation = RutaResponse.class),
                                     examples = @ExampleObject(name = "rutaSugerida",
                                             value = "{\n  \"id\": 21,\n  \"cantTramos\": 3,\n  \"costoTotalAprox\": 185000,\n  \"tramos\": [\n    {\n      \"id\": 55,\n      \"estado\": \"ESTIMADO\",\n      \"distanciaKmEstimada\": 320.5\n    }\n  ]\n}"))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "400", description = "Datos inválidos"),
                     @ApiResponse(responseCode = "422", description = "No se pudo generar ruta")
             }
@@ -71,6 +79,7 @@ public class RutaController {
     @PostMapping("/{rutaId}/asignar")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Asignar ruta a solicitud",
+            description = "Vincula una ruta planificada a una solicitud. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = AsignarRutaRequest.class),
                     examples = @ExampleObject(name = "asignarRuta",
@@ -79,6 +88,14 @@ public class RutaController {
                     @ApiResponse(responseCode = "200", description = "Ruta asignada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = RutaResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Ruta o solicitud no encontrada"),
                     @ApiResponse(responseCode = "409", description = "Solicitud no admite asignación")
             })
@@ -92,10 +109,19 @@ public class RutaController {
     @GetMapping("/solicitud/{solicitudId}")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Obtener ruta por solicitud",
+            description = "Consulta la ruta asociada a una solicitud. Requiere rol OPERADOR.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Ruta encontrada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = RutaResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Ruta no encontrada")
             })
     public ResponseEntity<RutaResponse> obtenerPorSolicitud(@PathVariable Long solicitudId) {

@@ -47,7 +47,20 @@ verify-postgres.bat
 | Orders | http://localhost:8082/actuator/health | http://localhost:8082/swagger-ui.html | 8082 |
 | Logistics | http://localhost:8083/actuator/health | http://localhost:8083/swagger-ui.html | 8083 |
 | Fleet | http://localhost:8084/actuator/health | http://localhost:8084/swagger-ui.html | 8084 |
+| Keycloak | http://localhost:8085/health/ready | http://localhost:8085 | 8085 |
 | PostgreSQL | localhost:5432 | N/A | 5432 |
+
+### 🔐 Usuarios de Keycloak Preconfigurados
+
+El sistema incluye 3 usuarios de prueba ya configurados:
+
+| Usuario | Password | Rol | Permisos |
+|---------|----------|-----|----------|
+| `cliente01` | `1234` | CLIENTE | Crear solicitudes, ver seguimiento |
+| `transportista01` | `1234` | TRANSPORTISTA | Iniciar/finalizar tramos |
+| `operador01` | `1234` | OPERADOR | Gestión completa de rutas y flota |
+
+**Ver guía completa**: [KEYCLOAK_USERS.md](KEYCLOAK_USERS.md)
 
 ### 🗄️ Acceso a PostgreSQL
 
@@ -86,6 +99,7 @@ Los servicios en Docker usan el perfil `dev-postgres` que:
 
 ### Documentación
 
+- **[KEYCLOAK_USERS.md](KEYCLOAK_USERS.md)** - 🔐 Usuarios preconfigurados y cómo usar Keycloak
 - **[POSTGRES_ACCESS.md](POSTGRES_ACCESS.md)** - Guía completa de acceso a PostgreSQL
 - **[POSTGRES_INTEGRATION.md](POSTGRES_INTEGRATION.md)** - Arquitectura y configuración
 - **[KEYCLOAK.md](KEYCLOAK.md)** - Configuración de autenticación

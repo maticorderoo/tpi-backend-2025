@@ -1,4 +1,4 @@
-package com.tpibackend.logistics.config;
+package com.tpibackend.orders.config;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -27,9 +27,9 @@ public class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<Gra
         }
 
         return roleList.stream()
-                .map(Object::toString)
-                .map(role -> "ROLE_" + role.toUpperCase())
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toSet());
+            .map(Object::toString)
+            .map(role -> "ROLE_" + role.toUpperCase())
+            .map(SimpleGrantedAuthority::new)
+            .collect(Collectors.toSet());
     }
 }

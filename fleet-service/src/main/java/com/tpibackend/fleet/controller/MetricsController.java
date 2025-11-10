@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,13 +28,22 @@ public class MetricsController {
     }
 
     @GetMapping("/promedios")
-    @Operation(summary = "Promedios de consumo y costo", description = "Calcula los promedios de consumo y costo por km para camiones disponibles",
+    @PreAuthorize("hasAnyRole('OPERADOR','INTERNO')")
+    @Operation(summary = "Promedios de consumo y costo", description = "Calcula los promedios de consumo y costo por km para camiones disponibles. Requiere roles OPERADOR o INTERNO.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Promedios calculados",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = FleetMetricsResponse.class),
                                     examples = @ExampleObject(name = "metrics",
-                                            value = "{\n  \"consumoPromedio\": 0.31,\n  \"costoKmPromedio\": 940\n}")))
+                                            value = "{\n  \"consumoPromedio\": 0.31,\n  \"costoKmPromedio\": 940\n}"))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}")))
             })
     public FleetMetricsResponse obtenerPromedios() {
         return fleetMetricsService.obtenerPromedios();

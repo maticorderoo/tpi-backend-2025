@@ -23,6 +23,7 @@ import com.tpibackend.orders.model.history.SolicitudEvento;
 import com.tpibackend.orders.repository.ClienteRepository;
 import com.tpibackend.orders.repository.ContenedorRepository;
 import com.tpibackend.orders.repository.SolicitudRepository;
+import com.tpibackend.orders.service.EstadoService;
 import com.tpibackend.orders.service.SolicitudService;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -38,19 +39,21 @@ import org.springframework.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class SolicitudServiceImpl implements SolicitudService {
 
     private static final Logger log = LoggerFactory.getLogger(SolicitudServiceImpl.class);
     private static final EnumSet<SolicitudEstado> ESTADOS_ACTIVOS = EnumSet.of(
-        SolicitudEstado.BORRADOR, SolicitudEstado.PROGRAMADA, SolicitudEstado.EN_TRANSITO
+        SolicitudEstado.BORRADOR, SolicitudEstado.PROGRAMADA
     );
     private static final Map<SolicitudEstado, Set<SolicitudEstado>> TRANSICIONES_VALIDAS = Map.of(
         SolicitudEstado.BORRADOR, EnumSet.of(SolicitudEstado.PROGRAMADA),
-        SolicitudEstado.PROGRAMADA, EnumSet.of(SolicitudEstado.EN_TRANSITO),
-        SolicitudEstado.EN_TRANSITO, EnumSet.of(SolicitudEstado.ENTREGADA),
-        SolicitudEstado.ENTREGADA, EnumSet.noneOf(SolicitudEstado.class)
+        SolicitudEstado.PROGRAMADA, EnumSet.of(SolicitudEstado.COMPLETADA),
+        SolicitudEstado.COMPLETADA, EnumSet.noneOf(SolicitudEstado.class),
+        SolicitudEstado.CANCELADA, EnumSet.noneOf(SolicitudEstado.class)
     );
 
     private final ClienteRepository clienteRepository;
@@ -60,6 +63,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final FleetMetricsClient fleetMetricsClient;
     private final DistanceClient distanceClient;
     private final LogisticsClient logisticsClient;
+    private final EstadoService estadoService;
 
     public SolicitudServiceImpl(
         ClienteRepository clienteRepository,
@@ -68,7 +72,8 @@ public class SolicitudServiceImpl implements SolicitudService {
         SolicitudMapper solicitudMapper,
         FleetMetricsClient fleetMetricsClient,
         DistanceClient distanceClient,
-        LogisticsClient logisticsClient
+        LogisticsClient logisticsClient,
+        EstadoService estadoService
     ) {
         this.clienteRepository = clienteRepository;
         this.contenedorRepository = contenedorRepository;
@@ -77,6 +82,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         this.fleetMetricsClient = fleetMetricsClient;
         this.distanceClient = distanceClient;
         this.logisticsClient = logisticsClient;
+        this.estadoService = estadoService;
     }
 
     @Override
@@ -92,11 +98,14 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud solicitud = new Solicitud();
         solicitud.setCliente(cliente);
         solicitud.setContenedor(contenedor);
-        solicitud.setEstado(SolicitudEstado.BORRADOR);
         solicitud.setEstadiaEstimada(request.getEstadiaEstimada());
         solicitud.setOrigen(request.getOrigen());
         solicitud.setDestino(request.getDestino());
         solicitud.setFechaCreacion(OffsetDateTime.now());
+
+        // Inicializar estados automáticamente
+        String usuario = obtenerUsuarioActual();
+        estadoService.inicializarEstados(contenedor, solicitud, usuario);
 
         SolicitudEvento evento = new SolicitudEvento();
         evento.setEstado(SolicitudEstado.BORRADOR);
@@ -246,6 +255,14 @@ public class SolicitudServiceImpl implements SolicitudService {
                 .orElseThrow(() -> new OrdersNotFoundException("Cliente no encontrado"));
         }
         validarNuevoCliente(request);
+        
+        // Buscar cliente existente por email
+        Optional<Cliente> clienteExistente = clienteRepository.findByEmail(request.getCliente().getEmail());
+        if (clienteExistente.isPresent()) {
+            return clienteExistente.get();
+        }
+        
+        // Crear nuevo cliente si no existe
         Cliente cliente = new Cliente();
         cliente.setNombre(request.getCliente().getNombre());
         cliente.setEmail(request.getCliente().getEmail());
@@ -265,7 +282,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         validarNuevoContenedor(request);
         Contenedor contenedor = new Contenedor();
         contenedor.setCliente(cliente);
-        contenedor.setEstado(request.getContenedor().getEstado());
+        // No seteamos el estado aquí, lo hará EstadoService
         contenedor.setPeso(request.getContenedor().getPeso());
         contenedor.setVolumen(request.getContenedor().getVolumen());
         return contenedorRepository.save(contenedor);
@@ -304,9 +321,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         if (request.getContenedor().getVolumen() == null || request.getContenedor().getVolumen().compareTo(BigDecimal.ZERO) <= 0) {
             throw new OrdersValidationException("El volumen del contenedor debe ser mayor a 0");
         }
-        if (!StringUtils.hasText(request.getContenedor().getEstado())) {
-            throw new OrdersValidationException("El estado del contenedor es obligatorio");
-        }
+        // El estado se gestiona automáticamente, no es necesario validarlo
     }
 
     private boolean isAnyBlank(String... values) {
@@ -327,5 +342,13 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private BigDecimal nvl(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private String obtenerUsuarioActual() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication.getName();
+        }
+        return "system";
     }
 }

@@ -1,5 +1,6 @@
 package com.tpibackend.orders.dto.response;
 
+import com.tpibackend.orders.model.enums.ContenedorEstado;
 import java.math.BigDecimal;
 import lombok.Builder;
 import lombok.Value;
@@ -10,5 +11,5 @@ public class ContenedorResponseDto {
     Long id;
     BigDecimal peso;
     BigDecimal volumen;
-    String estado;
+    ContenedorEstado estado;
 }

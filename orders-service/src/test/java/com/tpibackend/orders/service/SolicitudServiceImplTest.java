@@ -21,10 +21,12 @@ import com.tpibackend.orders.mapper.SolicitudMapper;
 import com.tpibackend.orders.model.Cliente;
 import com.tpibackend.orders.model.Contenedor;
 import com.tpibackend.orders.model.Solicitud;
+import com.tpibackend.orders.model.enums.ContenedorEstado;
 import com.tpibackend.orders.model.enums.SolicitudEstado;
 import com.tpibackend.orders.repository.ClienteRepository;
 import com.tpibackend.orders.repository.ContenedorRepository;
 import com.tpibackend.orders.repository.SolicitudRepository;
+import com.tpibackend.orders.service.EstadoService;
 import com.tpibackend.orders.service.impl.SolicitudServiceImpl;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -54,6 +56,9 @@ class SolicitudServiceImplTest {
     @Mock
     private LogisticsClient logisticsClient;
 
+    @Mock
+    private EstadoService estadoService;
+
     private SolicitudMapper solicitudMapper = Mappers.getMapper(SolicitudMapper.class);
 
     private SolicitudServiceImpl solicitudService;
@@ -68,7 +73,8 @@ class SolicitudServiceImplTest {
             solicitudMapper,
             fleetMetricsClient,
             distanceClient,
-            logisticsClient
+            logisticsClient,
+            estadoService
         );
     }
 
@@ -82,7 +88,7 @@ class SolicitudServiceImplTest {
         request.setCliente(clienteDto);
 
         ContenedorRequestDto contenedorDto = new ContenedorRequestDto();
-        contenedorDto.setEstado("Disponible");
+        // El estado no se setea, se gestiona automáticamente
         contenedorDto.setPeso(new BigDecimal("2000"));
         contenedorDto.setVolumen(new BigDecimal("30"));
         request.setContenedor(contenedorDto);
@@ -95,7 +101,7 @@ class SolicitudServiceImplTest {
         Contenedor contenedorPersistido = new Contenedor();
         contenedorPersistido.setId(2L);
         contenedorPersistido.setCliente(clientePersistido);
-        contenedorPersistido.setEstado("Disponible");
+        contenedorPersistido.setEstado(ContenedorEstado.BORRADOR);
         contenedorPersistido.setPeso(new BigDecimal("2000"));
         contenedorPersistido.setVolumen(new BigDecimal("30"));
 

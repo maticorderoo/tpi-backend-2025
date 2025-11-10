@@ -95,6 +95,12 @@ public class Tramo {
     @Column(name = "costo_estadia", precision = 12, scale = 2)
     private BigDecimal costoEstadia = BigDecimal.ZERO;
 
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
+
     public Long getId() {
         return id;
     }
@@ -269,5 +275,21 @@ public class Tramo {
 
     public void setCostoEstadia(BigDecimal costoEstadia) {
         this.costoEstadia = costoEstadia;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 }

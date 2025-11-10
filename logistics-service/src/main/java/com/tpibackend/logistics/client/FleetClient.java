@@ -29,7 +29,7 @@ public class FleetClient {
     public TruckInfo obtenerCamion(Long camionId) {
         try {
             ResponseEntity<TruckInfo> response = restTemplate
-                    .getForEntity(baseUrl + "/camiones/" + camionId, TruckInfo.class);
+                    .getForEntity(baseUrl + "/api/trucks/" + camionId, TruckInfo.class);
             if (response.getBody() == null) {
                 throw new IllegalStateException("No se obtuvo información del camión " + camionId);
             }

@@ -1,8 +1,76 @@
 {
   "realm": "tpi-2025",
   "enabled": true,
-  "users": [],
-  "clients": [],
+  "users": [
+    {
+      "username": "cliente01",
+      "enabled": true,
+      "email": "cliente01@tpi.com",
+      "emailVerified": true,
+      "firstName": "Cliente",
+      "lastName": "Demo",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["CLIENTE"],
+      "clientRoles": {}
+    },
+    {
+      "username": "transportista01",
+      "enabled": true,
+      "email": "transportista01@tpi.com",
+      "emailVerified": true,
+      "firstName": "Transportista",
+      "lastName": "Demo",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["TRANSPORTISTA"],
+      "clientRoles": {}
+    },
+    {
+      "username": "operador01",
+      "enabled": true,
+      "email": "operador01@tpi.com",
+      "emailVerified": true,
+      "firstName": "Operador",
+      "lastName": "Demo",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["OPERADOR"],
+      "clientRoles": {}
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "tpi-client",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      }
+    }
+  ],
   "roles": {
     "realm": [
       { "name": "CLIENTE" },

@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/logistics/tramos")
+@RequestMapping({"/api/logistics/tramos", "/api/legs"})
 @Validated
 @Tag(name = "Tramos", description = "Gestión operativa de tramos")
 @SecurityRequirement(name = "bearerAuth")
@@ -42,9 +43,10 @@ public class TramoController {
         this.tramoService = tramoService;
     }
 
-    @PostMapping("/{tramoId}/asignar-camion")
+    @PostMapping({"/{tramoId}/asignar-camion", "/{tramoId}/assign-truck"})
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Asignar camión a tramo",
+            description = "Asigna un camión disponible a un tramo. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = AsignarCamionRequest.class),
                     examples = @ExampleObject(name = "asignarCamion",
@@ -53,6 +55,14 @@ public class TramoController {
                     @ApiResponse(responseCode = "200", description = "Camión asignado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = TramoResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Tramo o camión no encontrado"),
                     @ApiResponse(responseCode = "409", description = "Capacidad insuficiente o estado inválido")
             })
@@ -63,8 +73,10 @@ public class TramoController {
     }
 
     @PostMapping("/{tramoId}/inicio")
+    @PatchMapping("/{tramoId}/start")
     @PreAuthorize("hasRole('TRANSPORTISTA')")
     @Operation(summary = "Marcar inicio del tramo",
+            description = "Marca el inicio efectivo del tramo asignado. Requiere rol TRANSPORTISTA.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = InicioTramoRequest.class),
                     examples = @ExampleObject(name = "inicioTramo",
@@ -73,6 +85,14 @@ public class TramoController {
                     @ApiResponse(responseCode = "200", description = "Tramo iniciado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = TramoResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "400", description = "Tramo sin camión asignado"),
                     @ApiResponse(responseCode = "409", description = "Estado inválido")
             })
@@ -83,8 +103,10 @@ public class TramoController {
     }
 
     @PostMapping("/{tramoId}/fin")
+    @PatchMapping("/{tramoId}/finish")
     @PreAuthorize("hasRole('TRANSPORTISTA')")
     @Operation(summary = "Marcar fin del tramo",
+            description = "Registra la finalización del tramo en curso. Requiere rol TRANSPORTISTA.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = FinTramoRequest.class),
                     examples = @ExampleObject(name = "finTramo",
@@ -93,6 +115,14 @@ public class TramoController {
                     @ApiResponse(responseCode = "200", description = "Tramo finalizado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = TramoResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "400", description = "Tramo no iniciado"),
                     @ApiResponse(responseCode = "409", description = "Estado inválido")
             })

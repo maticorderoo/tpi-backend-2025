@@ -1,11 +1,14 @@
 package com.tpibackend.orders.controller;
 
+import com.tpibackend.orders.dto.request.ContenedorEstadoUpdateRequest;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.request.SolicitudEstadoUpdateRequest;
+import com.tpibackend.orders.dto.response.ContenedorResponseDto;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
+import com.tpibackend.orders.service.ContenedorService;
 import com.tpibackend.orders.service.SolicitudService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,23 +32,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping
+@RequestMapping("/api/orders")
 @Validated
 @Tag(name = "Solicitudes", description = "Gestión de solicitudes de transporte")
 @SecurityRequirement(name = "bearerAuth")
 public class SolicitudController {
 
     private final SolicitudService solicitudService;
+    private final ContenedorService contenedorService;
 
-    public SolicitudController(SolicitudService solicitudService) {
+    public SolicitudController(SolicitudService solicitudService, ContenedorService contenedorService) {
         this.solicitudService = solicitudService;
+        this.contenedorService = contenedorService;
     }
 
-    @PostMapping("/solicitudes")
-    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
+        @PostMapping
+    @PreAuthorize("hasRole('CLIENTE')")
     @Operation(
             summary = "Crear una nueva solicitud",
-            description = "Registra una solicitud nueva creando el cliente y el contenedor en caso de que no existan.",
+            description = "Registra una solicitud nueva creando el cliente y el contenedor en caso de que no existan. Requiere rol CLIENTE.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = SolicitudCreateRequest.class),
                     examples = @ExampleObject(name = "crearSolicitud",
@@ -58,7 +63,15 @@ public class SolicitudController {
                                     examples = @ExampleObject(name = "solicitudCreada",
                                             summary = "Solicitud creada correctamente",
                                             value = "{\n  \"id\": 42,\n  \"estado\": \"PROGRAMADA\",\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"Córdoba\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"eventos\": []\n}"))),
-                    @ApiResponse(responseCode = "400", description = "Datos inválidos")
+                    @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}")))
             }
     )
     public ResponseEntity<SolicitudResponseDto> crearSolicitud(@Valid @RequestBody SolicitudCreateRequest request) {
@@ -66,41 +79,59 @@ public class SolicitudController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/solicitudes/{id}")
+        @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
     @Operation(summary = "Obtener detalle de la solicitud",
+            description = "Recupera el detalle de una solicitud existente. Requiere rol CLIENTE u OPERADOR.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Solicitud encontrada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudDetalle",
                                             value = "{\n  \"id\": 42,\n  \"estado\": \"EN_TRANSITO\",\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
             })
     public ResponseEntity<SolicitudResponseDto> obtenerSolicitud(@PathVariable Long id) {
         return ResponseEntity.ok(solicitudService.obtenerSolicitud(id));
     }
 
-    @GetMapping("/seguimiento/{contenedorId}")
-    @PreAuthorize("hasRole('CLIENTE')")
+        @GetMapping("/{id}/tracking")
+    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
     @Operation(summary = "Obtener seguimiento de una solicitud por contenedor",
+            description = "Devuelve el estado y eventos asociados a una solicitud por contenedor. Requiere rol CLIENTE u OPERADOR.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Seguimiento recuperado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SeguimientoResponseDto.class),
                                     examples = @ExampleObject(name = "seguimiento",
                                             value = "{\n  \"contenedorId\": 9,\n  \"estadoActual\": \"EN_TRANSITO\",\n  \"eventos\": [\n    {\n      \"estado\": \"PROGRAMADA\",\n      \"descripcion\": \"Solicitud programada\"\n    },\n    {\n      \"estado\": \"EN_TRANSITO\",\n      \"descripcion\": \"Camión asignado y en curso\"\n    }\n  ]\n}"))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Contenedor no encontrado")
             })
-    public ResponseEntity<SeguimientoResponseDto> obtenerSeguimiento(@PathVariable Long contenedorId) {
-        return ResponseEntity.ok(solicitudService.obtenerSeguimientoPorContenedor(contenedorId));
-    }
+        public ResponseEntity<SeguimientoResponseDto> obtenerSeguimiento(@PathVariable("id") Long id) {
+                return ResponseEntity.ok(solicitudService.obtenerSeguimientoPorContenedor(id));
+        }
 
-    @PostMapping("/solicitudes/{id}/estimacion")
+        @PostMapping("/{id}/estimacion")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(
             summary = "Calcular estimación de costo y tiempo",
-            description = "Calcula el costo y tiempo estimado utilizando distance-client y métricas de flota.",
+            description = "Calcula el costo y tiempo estimado utilizando distance-client y métricas de flota. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = EstimacionRequest.class),
                     examples = @ExampleObject(name = "estimacion",
@@ -109,6 +140,14 @@ public class SolicitudController {
                     @ApiResponse(responseCode = "200", description = "Estimación calculada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Solicitud no encontrada"),
                     @ApiResponse(responseCode = "409", description = "Solicitud no admite estimación")
             }
@@ -120,9 +159,10 @@ public class SolicitudController {
         return ResponseEntity.ok(solicitudService.calcularEstimacion(id, request));
     }
 
-    @PutMapping("/solicitudes/{id}/estado")
+        @PutMapping("/{id}/estado")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar estado de una solicitud",
+            description = "Permite cambiar el estado de la solicitud. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = SolicitudEstadoUpdateRequest.class),
                     examples = @ExampleObject(name = "actualizarEstado",
@@ -131,6 +171,14 @@ public class SolicitudController {
                     @ApiResponse(responseCode = "200", description = "Estado actualizado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "400", description = "Transición inválida"),
                     @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
             })
@@ -141,9 +189,10 @@ public class SolicitudController {
         return ResponseEntity.ok(solicitudService.actualizarEstado(id, request));
     }
 
-    @PutMapping("/solicitudes/{id}/costo")
+        @PutMapping("/{id}/costo")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar costo final de una solicitud",
+            description = "Actualiza el costo y tiempo real de la solicitud. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = SolicitudCostoUpdateRequest.class),
                     examples = @ExampleObject(name = "actualizarCosto",
@@ -152,6 +201,14 @@ public class SolicitudController {
                     @ApiResponse(responseCode = "200", description = "Costo actualizado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "unauthorized",
+                                            value = "{\"error\":\"unauthorized\"}"))),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(name = "forbidden",
+                                            value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Solicitud no encontrada"),
                     @ApiResponse(responseCode = "409", description = "Estado inválido para cierre")
             })
@@ -160,5 +217,26 @@ public class SolicitudController {
         @Valid @RequestBody SolicitudCostoUpdateRequest request
     ) {
         return ResponseEntity.ok(solicitudService.actualizarCosto(id, request));
+    }
+
+    @PostMapping("/{id}/estado")
+    @PreAuthorize("hasRole('OPERADOR')")
+    @Operation(
+        summary = "Actualizar manualmente el estado del contenedor",
+        description = "Permite a un operador cambiar manualmente el estado del contenedor asociado a una solicitud. Solo disponible para rol OPERADOR.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Estado actualizado exitosamente",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ContenedorResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "Acceso prohibido - Se requiere rol OPERADOR"),
+            @ApiResponse(responseCode = "404", description = "Solicitud o contenedor no encontrado")
+        }
+    )
+    public ResponseEntity<ContenedorResponseDto> actualizarEstadoContenedor(
+        @PathVariable Long id,
+        @Valid @RequestBody ContenedorEstadoUpdateRequest request
+    ) {
+        return ResponseEntity.ok(contenedorService.actualizarEstadoManual(id, request));
     }
 }

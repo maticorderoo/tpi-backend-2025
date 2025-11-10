@@ -66,6 +66,12 @@ public class Solicitud {
     @Column(nullable = false)
     private OffsetDateTime fechaCreacion;
 
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
+
     @OneToMany(mappedBy = "solicitud", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SolicitudEvento> eventos = new ArrayList<>();
 
