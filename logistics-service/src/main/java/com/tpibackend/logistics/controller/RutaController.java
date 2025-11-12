@@ -107,9 +107,8 @@ public class RutaController {
     }
 
     @GetMapping("/solicitud/{solicitudId}")
-    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Obtener ruta por solicitud",
-            description = "Consulta la ruta asociada a una solicitud. Requiere rol OPERADOR.",
+            description = "Consulta la ruta asociada a una solicitud. Endpoint permitido para comunicación inter-servicio. La seguridad se aplica en API Gateway para clientes externos.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Ruta encontrada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
