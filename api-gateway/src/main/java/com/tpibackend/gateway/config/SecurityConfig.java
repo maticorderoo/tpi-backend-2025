@@ -2,7 +2,6 @@ package com.tpibackend.gateway.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -21,7 +20,6 @@ import reactor.core.publisher.Mono;
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
-@Profile("!(dev | dev-docker | dev-postgres)")
 public class SecurityConfig {
 
     @Bean

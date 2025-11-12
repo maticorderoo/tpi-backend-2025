@@ -1,19 +1,12 @@
 package com.tpibackend.gateway.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
 
+/**
+ * Configuración de seguridad deshabilitada.
+ * Ahora se usa SecurityConfig con seguridad completa en todos los entornos.
+ */
 @Configuration
-@Profile({"dev", "dev-docker", "dev-postgres"})
 public class DevSecurityConfig {
-
-    @Bean
-    public SecurityWebFilterChain devSecurityFilterChain(ServerHttpSecurity http) {
-        return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchange -> exchange.anyExchange().permitAll())
-                .build();
-    }
+    // Security disabled - using main SecurityConfig for all profiles
 }

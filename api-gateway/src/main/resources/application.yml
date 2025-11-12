@@ -76,3 +76,5 @@ logging:
   level:
     org.springframework.cloud.gateway: INFO
     com.tpibackend.gateway.filter: INFO
+    org.springframework.security: DEBUG
+    com.tpibackend.gateway.security: DEBUG

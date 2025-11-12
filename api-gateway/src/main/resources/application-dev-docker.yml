@@ -17,11 +17,17 @@ spring:
           uri: http://fleet-service:8080
           predicates:
             - Path=/api/fleet/**
-
-# Deshabilitar seguridad para smoke test
-app:
   security:
-    enabled: false
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/tpi-2025}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/tpi-2025/protocol/openid-connect/certs}
+
+security:
+  oauth2:
+    client-id: ${KEYCLOAK_CLIENT_ID:tpi-client}
+    audience: ${KEYCLOAK_AUDIENCE:tpi-api}
 
 # Actuator
 management:

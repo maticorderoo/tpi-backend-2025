@@ -16,14 +16,20 @@ spring:
           uri: http://fleet-service:8080
           predicates:
             - Path=/api/fleet/**
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/tpi-2025}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/tpi-2025/protocol/openid-connect/certs}
 
 server:
   port: 8080
 
-# Security deshabilitada para desarrollo
 security:
   oauth2:
-    enabled: false
+    client-id: ${KEYCLOAK_CLIENT_ID:tpi-client}
+    audience: ${KEYCLOAK_AUDIENCE:tpi-api}
 
 # Actuator para health checks
 management:

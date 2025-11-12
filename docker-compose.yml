@@ -117,6 +117,8 @@ services:
     container_name: api-gateway
     environment:
       SPRING_PROFILES_ACTIVE: dev-postgres
+      KEYCLOAK_ISSUER_URI: http://localhost:8085/realms/tpi-2025
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/tpi-2025/protocol/openid-connect/certs
     ports:
       - "8081:8080"
     depends_on:
