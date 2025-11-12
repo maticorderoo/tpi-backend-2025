@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/trucks")
+@RequestMapping("/fleet/trucks")
 @Validated
 @Tag(name = "Camiones")
 @SecurityRequirement(name = "bearerAuth")
@@ -63,26 +63,6 @@ public class CamionController {
             })
     public List<CamionResponse> listar(@RequestParam(value = "disponible", required = false) Boolean disponible) {
         return camionService.findAll(disponible);
-    }
-
-    @GetMapping("/available")
-    @PreAuthorize("hasRole('OPERADOR')")
-    @Operation(summary = "Camiones disponibles", description = "Obtiene los camiones marcados como disponibles. Requiere rol OPERADOR.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Listado recuperado",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = CamionResponse.class))),
-                    @ApiResponse(responseCode = "401", description = "No autenticado",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    examples = @ExampleObject(name = "unauthorized",
-                                            value = "{\"error\":\"unauthorized\"}"))),
-                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    examples = @ExampleObject(name = "forbidden",
-                                            value = "{\"error\":\"forbidden\"}")))
-            })
-    public List<CamionResponse> listarDisponibles() {
-        return camionService.findAll(Boolean.TRUE);
     }
 
     @GetMapping("/{id}")
@@ -159,9 +139,8 @@ public class CamionController {
     }
 
     @PutMapping("/{id}/disponibilidad")
-    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar disponibilidad de camión",
-            description = "Modifica el estado de disponibilidad de un camión. Requiere rol OPERADOR.",
+            description = "Modifica el estado de disponibilidad de un camión. Acceso público para permitir actualizaciones desde otros servicios.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = CamionAvailabilityRequest.class),
                     examples = @ExampleObject(name = "actualizarDisponibilidad",

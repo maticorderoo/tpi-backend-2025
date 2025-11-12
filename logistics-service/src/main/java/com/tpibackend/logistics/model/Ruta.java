@@ -84,11 +84,23 @@ public class Ruta {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public BigDecimal calcularCostoTotalApproxConGestion(BigDecimal cargoGestionPorTramo) {
+        BigDecimal costoTramos = calcularCostoTotalAprox();
+        BigDecimal cargoGestion = cargoGestionPorTramo.multiply(BigDecimal.valueOf(this.cantTramos));
+        return costoTramos.add(cargoGestion);
+    }
+
     public BigDecimal calcularCostoTotalReal() {
         return tramos.stream()
                 .map(Tramo::getCostoReal)
                 .filter(valor -> valor != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal calcularCostoTotalRealConGestion(BigDecimal cargoGestionPorTramo) {
+        BigDecimal costoTramos = calcularCostoTotalReal();
+        BigDecimal cargoGestion = cargoGestionPorTramo.multiply(BigDecimal.valueOf(this.cantTramos));
+        return costoTramos.add(cargoGestion);
     }
 
     public Long getId() {

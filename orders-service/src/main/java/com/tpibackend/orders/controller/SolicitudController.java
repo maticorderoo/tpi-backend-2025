@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/orders")
 @Validated
 @Tag(name = "Solicitudes", description = "Gestión de solicitudes de transporte")
 @SecurityRequirement(name = "bearerAuth")
@@ -159,37 +159,7 @@ public class SolicitudController {
         return ResponseEntity.ok(solicitudService.calcularEstimacion(id, request));
     }
 
-        @PutMapping("/{id}/estado")
-    @PreAuthorize("hasRole('OPERADOR')")
-    @Operation(summary = "Actualizar estado de una solicitud",
-            description = "Permite cambiar el estado de la solicitud. Requiere rol OPERADOR.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = SolicitudEstadoUpdateRequest.class),
-                    examples = @ExampleObject(name = "actualizarEstado",
-                            value = "{\n  \"estado\": \"EN_TRANSITO\"\n}"))),
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Estado actualizado",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = SolicitudResponseDto.class))),
-                    @ApiResponse(responseCode = "401", description = "No autenticado",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    examples = @ExampleObject(name = "unauthorized",
-                                            value = "{\"error\":\"unauthorized\"}"))),
-                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    examples = @ExampleObject(name = "forbidden",
-                                            value = "{\"error\":\"forbidden\"}"))),
-                    @ApiResponse(responseCode = "400", description = "Transición inválida"),
-                    @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
-            })
-    public ResponseEntity<SolicitudResponseDto> actualizarEstado(
-        @PathVariable Long id,
-        @Valid @RequestBody SolicitudEstadoUpdateRequest request
-    ) {
-        return ResponseEntity.ok(solicitudService.actualizarEstado(id, request));
-    }
-
-        @PutMapping("/{id}/costo")
+    @PutMapping("/{id}/costo")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar costo final de una solicitud",
             description = "Actualiza el costo y tiempo real de la solicitud. Requiere rol OPERADOR.",

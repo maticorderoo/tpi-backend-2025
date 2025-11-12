@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/logistics/contenedores")
+@RequestMapping("/logistics/contenedores")
 @Validated
 @Tag(name = "Contenedores", description = "Consulta de contenedores pendientes")
 @SecurityRequirement(name = "bearerAuth")

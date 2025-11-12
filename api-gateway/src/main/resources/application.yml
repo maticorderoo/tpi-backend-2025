@@ -15,56 +15,50 @@ spring:
               uri: http://orders-service:8082
               predicates:
                 - Path=/api/orders/**
-              filters:
-                - StripPrefix=1
             - id: logistics
               uri: http://logistics-service:8083
               predicates:
                 - Path=/api/logistics/**
-              filters:
-                - StripPrefix=1
             - id: fleet
               uri: http://fleet-service:8084
               predicates:
                 - Path=/api/fleet/**
-              filters:
-                - StripPrefix=1
             - id: orders-swagger-ui
               uri: http://orders-service:8082
               predicates:
                 - Path=/api/orders/swagger-ui/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=1
             - id: orders-openapi
               uri: http://orders-service:8082
               predicates:
                 - Path=/api/orders/v3/api-docs/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=1
             - id: logistics-swagger-ui
               uri: http://logistics-service:8083
               predicates:
                 - Path=/api/logistics/swagger-ui/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=1
             - id: logistics-openapi
               uri: http://logistics-service:8083
               predicates:
                 - Path=/api/logistics/v3/api-docs/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=1
             - id: fleet-swagger-ui
               uri: http://fleet-service:8084
               predicates:
                 - Path=/api/fleet/swagger-ui/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=1
             - id: fleet-openapi
               uri: http://fleet-service:8084
               predicates:
                 - Path=/api/fleet/v3/api-docs/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=1
 
   security:
     oauth2:

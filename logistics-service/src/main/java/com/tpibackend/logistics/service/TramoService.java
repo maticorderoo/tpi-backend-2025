@@ -99,6 +99,9 @@ public class TramoService {
         tramo.setFechaHoraInicio(inicio);
         tramoRepository.save(tramo);
 
+        // Marcar camión como no disponible
+        fleetClient.actualizarDisponibilidad(tramo.getCamionId(), false, "En tránsito - Tramo " + tramoId);
+
         Ruta ruta = tramo.getRuta();
         if (ruta.getSolicitudId() != null) {
             ordersClient.actualizarEstado(ruta.getSolicitudId(), "EN_TRANSITO");
@@ -141,6 +144,9 @@ public class TramoService {
         tramo.setCostoReal(costoReal);
         tramo.setEstado(TramoEstado.FINALIZADO);
         tramoRepository.save(tramo);
+
+        // Marcar camión como disponible nuevamente
+        fleetClient.actualizarDisponibilidad(tramo.getCamionId(), true, null);
 
         Ruta ruta = tramo.getRuta();
         ruta.setCostoTotalReal(ruta.calcularCostoTotalReal());
@@ -187,5 +193,52 @@ public class TramoService {
                     tramo.getId(), fallback, ex);
             return fallback;
         }
+    }
+
+    public java.util.List<TramoResponse> obtenerTramosPorCamion(Long camionId) {
+        log.debug("Obteniendo tramos para camión {}", camionId);
+        return tramoRepository.findByCamionIdOrderByRutaIdAsc(camionId)
+                .stream()
+                .map(LogisticsMapper::toTramoResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public java.util.List<TramoResponse> obtenerContenedoresEnDeposito(Long depositoId) {
+        log.debug("Obteniendo contenedores en depósito {}", depositoId);
+        
+        // Buscar tramos cuyo destino sea el depósito especificado
+        java.util.List<Tramo> tramosEnDeposito = tramoRepository.findAll().stream()
+                .filter(tramo -> {
+                    // El tramo debe estar FINALIZADO (contenedor llegó al depósito)
+                    if (tramo.getEstado() != TramoEstado.FINALIZADO) {
+                        return false;
+                    }
+                    
+                    // El destino debe ser el depósito buscado
+                    if (tramo.getDestinoTipo() != LocationType.DEPOSITO 
+                            || !depositoId.equals(tramo.getDestinoId())) {
+                        return false;
+                    }
+                    
+                    // Verificar que el siguiente tramo (si existe) no haya iniciado
+                    Ruta ruta = tramo.getRuta();
+                    java.util.List<Tramo> tramosRuta = ruta.getTramos();
+                    int indexActual = tramosRuta.indexOf(tramo);
+                    
+                    // Si no hay siguiente tramo, el contenedor ya llegó a destino final
+                    if (indexActual == tramosRuta.size() - 1) {
+                        return false;
+                    }
+                    
+                    // Verificar que el siguiente tramo no haya iniciado
+                    Tramo siguienteTramo = tramosRuta.get(indexActual + 1);
+                    return siguienteTramo.getEstado() == TramoEstado.ESTIMADO 
+                            || siguienteTramo.getEstado() == TramoEstado.ASIGNADO;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        
+        return tramosEnDeposito.stream()
+                .map(LogisticsMapper::toTramoResponse)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

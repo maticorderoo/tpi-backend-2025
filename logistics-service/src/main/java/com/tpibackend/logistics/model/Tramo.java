@@ -71,6 +71,12 @@ public class Tramo {
     @Column(name = "costo_real", precision = 14, scale = 2)
     private BigDecimal costoReal = BigDecimal.ZERO;
 
+    @Column(name = "fecha_hora_inicio_estimada")
+    private OffsetDateTime fechaHoraInicioEstimada;
+
+    @Column(name = "fecha_hora_fin_estimada")
+    private OffsetDateTime fechaHoraFinEstimada;
+
     @Column(name = "fecha_hora_inicio")
     private OffsetDateTime fechaHoraInicio;
 
@@ -211,6 +217,22 @@ public class Tramo {
 
     public void setCostoReal(BigDecimal costoReal) {
         this.costoReal = costoReal;
+    }
+
+    public OffsetDateTime getFechaHoraInicioEstimada() {
+        return fechaHoraInicioEstimada;
+    }
+
+    public void setFechaHoraInicioEstimada(OffsetDateTime fechaHoraInicioEstimada) {
+        this.fechaHoraInicioEstimada = fechaHoraInicioEstimada;
+    }
+
+    public OffsetDateTime getFechaHoraFinEstimada() {
+        return fechaHoraFinEstimada;
+    }
+
+    public void setFechaHoraFinEstimada(OffsetDateTime fechaHoraFinEstimada) {
+        this.fechaHoraFinEstimada = fechaHoraFinEstimada;
     }
 
     public OffsetDateTime getFechaHoraInicio() {

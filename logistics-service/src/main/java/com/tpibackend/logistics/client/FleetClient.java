@@ -21,7 +21,7 @@ public class FleetClient {
     private final String baseUrl;
 
     public FleetClient(RestTemplate restTemplate,
-            @Value("${clients.fleet.base-url:http://fleet-service:8084}") String baseUrl) {
+            @Value("${clients.fleet.base-url:http://fleet-service:8080/api/fleet}") String baseUrl) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
     }
@@ -29,7 +29,7 @@ public class FleetClient {
     public TruckInfo obtenerCamion(Long camionId) {
         try {
             ResponseEntity<TruckInfo> response = restTemplate
-                    .getForEntity(baseUrl + "/api/trucks/" + camionId, TruckInfo.class);
+                    .getForEntity(baseUrl + "/trucks/" + camionId, TruckInfo.class);
             if (response.getBody() == null) {
                 throw new IllegalStateException("No se obtuvo información del camión " + camionId);
             }
@@ -41,7 +41,20 @@ public class FleetClient {
         }
     }
 
+    public void actualizarDisponibilidad(Long camionId, boolean disponible, String motivo) {
+        try {
+            DisponibilidadRequest request = new DisponibilidadRequest(disponible, motivo);
+            restTemplate.put(baseUrl + "/trucks/" + camionId + "/disponibilidad", request);
+            log.info("Disponibilidad del camión {} actualizada a: {}", camionId, disponible);
+        } catch (RestClientException ex) {
+            log.error("Error actualizando disponibilidad del camión {}: {}", camionId, ex.getMessage());
+        }
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record TruckInfo(Long id, BigDecimal capacidadPeso, BigDecimal capacidadVolumen, boolean disponible) {
+    }
+
+    public record DisponibilidadRequest(Boolean disponible, String motivoNoDisponibilidad) {
     }
 }

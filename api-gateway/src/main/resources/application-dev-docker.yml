@@ -9,20 +9,14 @@ spring:
           uri: http://orders-service:8080
           predicates:
             - Path=/api/orders/**
-          filters:
-            - StripPrefix=1
         - id: logistics
           uri: http://logistics-service:8080
           predicates:
             - Path=/api/logistics/**
-          filters:
-            - StripPrefix=1
         - id: fleet
           uri: http://fleet-service:8080
           predicates:
             - Path=/api/fleet/**
-          filters:
-            - StripPrefix=1
 
 # Deshabilitar seguridad para smoke test
 app:

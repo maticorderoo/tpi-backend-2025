@@ -1,14 +1,15 @@
 package com.tpibackend.fleet.model.dto;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
-import java.math.BigDecimal;
 
 public record CamionRequest(
         @NotBlank(message = "El dominio es obligatorio")
-        @Pattern(regexp = "^[A-Z]{2,3}[0-9]{3}$", message = "Formato de dominio inválido")
+        @Pattern(regexp = "^[A-Z]{2,3}[0-9]{3}([A-Z]{2})?$", message = "Formato de dominio inválido")
         String dominio,
 
         @NotBlank(message = "El nombre del transportista es obligatorio")

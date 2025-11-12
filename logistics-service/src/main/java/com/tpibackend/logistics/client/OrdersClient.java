@@ -23,7 +23,7 @@ public class OrdersClient {
     private final String baseUrl;
 
     public OrdersClient(RestTemplate restTemplate,
-            @Value("${clients.orders.base-url:http://orders-service:8080}") String baseUrl) {
+            @Value("${clients.orders.base-url:http://orders-service:8080/api/orders}") String baseUrl) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
     }
@@ -37,7 +37,7 @@ public class OrdersClient {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(Map.of("estado", estadoPayload), headers);
-            restTemplate.put(baseUrl + "/api/orders/" + solicitudId + "/estado", entity);
+            restTemplate.put(baseUrl + "/" + solicitudId + "/estado", entity);
         } catch (RestClientException ex) {
             log.warn("No se pudo notificar al servicio de Orders sobre el estado {}: {}", estado, ex.getMessage());
         }
@@ -49,7 +49,7 @@ public class OrdersClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(
                     Map.of("costoFinal", costoFinal), headers);
-            restTemplate.put(baseUrl + "/api/orders/" + solicitudId + "/costo", entity);
+            restTemplate.put(baseUrl + "/" + solicitudId + "/costo", entity);
         } catch (RestClientException ex) {
             log.warn("No se pudo actualizar el costo final de la solicitud {}: {}", solicitudId, ex.getMessage());
         }

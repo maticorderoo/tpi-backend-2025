@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -60,8 +61,20 @@ public class Solicitud {
     @Column(length = 255)
     private String origen;
 
+    @Column(name = "origen_lat")
+    private Double origenLat;
+
+    @Column(name = "origen_lng")
+    private Double origenLng;
+
     @Column(length = 255)
     private String destino;
+
+    @Column(name = "destino_lat")
+    private Double destinoLat;
+
+    @Column(name = "destino_lng")
+    private Double destinoLng;
 
     @Column(nullable = false)
     private OffsetDateTime fechaCreacion;
@@ -73,6 +86,7 @@ public class Solicitud {
     private String updatedBy;
 
     @OneToMany(mappedBy = "solicitud", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("fechaEvento ASC")
     private List<SolicitudEvento> eventos = new ArrayList<>();
 
     public void agregarEvento(SolicitudEvento evento) {

@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping({"/api/logistics/tramos", "/api/legs"})
+@RequestMapping({"/logistics/tramos", "/legs"})
 @Validated
 @Tag(name = "Tramos", description = "Gestión operativa de tramos")
 @SecurityRequirement(name = "bearerAuth")
@@ -130,5 +131,38 @@ public class TramoController {
             @Valid @RequestBody FinTramoRequest request) {
         log.debug("Marcando fin del tramo {}", tramoId);
         return ResponseEntity.ok(tramoService.finalizarTramo(tramoId, request));
+    }
+
+    @GetMapping("/camion/{camionId}")
+    @PreAuthorize("hasAnyRole('TRANSPORTISTA','OPERADOR')")
+    @Operation(summary = "Listar tramos por camión",
+            description = "Obtiene todos los tramos asignados a un camión específico. Requiere rol TRANSPORTISTA u OPERADOR.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Listado recuperado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = TramoResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado"),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido")
+            })
+    public ResponseEntity<java.util.List<TramoResponse>> listarPorCamion(@PathVariable Long camionId) {
+        log.debug("Listando tramos del camión {}", camionId);
+        return ResponseEntity.ok(tramoService.obtenerTramosPorCamion(camionId));
+    }
+
+    @GetMapping("/deposito/{depositoId}/contenedores")
+    @PreAuthorize("hasAnyRole('OPERADOR', 'TRANSPORTISTA')")
+    @Operation(summary = "Listar contenedores actualmente en un depósito",
+            description = "Retorna los tramos finalizados cuyo destino es el depósito indicado y el siguiente tramo aún no ha iniciado. Útil para ver qué contenedores están esperando asignación de camión.",
+            security = @SecurityRequirement(name = "bearer-jwt"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Listado de contenedores en depósito",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = TramoResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "No autenticado"),
+                    @ApiResponse(responseCode = "403", description = "Acceso prohibido")
+            })
+    public ResponseEntity<java.util.List<TramoResponse>> listarContenedoresEnDeposito(@PathVariable Long depositoId) {
+        log.debug("Listando contenedores en depósito {}", depositoId);
+        return ResponseEntity.ok(tramoService.obtenerContenedoresEnDeposito(depositoId));
     }
 }
