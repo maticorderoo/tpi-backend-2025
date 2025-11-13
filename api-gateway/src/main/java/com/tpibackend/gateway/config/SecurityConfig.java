@@ -30,6 +30,15 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
                         .pathMatchers("/actuator/health", "/actuator/info").permitAll()
+                        // Permitir acceso público a Swagger UI y API Docs de todos los servicios
+                        .pathMatchers(
+                                "/api/*/swagger-ui/**",
+                                "/api/*/swagger-ui.html",
+                                "/api/*/v3/api-docs/**",
+                                "/api/*/v3/api-docs.yaml",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
                         .pathMatchers("/api/orders/**").hasAnyRole("CLIENTE", "OPERADOR")
                         .pathMatchers("/api/logistics/tramos/**").hasAnyRole("OPERADOR", "TRANSPORTISTA")
                         .pathMatchers("/api/logistics/**").hasRole("OPERADOR")
