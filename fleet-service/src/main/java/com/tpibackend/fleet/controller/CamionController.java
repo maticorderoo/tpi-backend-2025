@@ -139,8 +139,9 @@ public class CamionController {
     }
 
     @PutMapping("/{id}/disponibilidad")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar disponibilidad de camión",
-            description = "Modifica el estado de disponibilidad de un camión. Acceso público para permitir actualizaciones desde otros servicios.",
+            description = "Modifica el estado de disponibilidad de un camión. Requiere rol OPERADOR. Si otros servicios necesitan modificarlo, deben pasar por Gateway.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = CamionAvailabilityRequest.class),
                     examples = @ExampleObject(name = "actualizarDisponibilidad",

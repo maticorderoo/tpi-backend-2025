@@ -19,6 +19,8 @@ import com.tpibackend.logistics.repository.TramoRepository;
 @Transactional(readOnly = true)
 public class ContenedorService {
 
+    // TODO: Servicio temporal; la consulta de contenedores debería vivir en Orders
+
     private final TramoRepository tramoRepository;
     private final DepositoRepository depositoRepository;
 

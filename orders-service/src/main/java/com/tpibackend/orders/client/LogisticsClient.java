@@ -1,5 +1,6 @@
 package com.tpibackend.orders.client;
 
+import com.tpibackend.orders.dto.response.DistanceEstimationResponse;
 import com.tpibackend.orders.dto.response.RutaResumenDto;
 import com.tpibackend.orders.dto.response.TramoResumenDto;
 import java.math.BigDecimal;
@@ -22,12 +23,15 @@ public class LogisticsClient {
 
     private final WebClient webClient;
     private final String routeBySolicitudPath;
+    private final String distanceEstimationPath;
 
     public LogisticsClient(WebClient.Builder builder,
             @Value("${clients.logistics.base-url}") String baseUrl,
-            @Value("${clients.logistics.route-by-solicitud-path}") String routeBySolicitudPath) {
+            @Value("${clients.logistics.route-by-solicitud-path}") String routeBySolicitudPath,
+            @Value("${clients.logistics.distance-estimation-path}") String distanceEstimationPath) {
         this.webClient = builder.baseUrl(baseUrl).build();
         this.routeBySolicitudPath = routeBySolicitudPath;
+        this.distanceEstimationPath = distanceEstimationPath;
     }
 
     public Optional<RutaResumenDto> obtenerRutaPorSolicitud(Long solicitudId) {
@@ -50,6 +54,22 @@ public class LogisticsClient {
             return Optional.empty();
         } catch (Exception ex) {
             log.warn("No se pudo obtener la ruta asociada a la solicitud {}: {}", solicitudId, ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public Optional<DistanceEstimationResponse> estimarDistancia(String origen, String destino) {
+        try {
+            DistanceEstimationResponse response = webClient.post()
+                    .uri(distanceEstimationPath)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(new DistanceEstimationRequest(origen, destino))
+                    .retrieve()
+                    .bodyToMono(DistanceEstimationResponse.class)
+                    .block();
+            return Optional.ofNullable(response);
+        } catch (Exception ex) {
+            log.warn("Error solicitando estimación de distancia a Logistics: {}", ex.getMessage());
             return Optional.empty();
         }
     }
@@ -105,4 +125,6 @@ public class LogisticsClient {
                                  Long camionId, Double distanciaKmEstimada, Double distanciaKmReal,
                                  Integer diasEstadia, BigDecimal costoEstadiaDia, BigDecimal costoEstadia) {
     }
+
+    private record DistanceEstimationRequest(String origen, String destino) { }
 }

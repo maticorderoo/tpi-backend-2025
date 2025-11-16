@@ -104,6 +104,7 @@ public class TramoService {
 
         Ruta ruta = tramo.getRuta();
         if (ruta.getSolicitudId() != null) {
+            // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
             ordersClient.actualizarEstado(ruta.getSolicitudId(), "EN_TRANSITO");
         }
 
@@ -155,6 +156,7 @@ public class TramoService {
 
         if (ruta.getSolicitudId() != null &&
                 ruta.getTramos().stream().allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO)) {
+            // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
             ordersClient.actualizarEstado(ruta.getSolicitudId(), "ENTREGADA");
             ordersClient.actualizarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal());
         }

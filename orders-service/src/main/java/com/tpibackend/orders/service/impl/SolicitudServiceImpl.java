@@ -1,9 +1,8 @@
 package com.tpibackend.orders.service.impl;
 
-import com.tpibackend.distance.DistanceClient;
-import com.tpibackend.distance.model.DistanceData;
 import com.tpibackend.orders.client.FleetMetricsClient;
 import com.tpibackend.orders.client.LogisticsClient;
+import com.tpibackend.orders.dto.response.DistanceEstimationResponse;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
@@ -61,7 +60,6 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final SolicitudRepository solicitudRepository;
     private final SolicitudMapper solicitudMapper;
     private final FleetMetricsClient fleetMetricsClient;
-    private final DistanceClient distanceClient;
     private final LogisticsClient logisticsClient;
     private final EstadoService estadoService;
 
@@ -71,7 +69,6 @@ public class SolicitudServiceImpl implements SolicitudService {
         SolicitudRepository solicitudRepository,
         SolicitudMapper solicitudMapper,
         FleetMetricsClient fleetMetricsClient,
-        DistanceClient distanceClient,
         LogisticsClient logisticsClient,
         EstadoService estadoService
     ) {
@@ -80,7 +77,6 @@ public class SolicitudServiceImpl implements SolicitudService {
         this.solicitudRepository = solicitudRepository;
         this.solicitudMapper = solicitudMapper;
         this.fleetMetricsClient = fleetMetricsClient;
-        this.distanceClient = distanceClient;
         this.logisticsClient = logisticsClient;
         this.estadoService = estadoService;
     }
@@ -159,16 +155,12 @@ public class SolicitudServiceImpl implements SolicitudService {
 
         solicitud.setEstadiaEstimada(request.getEstadiaEstimada());
 
-        DistanceData distanceData;
-        try {
-            distanceData = distanceClient.getDistance(origen, destino);
-        } catch (Exception ex) {
-            log.error("No fue posible obtener la distancia estimada entre {} y {}", origen, destino, ex);
-            throw new OrdersValidationException("No fue posible calcular la distancia estimada: " + ex.getMessage());
-        }
+        DistanceEstimationResponse distanceData = logisticsClient.estimarDistancia(origen, destino)
+            .orElseThrow(() -> new OrdersValidationException(
+                    "No fue posible calcular la distancia estimada con Logistics"));
         var fleetResponse = fleetMetricsClient.getFleetAverages();
 
-        BigDecimal kilometros = BigDecimal.valueOf(distanceData.distanceKm()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal kilometros = BigDecimal.valueOf(distanceData.distanciaKm()).setScale(2, RoundingMode.HALF_UP);
         BigDecimal costoKilometro = nvl(fleetResponse.costoKilometroPromedio());
         BigDecimal consumoPromedio = nvl(fleetResponse.consumoPromedio());
         BigDecimal precioCombustible = nvl(request.getPrecioCombustible());
@@ -180,7 +172,7 @@ public class SolicitudServiceImpl implements SolicitudService {
             .setScale(2, RoundingMode.HALF_UP);
 
         solicitud.setCostoEstimado(costoEstimado);
-        solicitud.setTiempoEstimadoMinutos(Math.round(distanceData.durationMinutes()));
+        solicitud.setTiempoEstimadoMinutos(Math.round(distanceData.duracionMinutos()));
 
         SolicitudEvento evento = new SolicitudEvento();
         SolicitudEstado estadoActual = obtenerEstadoActual(solicitud).orElse(null);

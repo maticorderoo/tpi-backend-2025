@@ -207,6 +207,7 @@ public class SolicitudController {
             @ApiResponse(responseCode = "404", description = "Solicitud o contenedor no encontrado")
         }
     )
+    // TODO: Este endpoint debería migrar a Logistics una vez que la sincronización de estados sea asíncrona
     public ResponseEntity<ContenedorResponseDto> actualizarEstadoContenedor(
         @PathVariable Long id,
         @Valid @RequestBody ContenedorEstadoUpdateRequest request

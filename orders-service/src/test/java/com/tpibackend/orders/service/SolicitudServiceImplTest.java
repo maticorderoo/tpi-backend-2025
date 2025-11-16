@@ -7,14 +7,13 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.tpibackend.distance.DistanceClient;
-import com.tpibackend.distance.model.DistanceData;
 import com.tpibackend.orders.client.FleetMetricsClient;
 import com.tpibackend.orders.client.LogisticsClient;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.request.ClienteRequestDto;
 import com.tpibackend.orders.dto.request.ContenedorRequestDto;
+import com.tpibackend.orders.dto.response.DistanceEstimationResponse;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
 import com.tpibackend.orders.exception.OrdersValidationException;
 import com.tpibackend.orders.mapper.SolicitudMapper;
@@ -51,9 +50,6 @@ class SolicitudServiceImplTest {
     private FleetMetricsClient fleetMetricsClient;
 
     @Mock
-    private DistanceClient distanceClient;
-
-    @Mock
     private LogisticsClient logisticsClient;
 
     @Mock
@@ -72,7 +68,6 @@ class SolicitudServiceImplTest {
             solicitudRepository,
             solicitudMapper,
             fleetMetricsClient,
-            distanceClient,
             logisticsClient,
             estadoService
         );
@@ -134,8 +129,8 @@ class SolicitudServiceImplTest {
         solicitud.setContenedor(new Contenedor());
 
         when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-        when(distanceClient.getDistance("Buenos Aires", "Rosario"))
-            .thenReturn(new DistanceData(300.0, 360.0));
+        when(logisticsClient.estimarDistancia("Buenos Aires", "Rosario"))
+            .thenReturn(Optional.of(new DistanceEstimationResponse(300.0, 360.0)));
         when(fleetMetricsClient.getFleetAverages())
             .thenReturn(new FleetMetricsClient.FleetAveragesResponse(new BigDecimal("15"), new BigDecimal("0.3")));
         when(solicitudRepository.save(any(Solicitud.class))).thenAnswer(invocation -> invocation.getArgument(0));

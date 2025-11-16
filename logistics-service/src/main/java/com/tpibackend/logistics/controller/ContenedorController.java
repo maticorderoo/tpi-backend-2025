@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/logistics/contenedores")
+@RequestMapping({"/logistics/containers", "/logistics/contenedores"})
 @Validated
 @Tag(name = "Contenedores", description = "Consulta de contenedores pendientes")
 @SecurityRequirement(name = "bearerAuth")
@@ -35,6 +35,8 @@ public class ContenedorController {
     public ContenedorController(ContenedorService contenedorService) {
         this.contenedorService = contenedorService;
     }
+
+    // TODO: mover este controlador y el servicio asociado a Orders; Logistics no debe ser dueño de contenedores
 
     @GetMapping("/pendientes")
     @PreAuthorize("hasRole('OPERADOR')")

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceData;
@@ -20,6 +21,7 @@ import com.tpibackend.logistics.dto.request.AsignarRutaRequest;
 import com.tpibackend.logistics.dto.request.CrearRutaRequest;
 import com.tpibackend.logistics.dto.request.DepositStopRequest;
 import com.tpibackend.logistics.dto.request.LocationPointRequest;
+import com.tpibackend.logistics.dto.response.EstimacionDistanciaResponse;
 import com.tpibackend.logistics.dto.response.RutaResponse;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.exception.NotFoundException;
@@ -150,9 +152,23 @@ public class RutaService {
         rutaRepository.save(ruta);
 
         log.info("Ruta {} asignada a la solicitud {}", ruta.getId(), request.solicitudId());
+        // TODO: Reemplazar por evento asincrónico; Logistics no debería mutar Orders vía REST directo
         ordersClient.actualizarEstado(request.solicitudId(), "PROGRAMADA");
 
         return LogisticsMapper.toRutaResponse(ruta);
+    }
+
+    public EstimacionDistanciaResponse estimarDistancia(String origen, String destino) {
+        if (!StringUtils.hasText(origen) || !StringUtils.hasText(destino)) {
+            throw new BusinessException("Se requieren origen y destino para estimar distancia");
+        }
+        try {
+            DistanceData distanceData = distanceClient.getDistance(origen.trim(), destino.trim());
+            return new EstimacionDistanciaResponse(distanceData.distanceKm(), distanceData.durationMinutes());
+        } catch (Exception ex) {
+            log.error("No fue posible calcular distancia entre {} y {}", origen, destino, ex);
+            throw new BusinessException("No se pudo calcular la distancia estimada: " + ex.getMessage());
+        }
     }
 
     public Ruta obtenerRuta(Long rutaId) {

@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tpibackend.logistics.dto.request.AsignarRutaRequest;
 import com.tpibackend.logistics.dto.request.CrearRutaRequest;
+import com.tpibackend.logistics.dto.request.EstimacionDistanciaRequest;
+import com.tpibackend.logistics.dto.response.EstimacionDistanciaResponse;
 import com.tpibackend.logistics.dto.response.RutaResponse;
 import com.tpibackend.logistics.service.RutaService;
 
@@ -29,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping({"/logistics/rutas", "/routes"})
+@RequestMapping({"/logistics/routes", "/logistics/rutas", "/routes", "/rutas"})
 @Validated
 @Tag(name = "Rutas", description = "Gestión de rutas y asignaciones")
 @SecurityRequirement(name = "bearerAuth")
@@ -74,6 +76,15 @@ public class RutaController {
         log.debug("Creando nueva ruta sugerida");
         RutaResponse response = rutaService.crearRuta(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/estimaciones/distancia")
+    @PreAuthorize("hasRole('OPERADOR')")
+    @Operation(summary = "Calcular distancia logística",
+            description = "Centraliza el uso de distance-client en Logistics. Requiere rol OPERADOR.")
+    public ResponseEntity<EstimacionDistanciaResponse> estimarDistancia(
+            @Valid @RequestBody EstimacionDistanciaRequest request) {
+        return ResponseEntity.ok(rutaService.estimarDistancia(request.origen(), request.destino()));
     }
 
     @PostMapping("/{rutaId}/asignar")
