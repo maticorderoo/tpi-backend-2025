@@ -9,6 +9,7 @@ import lombok.Value;
 @Builder
 public class ContenedorResponseDto {
     Long id;
+    String codigo;
     BigDecimal peso;
     BigDecimal volumen;
     ContenedorEstado estado;

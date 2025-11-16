@@ -30,6 +30,9 @@ public class Contenedor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 50, unique = true)
+    private String codigo;
+
     @Column(nullable = false)
     private BigDecimal peso;
 

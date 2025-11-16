@@ -62,7 +62,7 @@ public class SolicitudController {
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudCreada",
                                             summary = "Solicitud creada correctamente",
-                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"eventos\": [],\n  \"rutaResumen\": null\n}"))),
+                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"BORRADOR\"\n  },\n  \"eventos\": [],\n  \"rutaResumen\": null\n}"))),
                     @ApiResponse(responseCode = "400", description = "Datos inv\u00e1lidos"),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -88,7 +88,7 @@ public class SolicitudController {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudDetalle",
-                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"eventos\": [\n    {\n      \"estado\": \"PROGRAMADA\",\n      \"fechaEvento\": \"2025-11-16T15:00:00Z\",\n      \"descripcion\": \"Solicitud programada\"\n    },\n    {\n      \"estado\": \"COMPLETADA\",\n      \"fechaEvento\": \"2025-11-17T03:00:00Z\",\n      \"descripcion\": \"Entrega completada\"\n    }\n  ],\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
+                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"PROGRAMADA\"\n  },\n  \"eventos\": [\n    {\n      \"estado\": \"PROGRAMADA\",\n      \"fechaEvento\": \"2025-11-16T15:00:00Z\",\n      \"descripcion\": \"Solicitud programada\"\n    },\n    {\n      \"estado\": \"COMPLETADA\",\n      \"fechaEvento\": \"2025-11-17T03:00:00Z\",\n      \"descripcion\": \"Entrega completada\"\n    }\n  ],\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     examples = @ExampleObject(name = "unauthorized",
@@ -197,7 +197,11 @@ public class SolicitudController {
         responses = {
             @ApiResponse(responseCode = "200", description = "Estado actualizado exitosamente",
                 content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = ContenedorResponseDto.class))),
+                    schema = @Schema(implementation = ContenedorResponseDto.class),
+                    examples = @ExampleObject(
+                        name = "contenedorActualizado",
+                        value = "{\n  \"id\": 9,\n  \"codigo\": \"CONT-0009\",\n  \"peso\": 1200.5,\n  \"volumen\": 28.4,\n  \"estado\": \"EN_VIAJE\"\n}"
+                    ))),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
             @ApiResponse(responseCode = "403", description = "Acceso prohibido - Se requiere rol OPERADOR"),
             @ApiResponse(responseCode = "404", description = "Solicitud o contenedor no encontrado")
@@ -210,4 +214,3 @@ public class SolicitudController {
         return ResponseEntity.ok(contenedorService.actualizarEstadoManual(id, request));
     }
 }
-

@@ -9,6 +9,8 @@ public class ContenedorRequestDto {
 
     private Long id;
 
+    private String codigo;
+
     private BigDecimal peso;
 
     private BigDecimal volumen;

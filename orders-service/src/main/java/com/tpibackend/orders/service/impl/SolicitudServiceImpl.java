@@ -89,7 +89,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Transactional
     public SolicitudResponseDto crearSolicitud(SolicitudCreateRequest request) {
         Cliente cliente = resolverCliente(request);
-        Contenedor contenedor = resolverContenedor(request, cliente);
+        Contenedor contenedor = resolverContenedorPorNegocio(request, cliente);
 
         solicitudRepository.findByContenedorId(contenedor.getId())
             .flatMap(this::obtenerEstadoActual)
@@ -352,8 +352,40 @@ public class SolicitudServiceImpl implements SolicitudService {
         return StringUtils.hasText(preferido) ? preferido : alternativo;
     }
 
+    private Contenedor resolverContenedorPorNegocio(SolicitudCreateRequest request, Cliente cliente) {
+        var contenedorRequest = request.getContenedor();
+
+        if (contenedorRequest.getId() != null) {
+            return resolverContenedor(request, cliente);
+        }
+
+        if (StringUtils.hasText(contenedorRequest.getCodigo())) {
+            Optional<Contenedor> existente = contenedorRepository
+                .findByCodigoAndClienteId(contenedorRequest.getCodigo(), cliente.getId());
+            if (existente.isPresent()) {
+                return existente.get();
+            }
+        }
+
+        validarNuevoContenedor(request);
+        Contenedor contenedor = new Contenedor();
+        contenedor.setCliente(cliente);
+        contenedor.setCodigo(generarCodigoContenedor(contenedorRequest, cliente));
+        // No seteamos el estado aqui, lo hara EstadoService
+        contenedor.setPeso(contenedorRequest.getPeso());
+        contenedor.setVolumen(contenedorRequest.getVolumen());
+        return contenedorRepository.save(contenedor);
+    }
+
     private BigDecimal nvl(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private String generarCodigoContenedor(com.tpibackend.orders.dto.request.ContenedorRequestDto contenedorRequest, Cliente cliente) {
+        if (StringUtils.hasText(contenedorRequest.getCodigo())) {
+            return contenedorRequest.getCodigo().trim();
+        }
+        return String.format("CONT-%d-%d", cliente.getId(), System.currentTimeMillis());
     }
 
     private String obtenerUsuarioActual() {
