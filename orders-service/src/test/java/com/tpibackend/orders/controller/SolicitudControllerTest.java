@@ -15,13 +15,10 @@ import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.response.ClienteResponseDto;
 import com.tpibackend.orders.dto.response.ContenedorResponseDto;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
-import com.tpibackend.orders.dto.response.SolicitudEventoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
-import com.tpibackend.orders.model.enums.SolicitudEstado;
+import com.tpibackend.orders.model.enums.ContenedorEstado;
 import com.tpibackend.orders.service.SolicitudService;
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -49,10 +46,8 @@ class SolicitudControllerTest {
     void crearSolicitud_debeRetornar201() throws Exception {
         SolicitudResponseDto responseDto = SolicitudResponseDto.builder()
             .id(1L)
-            .estado(SolicitudEstado.BORRADOR)
             .cliente(ClienteResponseDto.builder().id(1L).nombre("Juan").email("juan@test.com").build())
-            .contenedor(ContenedorResponseDto.builder().id(2L).estado(com.tpibackend.orders.model.enums.ContenedorEstado.BORRADOR).build())
-            .eventos(List.of())
+            .contenedor(ContenedorResponseDto.builder().id(2L).estado(ContenedorEstado.BORRADOR).build())
             .build();
         when(solicitudService.crearSolicitud(any())).thenReturn(responseDto);
 
@@ -66,7 +61,7 @@ class SolicitudControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.estado").value("BORRADOR"));
+            .andExpect(jsonPath("$.contenedor.estado").value("BORRADOR"));
 
         verify(solicitudService).crearSolicitud(any());
     }
@@ -76,12 +71,7 @@ class SolicitudControllerTest {
         SeguimientoResponseDto seguimiento = SeguimientoResponseDto.builder()
             .contenedorId(2L)
             .solicitudId(10L)
-            .estadoActual(SolicitudEstado.PROGRAMADA)
-            .eventos(List.of(SolicitudEventoResponseDto.builder()
-                .estado(SolicitudEstado.PROGRAMADA)
-                .fechaEvento(OffsetDateTime.now())
-                .descripcion("Programada")
-                .build()))
+            .estadoContenedor(ContenedorEstado.PROGRAMADA)
             .build();
         when(solicitudService.obtenerSeguimientoPorContenedor(2L)).thenReturn(seguimiento);
 
@@ -89,17 +79,15 @@ class SolicitudControllerTest {
                 .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.estadoActual").value("PROGRAMADA"));
+            .andExpect(jsonPath("$.estadoContenedor").value("PROGRAMADA"));
     }
 
     @Test
     void calcularEstimacion_requiereRolOperador() throws Exception {
         SolicitudResponseDto response = SolicitudResponseDto.builder()
             .id(10L)
-            .estado(SolicitudEstado.BORRADOR)
             .costoEstimado(new BigDecimal("100.00"))
             .tiempoEstimadoMinutos(120L)
-            .eventos(List.of())
             .build();
         when(solicitudService.calcularEstimacion(eq(10L), any())).thenReturn(response);
 

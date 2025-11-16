@@ -4,7 +4,6 @@ import com.tpibackend.orders.dto.request.ContenedorEstadoUpdateRequest;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
-import com.tpibackend.orders.dto.request.SolicitudEstadoUpdateRequest;
 import com.tpibackend.orders.dto.response.ContenedorResponseDto;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
@@ -62,7 +61,7 @@ public class SolicitudController {
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudCreada",
                                             summary = "Solicitud creada correctamente",
-                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"BORRADOR\"\n  },\n  \"eventos\": [],\n  \"rutaResumen\": null\n}"))),
+                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"BORRADOR\"\n  },\n  \"rutaResumen\": null\n}"))),
                     @ApiResponse(responseCode = "400", description = "Datos inv\u00e1lidos"),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -88,7 +87,7 @@ public class SolicitudController {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudDetalle",
-                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"PROGRAMADA\"\n  },\n  \"eventos\": [\n    {\n      \"estado\": \"PROGRAMADA\",\n      \"fechaEvento\": \"2025-11-16T15:00:00Z\",\n      \"descripcion\": \"Solicitud programada\"\n    },\n    {\n      \"estado\": \"COMPLETADA\",\n      \"fechaEvento\": \"2025-11-17T03:00:00Z\",\n      \"descripcion\": \"Entrega completada\"\n    }\n  ],\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
+                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"PROGRAMADA\"\n  },\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     examples = @ExampleObject(name = "unauthorized",
@@ -106,13 +105,13 @@ public class SolicitudController {
     @GetMapping("/{id}/tracking")
     @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
     @Operation(summary = "Obtener seguimiento de una solicitud por contenedor",
-            description = "Devuelve el estado y eventos asociados a una solicitud por contenedor. Requiere rol CLIENTE u OPERADOR.",
+            description = "Devuelve el estado del contenedor y la ruta asociada a una solicitud. Requiere rol CLIENTE u OPERADOR.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Seguimiento recuperado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SeguimientoResponseDto.class),
                                     examples = @ExampleObject(name = "seguimiento",
-                                            value = "{\n  \"contenedorId\": 9,\n  \"estadoActual\": \"EN_TRANSITO\",\n  \"eventos\": [\n    {\n      \"estado\": \"PROGRAMADA\",\n      \"descripcion\": \"Solicitud programada\"\n    },\n    {\n      \"estado\": \"EN_TRANSITO\",\n      \"descripcion\": \"Camión asignado y en curso\"\n    }\n  ]\n}"))),
+                                            value = "{\n  \"contenedorId\": 9,\n  \"solicitudId\": 42,\n  \"estadoContenedor\": \"EN_TRANSITO\",\n  \"ruta\": {\n    \"id\": 21,\n    \"cantTramos\": 3,\n    \"costoTotalAprox\": 180000\n  }\n}"))),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     examples = @ExampleObject(name = "unauthorized",

@@ -157,7 +157,7 @@ POST /api/orders/{{solicitud_id}}/estimacion
 ```
 GET /api/orders/{{solicitud_id}}/tracking
 ```
-- Debe mostrar historial cronológico de eventos
+- Debe mostrar el estado actual del contenedor y la información principal de la ruta
 - Estados: BORRADOR → PROGRAMADA → EN_RETIRO → EN_VIAJE → EN_DEPOSITO → ENTREGADO
 
 ### 5. Seguridad por Roles

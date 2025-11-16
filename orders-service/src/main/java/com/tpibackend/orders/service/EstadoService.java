@@ -7,11 +7,10 @@ import java.time.OffsetDateTime;
 import org.springframework.stereotype.Service;
 
 /**
- * Servicio para gestionar las transiciones de estado de Contenedor y Solicitud.
- * Implementa reglas de negocio para derivar estados automáticamente según eventos.
+ * Servicio para gestionar las transiciones de estado del contenedor asociado a una solicitud.
+ * Implementa reglas de negocio para derivar estados automáticamente según los eventos logísticos.
  *
- * Nota: el estado de la solicitud se modela a través de SolicitudEvento y no mediante
- * un campo de estado en la entidad Solicitud.
+ * Nota: el estado expuesto de la solicitud se deriva del estado del contenedor; no existe historial propio.
  */
 @Service
 public class EstadoService {

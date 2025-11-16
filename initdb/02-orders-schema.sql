@@ -44,17 +44,6 @@ CREATE TABLE solicitudes (
   updated_by              varchar(100)
 );
 
--- Tabla: SolicitudEvento
--- Historial de cambios de estado de las solicitudes
-CREATE TABLE solicitud_eventos (
-  id            bigserial PRIMARY KEY,
-  solicitud_id  bigint NOT NULL REFERENCES solicitudes(id),
-  estado        varchar(30) NOT NULL,
-  fecha_evento  timestamptz NOT NULL,
-  descripcion   varchar(255)
-);
-
 CREATE INDEX ix_contenedores_cliente ON contenedores(cliente_id);
 CREATE INDEX ix_solicitudes_cliente ON solicitudes(cliente_id);
 CREATE INDEX ix_solicitudes_contenedor ON solicitudes(contenedor_id);
-CREATE INDEX ix_solicitud_eventos_solicitud ON solicitud_eventos(solicitud_id);

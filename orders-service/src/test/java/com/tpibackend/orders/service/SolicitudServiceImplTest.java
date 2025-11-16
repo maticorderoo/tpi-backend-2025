@@ -3,7 +3,6 @@ package com.tpibackend.orders.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -21,7 +20,6 @@ import com.tpibackend.orders.model.Cliente;
 import com.tpibackend.orders.model.Contenedor;
 import com.tpibackend.orders.model.Solicitud;
 import com.tpibackend.orders.model.enums.ContenedorEstado;
-import com.tpibackend.orders.model.enums.SolicitudEstado;
 import com.tpibackend.orders.repository.ClienteRepository;
 import com.tpibackend.orders.repository.ContenedorRepository;
 import com.tpibackend.orders.repository.SolicitudRepository;
@@ -102,7 +100,7 @@ class SolicitudServiceImplTest {
 
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clientePersistido);
         when(contenedorRepository.save(any(Contenedor.class))).thenReturn(contenedorPersistido);
-        when(solicitudRepository.existsByContenedorIdAndEstadoIn(eq(2L), anyCollection())).thenReturn(false);
+        when(solicitudRepository.findByContenedorId(eq(2L))).thenReturn(Optional.empty());
         when(solicitudRepository.save(any(Solicitud.class))).thenAnswer(invocation -> {
             Solicitud solicitud = invocation.getArgument(0);
             solicitud.setId(5L);
@@ -112,19 +110,15 @@ class SolicitudServiceImplTest {
         SolicitudResponseDto response = solicitudService.crearSolicitud(request);
 
         assertThat(response.getId()).isEqualTo(5L);
-        assertThat(response.getEstado()).isEqualTo(SolicitudEstado.BORRADOR);
         assertThat(response.getCliente().getId()).isEqualTo(1L);
         assertThat(response.getContenedor().getId()).isEqualTo(2L);
-        assertThat(response.getEventos()).hasSize(1);
+        assertThat(response.getContenedor().getEstado()).isEqualTo(ContenedorEstado.BORRADOR);
     }
 
     @Test
     void calcularEstimacion_debeActualizarCostoYTiempo() {
         Solicitud solicitud = new Solicitud();
         solicitud.setId(10L);
-        solicitud.setEstado(SolicitudEstado.BORRADOR);
-        solicitud.setOrigen("Buenos Aires");
-        solicitud.setDestino("Rosario");
         solicitud.setCliente(new Cliente());
         solicitud.setContenedor(new Contenedor());
 
@@ -138,6 +132,8 @@ class SolicitudServiceImplTest {
         EstimacionRequest request = new EstimacionRequest();
         request.setPrecioCombustible(new BigDecimal("2"));
         request.setEstadiaEstimada(new BigDecimal("100"));
+        request.setOrigen("Buenos Aires");
+        request.setDestino("Rosario");
 
         SolicitudResponseDto response = solicitudService.calcularEstimacion(10L, request);
 
@@ -146,14 +142,12 @@ class SolicitudServiceImplTest {
             .add(new BigDecimal("100"));
         assertThat(response.getCostoEstimado()).isEqualByComparingTo(costoEsperado.setScale(2));
         assertThat(response.getTiempoEstimadoMinutos()).isEqualTo(360L);
-        assertThat(response.getEventos()).isNotEmpty();
     }
 
     @Test
     void calcularEstimacion_sinOrigenODestino_debeFallar() {
         Solicitud solicitud = new Solicitud();
         solicitud.setId(10L);
-        solicitud.setEstado(SolicitudEstado.BORRADOR);
         solicitud.setCliente(new Cliente());
         solicitud.setContenedor(new Contenedor());
         when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));

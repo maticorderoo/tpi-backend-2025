@@ -6,9 +6,7 @@ import com.tpibackend.orders.dto.response.DistanceEstimationResponse;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
-import com.tpibackend.orders.dto.request.SolicitudEstadoUpdateRequest;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
-import com.tpibackend.orders.dto.response.SolicitudEventoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
 import com.tpibackend.orders.dto.response.RutaResumenDto;
 import com.tpibackend.orders.exception.OrdersNotFoundException;
@@ -17,8 +15,7 @@ import com.tpibackend.orders.mapper.SolicitudMapper;
 import com.tpibackend.orders.model.Cliente;
 import com.tpibackend.orders.model.Contenedor;
 import com.tpibackend.orders.model.Solicitud;
-import com.tpibackend.orders.model.enums.SolicitudEstado;
-import com.tpibackend.orders.model.history.SolicitudEvento;
+import com.tpibackend.orders.model.enums.ContenedorEstado;
 import com.tpibackend.orders.repository.ClienteRepository;
 import com.tpibackend.orders.repository.ContenedorRepository;
 import com.tpibackend.orders.repository.SolicitudRepository;
@@ -29,11 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,14 +38,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class SolicitudServiceImpl implements SolicitudService {
 
     private static final Logger log = LoggerFactory.getLogger(SolicitudServiceImpl.class);
-    private static final EnumSet<SolicitudEstado> ESTADOS_ACTIVOS = EnumSet.of(
-        SolicitudEstado.BORRADOR, SolicitudEstado.PROGRAMADA
-    );
-    private static final Map<SolicitudEstado, Set<SolicitudEstado>> TRANSICIONES_VALIDAS = Map.of(
-        SolicitudEstado.BORRADOR, EnumSet.of(SolicitudEstado.PROGRAMADA),
-        SolicitudEstado.PROGRAMADA, EnumSet.of(SolicitudEstado.COMPLETADA),
-        SolicitudEstado.COMPLETADA, EnumSet.noneOf(SolicitudEstado.class),
-        SolicitudEstado.CANCELADA, EnumSet.noneOf(SolicitudEstado.class)
+    private static final EnumSet<ContenedorEstado> CONTENEDOR_ESTADOS_CERRADOS = EnumSet.of(
+            ContenedorEstado.ENTREGADO,
+            ContenedorEstado.CANCELADO
     );
 
     private final ClienteRepository clienteRepository;
@@ -88,9 +76,8 @@ public class SolicitudServiceImpl implements SolicitudService {
         Contenedor contenedor = resolverContenedorPorNegocio(request, cliente);
 
         solicitudRepository.findByContenedorId(contenedor.getId())
-            .flatMap(this::obtenerEstadoActual)
-            .filter(estado -> ESTADOS_ACTIVOS.contains(estado))
-            .ifPresent(estado -> {
+            .filter(this::esSolicitudActiva)
+            .ifPresent(existing -> {
                 throw new OrdersValidationException("El contenedor ya posee una solicitud activa");
             });
 
@@ -103,12 +90,6 @@ public class SolicitudServiceImpl implements SolicitudService {
         // Inicializar estados automáticamente
         String usuario = obtenerUsuarioActual();
         estadoService.inicializarEstados(contenedor, solicitud, usuario);
-
-        SolicitudEvento evento = new SolicitudEvento();
-        evento.setEstado(SolicitudEstado.BORRADOR);
-        evento.setFechaEvento(OffsetDateTime.now());
-        evento.setDescripcion("Solicitud creada en estado BORRADOR");
-        solicitud.agregarEvento(evento);
 
         Solicitud guardada = solicitudRepository.save(solicitud);
         contenedor.setSolicitudActiva(guardada);
@@ -129,15 +110,17 @@ public class SolicitudServiceImpl implements SolicitudService {
     public SeguimientoResponseDto obtenerSeguimientoPorContenedor(Long contenedorId) {
         Solicitud solicitud = solicitudRepository.findByContenedorId(contenedorId)
             .orElseThrow(() -> new OrdersNotFoundException("No existe solicitud asociada al contenedor"));
-        List<SolicitudEventoResponseDto> eventos = solicitudMapper.toDto(solicitud).getEventos();
-        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud)
+        ContenedorEstado estadoContenedor = Optional.ofNullable(solicitud.getContenedor())
+            .map(Contenedor::getEstado)
             .orElse(null);
+        Optional<RutaResumenDto> ruta = logisticsClient.obtenerRutaPorSolicitud(solicitud.getId());
+        // TODO: ampliar seguimiento con informacion de tramos/logistica cuando se definan los eventos compartidos.
 
         return SeguimientoResponseDto.builder()
             .contenedorId(contenedorId)
             .solicitudId(solicitud.getId())
-            .estadoActual(estadoActual)
-            .eventos(eventos)
+            .estadoContenedor(estadoContenedor)
+            .ruta(ruta.orElse(null))
             .build();
     }
 
@@ -174,52 +157,9 @@ public class SolicitudServiceImpl implements SolicitudService {
         solicitud.setCostoEstimado(costoEstimado);
         solicitud.setTiempoEstimadoMinutos(Math.round(distanceData.duracionMinutos()));
 
-        SolicitudEvento evento = new SolicitudEvento();
-        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud).orElse(null);
-        evento.setEstado(estadoActual);
-        evento.setFechaEvento(OffsetDateTime.now());
-        evento.setDescripcion("Estimación calculada para la solicitud");
-        solicitud.agregarEvento(evento);
-
         Solicitud actualizada = solicitudRepository.save(solicitud);
         log.info("Estimación actualizada para la solicitud {}", solicitudId);
         return mapToResponse(actualizada);
-    }
-
-    @Override
-    @Transactional
-    public SolicitudResponseDto actualizarEstado(Long solicitudId, SolicitudEstadoUpdateRequest request) {
-        Solicitud solicitud = solicitudRepository.findById(solicitudId)
-            .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
-
-        SolicitudEstado nuevoEstado = parseEstado(request.estado());
-        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud)
-            .orElse(null);
-
-        if (estadoActual == nuevoEstado) {
-            return mapToResponse(solicitud);
-        }
-
-        Set<SolicitudEstado> permitidos = TRANSICIONES_VALIDAS.getOrDefault(
-            estadoActual, EnumSet.noneOf(SolicitudEstado.class)
-        );
-        if (!permitidos.contains(nuevoEstado)) {
-            throw new OrdersValidationException(
-                String.format("No es posible pasar de %s a %s", estadoActual, nuevoEstado));
-        }
-
-        SolicitudEvento evento = new SolicitudEvento();
-        evento.setEstado(nuevoEstado);
-        evento.setFechaEvento(OffsetDateTime.now());
-        String descripcion = StringUtils.hasText(request.descripcion())
-            ? request.descripcion()
-            : "Estado actualizado a " + nuevoEstado;
-        evento.setDescripcion(descripcion);
-        solicitud.agregarEvento(evento);
-
-        Solicitud guardada = solicitudRepository.save(solicitud);
-        log.info("Solicitud {} actualizada al estado {}", solicitudId, nuevoEstado);
-        return mapToResponse(guardada);
     }
 
     @Override
@@ -232,13 +172,6 @@ public class SolicitudServiceImpl implements SolicitudService {
         if (request.tiempoRealMinutos() != null) {
             solicitud.setTiempoRealMinutos(request.tiempoRealMinutos());
         }
-
-        SolicitudEvento evento = new SolicitudEvento();
-        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud).orElse(null);
-        evento.setEstado(estadoActual);
-        evento.setFechaEvento(OffsetDateTime.now());
-        evento.setDescripcion("Costo final actualizado a " + request.costoFinal());
-        solicitud.agregarEvento(evento);
 
         Solicitud guardada = solicitudRepository.save(solicitud);
         log.info("Solicitud {} actualizada con costo final {}", solicitudId, request.costoFinal());
@@ -299,23 +232,10 @@ public class SolicitudServiceImpl implements SolicitudService {
         return ruta.map(resumen -> base.toBuilder().rutaResumen(resumen).build()).orElse(base);
     }
 
-    private Optional<SolicitudEstado> obtenerEstadoActual(Solicitud solicitud) {
-        List<SolicitudEvento> eventos = solicitud.getEventos();
-        if (eventos == null || eventos.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(eventos.get(eventos.size() - 1).getEstado());
-    }
-
-    private SolicitudEstado parseEstado(String estado) {
-        if (!StringUtils.hasText(estado)) {
-            throw new OrdersValidationException("El estado es obligatorio");
-        }
-        try {
-            return SolicitudEstado.valueOf(estado.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ex) {
-            throw new OrdersValidationException("Estado inválido: " + estado);
-        }
+    private boolean esSolicitudActiva(Solicitud solicitud) {
+        Contenedor contenedor = solicitud.getContenedor();
+        ContenedorEstado estado = contenedor != null ? contenedor.getEstado() : null;
+        return estado == null || !CONTENEDOR_ESTADOS_CERRADOS.contains(estado);
     }
 
     private void validarNuevoContenedor(SolicitudCreateRequest request) {

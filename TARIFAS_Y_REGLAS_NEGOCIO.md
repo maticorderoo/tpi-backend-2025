@@ -106,12 +106,11 @@ El tiempo estimado se calcula en base a:
 
 ## Seguimiento Cronológico
 
-Los eventos de seguimiento se almacenan en la tabla `solicitud_eventos` con:
-- `estado`: Estado del contenedor en ese momento
-- `fecha_evento`: Timestamp del cambio
-- `descripcion`: Descripción del evento
+El seguimiento se deriva del estado actual del contenedor (Orders) y de los tramos registrados en Logistics. No existe una tabla dedicada a eventos; la API de seguimiento combina:
+- `estadoContenedor`: valor vigente del enum `ContenedorEstado`.
+- `ruta`: resumen devuelto por Logistics con tramos, fechas estimadas y reales.
 
-Los eventos se ordenan cronológicamente por `fecha_evento ASC` al consultar el seguimiento.
+Al consultar `/orders/{id}/tracking`, Orders consulta a Logistics y arma la respuesta mostrando el estado del contenedor y la información relevante de la ruta.
 
 ## Fechas Estimadas y Reales en Tramos
 
