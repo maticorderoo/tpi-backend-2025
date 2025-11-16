@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/orders")
 @Validated
-@Tag(name = "Solicitudes", description = "Gestión de solicitudes de transporte")
+@Tag(name = "Solicitudes", description = "Gesti\u00f3n de solicitudes de transporte")
 @SecurityRequirement(name = "bearerAuth")
 public class SolicitudController {
 
@@ -46,7 +46,7 @@ public class SolicitudController {
         this.contenedorService = contenedorService;
     }
 
-        @PostMapping
+    @PostMapping
     @PreAuthorize("hasRole('CLIENTE')")
     @Operation(
             summary = "Crear una nueva solicitud",
@@ -54,16 +54,16 @@ public class SolicitudController {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = SolicitudCreateRequest.class),
                     examples = @ExampleObject(name = "crearSolicitud",
-                            summary = "Solicitud de traslado básica",
-                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"Córdoba\",\n  \"estadiaEstimada\": 2.5\n}"))),
+                            summary = "Solicitud de traslado b\u00e1sica",
+                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"C\u00f3rdoba\",\n  \"estadiaEstimada\": 2.5\n}"))),
             responses = {
                     @ApiResponse(responseCode = "201", description = "Solicitud creada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudCreada",
                                             summary = "Solicitud creada correctamente",
-                                            value = "{\n  \"id\": 42,\n  \"estado\": \"PROGRAMADA\",\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"Córdoba\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"eventos\": []\n}"))),
-                    @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"eventos\": [],\n  \"rutaResumen\": null\n}"))),
+                    @ApiResponse(responseCode = "400", description = "Datos inv\u00e1lidos"),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     examples = @ExampleObject(name = "unauthorized",
@@ -79,7 +79,7 @@ public class SolicitudController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-        @GetMapping("/{id}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
     @Operation(summary = "Obtener detalle de la solicitud",
             description = "Recupera el detalle de una solicitud existente. Requiere rol CLIENTE u OPERADOR.",
@@ -88,7 +88,7 @@ public class SolicitudController {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudDetalle",
-                                            value = "{\n  \"id\": 42,\n  \"estado\": \"EN_TRANSITO\",\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
+                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"eventos\": [\n    {\n      \"estado\": \"PROGRAMADA\",\n      \"fechaEvento\": \"2025-11-16T15:00:00Z\",\n      \"descripcion\": \"Solicitud programada\"\n    },\n    {\n      \"estado\": \"COMPLETADA\",\n      \"fechaEvento\": \"2025-11-17T03:00:00Z\",\n      \"descripcion\": \"Entrega completada\"\n    }\n  ],\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     examples = @ExampleObject(name = "unauthorized",
@@ -103,7 +103,7 @@ public class SolicitudController {
         return ResponseEntity.ok(solicitudService.obtenerSolicitud(id));
     }
 
-        @GetMapping("/{id}/tracking")
+    @GetMapping("/{id}/tracking")
     @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
     @Operation(summary = "Obtener seguimiento de una solicitud por contenedor",
             description = "Devuelve el estado y eventos asociados a una solicitud por contenedor. Requiere rol CLIENTE u OPERADOR.",
@@ -123,11 +123,11 @@ public class SolicitudController {
                                             value = "{\"error\":\"forbidden\"}"))),
                     @ApiResponse(responseCode = "404", description = "Contenedor no encontrado")
             })
-        public ResponseEntity<SeguimientoResponseDto> obtenerSeguimiento(@PathVariable("id") Long id) {
-                return ResponseEntity.ok(solicitudService.obtenerSeguimientoPorContenedor(id));
-        }
+    public ResponseEntity<SeguimientoResponseDto> obtenerSeguimiento(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(solicitudService.obtenerSeguimientoPorContenedor(id));
+    }
 
-        @PostMapping("/{id}/estimacion")
+    @PostMapping("/{id}/estimacion")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(
             summary = "Calcular estimación de costo y tiempo",
@@ -210,3 +210,4 @@ public class SolicitudController {
         return ResponseEntity.ok(contenedorService.actualizarEstadoManual(id, request));
     }
 }
+

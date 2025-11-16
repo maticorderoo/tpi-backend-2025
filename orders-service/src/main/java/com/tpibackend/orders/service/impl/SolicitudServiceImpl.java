@@ -91,16 +91,17 @@ public class SolicitudServiceImpl implements SolicitudService {
         Cliente cliente = resolverCliente(request);
         Contenedor contenedor = resolverContenedor(request, cliente);
 
-        if (solicitudRepository.existsByContenedorIdAndEstadoIn(contenedor.getId(), ESTADOS_ACTIVOS)) {
-            throw new OrdersValidationException("El contenedor ya posee una solicitud activa");
-        }
+        solicitudRepository.findByContenedorId(contenedor.getId())
+            .flatMap(this::obtenerEstadoActual)
+            .filter(estado -> ESTADOS_ACTIVOS.contains(estado))
+            .ifPresent(estado -> {
+                throw new OrdersValidationException("El contenedor ya posee una solicitud activa");
+            });
 
         Solicitud solicitud = new Solicitud();
         solicitud.setCliente(cliente);
         solicitud.setContenedor(contenedor);
         solicitud.setEstadiaEstimada(request.getEstadiaEstimada());
-        solicitud.setOrigen(request.getOrigen());
-        solicitud.setDestino(request.getDestino());
         solicitud.setFechaCreacion(OffsetDateTime.now());
 
         // Inicializar estados automáticamente
@@ -133,10 +134,13 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud solicitud = solicitudRepository.findByContenedorId(contenedorId)
             .orElseThrow(() -> new OrdersNotFoundException("No existe solicitud asociada al contenedor"));
         List<SolicitudEventoResponseDto> eventos = solicitudMapper.toDto(solicitud).getEventos();
+        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud)
+            .orElse(null);
+
         return SeguimientoResponseDto.builder()
             .contenedorId(contenedorId)
             .solicitudId(solicitud.getId())
-            .estadoActual(solicitud.getEstado())
+            .estadoActual(estadoActual)
             .eventos(eventos)
             .build();
     }
@@ -147,14 +151,12 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
             .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
 
-        String origen = seleccionarValorNoVacio(request.getOrigen(), solicitud.getOrigen());
-        String destino = seleccionarValorNoVacio(request.getDestino(), solicitud.getDestino());
+        String origen = request.getOrigen();
+        String destino = request.getDestino();
         if (isAnyBlank(origen, destino)) {
             throw new OrdersValidationException("Es necesario indicar origen y destino para calcular la estimación");
         }
 
-        solicitud.setOrigen(origen);
-        solicitud.setDestino(destino);
         solicitud.setEstadiaEstimada(request.getEstadiaEstimada());
 
         DistanceData distanceData;
@@ -181,7 +183,8 @@ public class SolicitudServiceImpl implements SolicitudService {
         solicitud.setTiempoEstimadoMinutos(Math.round(distanceData.durationMinutes()));
 
         SolicitudEvento evento = new SolicitudEvento();
-        evento.setEstado(solicitud.getEstado());
+        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud).orElse(null);
+        evento.setEstado(estadoActual);
         evento.setFechaEvento(OffsetDateTime.now());
         evento.setDescripcion("Estimación calculada para la solicitud");
         solicitud.agregarEvento(evento);
@@ -198,7 +201,8 @@ public class SolicitudServiceImpl implements SolicitudService {
             .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
 
         SolicitudEstado nuevoEstado = parseEstado(request.estado());
-        SolicitudEstado estadoActual = solicitud.getEstado();
+        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud)
+            .orElse(null);
 
         if (estadoActual == nuevoEstado) {
             return mapToResponse(solicitud);
@@ -212,7 +216,6 @@ public class SolicitudServiceImpl implements SolicitudService {
                 String.format("No es posible pasar de %s a %s", estadoActual, nuevoEstado));
         }
 
-        solicitud.setEstado(nuevoEstado);
         SolicitudEvento evento = new SolicitudEvento();
         evento.setEstado(nuevoEstado);
         evento.setFechaEvento(OffsetDateTime.now());
@@ -239,7 +242,8 @@ public class SolicitudServiceImpl implements SolicitudService {
         }
 
         SolicitudEvento evento = new SolicitudEvento();
-        evento.setEstado(solicitud.getEstado());
+        SolicitudEstado estadoActual = obtenerEstadoActual(solicitud).orElse(null);
+        evento.setEstado(estadoActual);
         evento.setFechaEvento(OffsetDateTime.now());
         evento.setDescripcion("Costo final actualizado a " + request.costoFinal());
         solicitud.agregarEvento(evento);
@@ -301,6 +305,14 @@ public class SolicitudServiceImpl implements SolicitudService {
         SolicitudResponseDto base = solicitudMapper.toDto(solicitud);
         Optional<RutaResumenDto> ruta = logisticsClient.obtenerRutaPorSolicitud(solicitud.getId());
         return ruta.map(resumen -> base.toBuilder().rutaResumen(resumen).build()).orElse(base);
+    }
+
+    private Optional<SolicitudEstado> obtenerEstadoActual(Solicitud solicitud) {
+        List<SolicitudEvento> eventos = solicitud.getEventos();
+        if (eventos == null || eventos.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(eventos.get(eventos.size() - 1).getEstado());
     }
 
     private SolicitudEstado parseEstado(String estado) {

@@ -1,12 +1,9 @@
 package com.tpibackend.orders.model;
 
-import com.tpibackend.orders.model.enums.SolicitudEstado;
 import com.tpibackend.orders.model.history.SolicitudEvento;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -44,10 +41,6 @@ public class Solicitud {
     @JoinColumn(name = "contenedor_id", nullable = false, unique = true)
     private Contenedor contenedor;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private SolicitudEstado estado;
-
     private BigDecimal costoEstimado;
 
     private Long tiempoEstimadoMinutos;
@@ -57,24 +50,6 @@ public class Solicitud {
     private Long tiempoRealMinutos;
 
     private BigDecimal estadiaEstimada;
-
-    @Column(length = 255)
-    private String origen;
-
-    @Column(name = "origen_lat")
-    private Double origenLat;
-
-    @Column(name = "origen_lng")
-    private Double origenLng;
-
-    @Column(length = 255)
-    private String destino;
-
-    @Column(name = "destino_lat")
-    private Double destinoLat;
-
-    @Column(name = "destino_lng")
-    private Double destinoLng;
 
     @Column(nullable = false)
     private OffsetDateTime fechaCreacion;
