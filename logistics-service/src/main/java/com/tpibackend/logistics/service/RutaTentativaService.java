@@ -71,8 +71,10 @@ public class RutaTentativaService {
         SolicitudLogisticaResponse solicitud = ordersClient.obtenerSolicitud(solicitudId)
                 .orElseThrow(() -> new NotFoundException("Solicitud " + solicitudId + " no encontrada"));
 
-        LocationNode origen = LocationNode.fromSolicitud(LocationType.ORIGEN_SOLICITUD, solicitud.id(), solicitud.origen());
-        LocationNode destino = LocationNode.fromSolicitud(LocationType.DESTINO_SOLICITUD, solicitud.id(), solicitud.destino());
+        LocationNode origen = LocationNode.fromSolicitud(LocationType.ORIGEN_SOLICITUD, solicitud.id(),
+                solicitud.origen());
+        LocationNode destino = LocationNode.fromSolicitud(LocationType.DESTINO_SOLICITUD, solicitud.id(),
+                solicitud.destino());
 
         List<LocationNode> depositos = depositoRepository.findAll().stream()
                 .map(LocationNode::fromDeposito)
@@ -97,7 +99,8 @@ public class RutaTentativaService {
             }
         }
 
-        // aplicar orden y límite ANTES de persistir: primero por costoTotalAprox asc, luego por tiempoEstimadoMinutos asc
+        // aplicar orden y límite ANTES de persistir: primero por costoTotalAprox asc,
+        // luego por tiempoEstimadoMinutos asc
         List<RutaTentativa> aPersistir = rutas.stream()
                 .sorted(Comparator.comparing(RutaTentativa::getCostoTotalAprox)
                         .thenComparing(RutaTentativa::getTiempoEstimadoMinutos))
@@ -137,9 +140,11 @@ public class RutaTentativaService {
             LocationNode destino = nodos.get(i + 1);
             DistanceResult resultado = null;
             try {
-                resultado = distanceClient.getDistanceAndDuration(origen.lat(), origen.lng(), destino.lat(), destino.lng());
+                resultado = distanceClient.getDistanceAndDuration(origen.lat(), origen.lng(), destino.lat(),
+                        destino.lng());
             } catch (Exception ex) {
-                log.warn("No se pudo calcular distancia entre {} y {}: {}", origen.descripcion(), destino.descripcion(), ex.getMessage());
+                log.warn("No se pudo calcular distancia entre {} y {}: {}", origen.descripcion(), destino.descripcion(),
+                        ex.getMessage());
             }
 
             double distancia = resultado != null ? resultado.distanceKm() : 0d;
