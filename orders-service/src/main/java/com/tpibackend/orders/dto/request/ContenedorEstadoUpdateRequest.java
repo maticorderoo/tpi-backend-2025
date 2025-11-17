@@ -4,8 +4,7 @@ import com.tpibackend.orders.model.enums.ContenedorEstado;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Request para actualizar manualmente el estado de un contenedor.
- * Solo disponible para usuarios con rol OPERADOR.
+ * Payload interno utilizado por Logistics para propagar estados del contenedor.
  */
 public record ContenedorEstadoUpdateRequest(
     @NotNull(message = "El estado es obligatorio")

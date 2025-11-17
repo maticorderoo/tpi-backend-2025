@@ -1,13 +1,10 @@
 package com.tpibackend.orders.controller;
 
-import com.tpibackend.orders.dto.request.ContenedorEstadoUpdateRequest;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
-import com.tpibackend.orders.dto.response.ContenedorResponseDto;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
-import com.tpibackend.orders.service.ContenedorService;
 import com.tpibackend.orders.service.SolicitudService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,11 +35,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class SolicitudController {
 
     private final SolicitudService solicitudService;
-    private final ContenedorService contenedorService;
 
-    public SolicitudController(SolicitudService solicitudService, ContenedorService contenedorService) {
+    public SolicitudController(SolicitudService solicitudService) {
         this.solicitudService = solicitudService;
-        this.contenedorService = contenedorService;
     }
 
     @PostMapping
@@ -54,14 +49,14 @@ public class SolicitudController {
                     schema = @Schema(implementation = SolicitudCreateRequest.class),
                     examples = @ExampleObject(name = "crearSolicitud",
                             summary = "Solicitud de traslado b\u00e1sica",
-                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires\",\n  \"destino\": \"C\u00f3rdoba\",\n  \"estadiaEstimada\": 2.5\n}"))),
+                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"C\u00f3rdoba\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888\n}"))),
             responses = {
                     @ApiResponse(responseCode = "201", description = "Solicitud creada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudCreada",
                                             summary = "Solicitud creada correctamente",
-                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"BORRADOR\"\n  },\n  \"rutaResumen\": null\n}"))),
+                                            value = "{\n  \"id\": 42,\n  \"estado\": \"BORRADOR\",\n  \"costoEstimado\": null,\n  \"tiempoEstimadoMinutos\": null,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"origen\": \"Buenos Aires\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"C\u00f3rdoba\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"BORRADOR\"\n  },\n  \"rutaResumen\": null\n}"))),
                     @ApiResponse(responseCode = "400", description = "Datos inv\u00e1lidos"),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -87,7 +82,7 @@ public class SolicitudController {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudDetalle",
-                                            value = "{\n  \"id\": 42,\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810,\n  \"estadiaEstimada\": 2.5,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"PROGRAMADA\"\n  },\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
+                                            value = "{\n  \"id\": 42,\n  \"estado\": \"PROGRAMADA\",\n  \"costoEstimado\": 150000,\n  \"tiempoEstimadoMinutos\": 720,\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810,\n  \"origen\": \"Buenos Aires\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"C\u00f3rdoba\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"PROGRAMADA\"\n  },\n  \"rutaResumen\": {\n    \"rutaId\": 21,\n    \"estado\": \"ASIGNADA\",\n    \"tramos\": 3\n  }\n}"))),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     examples = @ExampleObject(name = "unauthorized",
@@ -188,29 +183,4 @@ public class SolicitudController {
         return ResponseEntity.ok(solicitudService.actualizarCosto(id, request));
     }
 
-    @PostMapping("/{id}/estado")
-    @PreAuthorize("hasRole('OPERADOR')")
-    @Operation(
-        summary = "Actualizar manualmente el estado del contenedor",
-        description = "Permite a un operador cambiar manualmente el estado del contenedor asociado a una solicitud. Solo disponible para rol OPERADOR.",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Estado actualizado exitosamente",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = ContenedorResponseDto.class),
-                    examples = @ExampleObject(
-                        name = "contenedorActualizado",
-                        value = "{\n  \"id\": 9,\n  \"codigo\": \"CONT-0009\",\n  \"peso\": 1200.5,\n  \"volumen\": 28.4,\n  \"estado\": \"EN_VIAJE\"\n}"
-                    ))),
-            @ApiResponse(responseCode = "401", description = "No autenticado"),
-            @ApiResponse(responseCode = "403", description = "Acceso prohibido - Se requiere rol OPERADOR"),
-            @ApiResponse(responseCode = "404", description = "Solicitud o contenedor no encontrado")
-        }
-    )
-    // TODO: Este endpoint debería migrar a Logistics una vez que la sincronización de estados sea asíncrona
-    public ResponseEntity<ContenedorResponseDto> actualizarEstadoContenedor(
-        @PathVariable Long id,
-        @Valid @RequestBody ContenedorEstadoUpdateRequest request
-    ) {
-        return ResponseEntity.ok(contenedorService.actualizarEstadoManual(id, request));
-    }
 }

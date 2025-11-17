@@ -85,6 +85,12 @@ class SolicitudServiceImplTest {
         contenedorDto.setPeso(new BigDecimal("2000"));
         contenedorDto.setVolumen(new BigDecimal("30"));
         request.setContenedor(contenedorDto);
+        request.setOrigen("Buenos Aires");
+        request.setOrigenLat(-34.6037);
+        request.setOrigenLng(-58.3816);
+        request.setDestino("Córdoba");
+        request.setDestinoLat(-31.4201);
+        request.setDestinoLng(-64.1888);
 
         Cliente clientePersistido = new Cliente();
         clientePersistido.setId(1L);
@@ -113,6 +119,8 @@ class SolicitudServiceImplTest {
         assertThat(response.getCliente().getId()).isEqualTo(1L);
         assertThat(response.getContenedor().getId()).isEqualTo(2L);
         assertThat(response.getContenedor().getEstado()).isEqualTo(ContenedorEstado.BORRADOR);
+        assertThat(response.getOrigen()).isEqualTo("Buenos Aires");
+        assertThat(response.getDestino()).isEqualTo("Córdoba");
     }
 
     @Test

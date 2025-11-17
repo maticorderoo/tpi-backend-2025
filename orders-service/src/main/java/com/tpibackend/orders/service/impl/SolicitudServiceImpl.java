@@ -84,7 +84,12 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud solicitud = new Solicitud();
         solicitud.setCliente(cliente);
         solicitud.setContenedor(contenedor);
-        solicitud.setEstadiaEstimada(request.getEstadiaEstimada());
+        solicitud.setOrigen(request.getOrigen());
+        solicitud.setOrigenLat(request.getOrigenLat());
+        solicitud.setOrigenLng(request.getOrigenLng());
+        solicitud.setDestino(request.getDestino());
+        solicitud.setDestinoLat(request.getDestinoLat());
+        solicitud.setDestinoLng(request.getDestinoLng());
         solicitud.setFechaCreacion(OffsetDateTime.now());
 
         // Inicializar estados automáticamente
@@ -258,10 +263,6 @@ public class SolicitudServiceImpl implements SolicitudService {
             }
         }
         return false;
-    }
-
-    private String seleccionarValorNoVacio(String preferido, String alternativo) {
-        return StringUtils.hasText(preferido) ? preferido : alternativo;
     }
 
     private Contenedor resolverContenedorPorNegocio(SolicitudCreateRequest request, Cliente cliente) {

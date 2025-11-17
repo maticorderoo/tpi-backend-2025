@@ -17,14 +17,15 @@ import com.tpibackend.orders.dto.response.SolicitudResponseDto;
 import com.tpibackend.orders.exception.SecurityExceptionHandler;
 import com.tpibackend.orders.service.SolicitudService;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -33,6 +34,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 @Import({SecurityConfig.class, SecurityExceptionHandler.class})
 @ActiveProfiles("test")
 class SolicitudControllerSecurityTest {
+
+    private static final String BASE_URL = "/orders";
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,7 +48,7 @@ class SolicitudControllerSecurityTest {
 
     @Test
     void crearSolicitudSinTokenDevuelve401() throws Exception {
-    mockMvc.perform(post("/api/orders")
+        mockMvc.perform(post(BASE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(crearSolicitudRequest())))
             .andExpect(status().isUnauthorized());
@@ -53,7 +56,7 @@ class SolicitudControllerSecurityTest {
 
     @Test
     void crearSolicitudConRolIncorrectoDevuelve403() throws Exception {
-    mockMvc.perform(post("/api/orders")
+        mockMvc.perform(post(BASE_URL)
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(crearSolicitudRequest())))
@@ -64,7 +67,7 @@ class SolicitudControllerSecurityTest {
     void crearSolicitudConRolClienteDevuelve201() throws Exception {
         when(solicitudService.crearSolicitud(any())).thenReturn(SolicitudResponseDto.builder().build());
 
-    mockMvc.perform(post("/api/orders")
+        mockMvc.perform(post(BASE_URL)
                 .with(jwtWithRoles("CLIENTE"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(crearSolicitudRequest())))
@@ -73,13 +76,13 @@ class SolicitudControllerSecurityTest {
 
     @Test
     void obtenerSolicitudSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/orders/10"))
+        mockMvc.perform(get(BASE_URL + "/10"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     void obtenerSolicitudConRolNoPermitidoDevuelve403() throws Exception {
-        mockMvc.perform(get("/api/orders/10").with(jwtWithRoles("TRANSPORTISTA")))
+        mockMvc.perform(get(BASE_URL + "/10").with(jwtWithRoles("TRANSPORTISTA")))
             .andExpect(status().isForbidden());
     }
 
@@ -87,19 +90,19 @@ class SolicitudControllerSecurityTest {
     void obtenerSolicitudConRolValidoDevuelve200() throws Exception {
         when(solicitudService.obtenerSolicitud(10L)).thenReturn(SolicitudResponseDto.builder().build());
 
-        mockMvc.perform(get("/api/orders/10").with(jwtWithRoles("OPERADOR")))
+        mockMvc.perform(get(BASE_URL + "/10").with(jwtWithRoles("OPERADOR")))
             .andExpect(status().isOk());
     }
 
     @Test
     void seguimientoSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/orders/5/tracking"))
+        mockMvc.perform(get(BASE_URL + "/5/tracking"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     void seguimientoConRolNoPermitidoDevuelve403() throws Exception {
-        mockMvc.perform(get("/api/orders/5/tracking").with(jwtWithRoles("TRANSPORTISTA")))
+        mockMvc.perform(get(BASE_URL + "/5/tracking").with(jwtWithRoles("TRANSPORTISTA")))
             .andExpect(status().isForbidden());
     }
 
@@ -107,7 +110,7 @@ class SolicitudControllerSecurityTest {
     void seguimientoConRolValidoDevuelve200() throws Exception {
         when(solicitudService.obtenerSeguimientoPorContenedor(5L)).thenReturn(SeguimientoResponseDto.builder().build());
 
-        mockMvc.perform(get("/api/orders/5/tracking").with(jwtWithRoles("OPERADOR")))
+        mockMvc.perform(get(BASE_URL + "/5/tracking").with(jwtWithRoles("OPERADOR")))
             .andExpect(status().isOk());
     }
 
@@ -123,11 +126,17 @@ class SolicitudControllerSecurityTest {
         // El estado se gestiona automáticamente, no se debe setear
         request.setContenedor(contenedor);
         request.setOrigen("Buenos Aires");
+        request.setOrigenLat(-34.6037);
+        request.setOrigenLng(-58.3816);
         request.setDestino("Cordoba");
+        request.setDestinoLat(-31.4201);
+        request.setDestinoLng(-64.1888);
         return request;
     }
 
     private RequestPostProcessor jwtWithRoles(String... roles) {
-        return jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))));
+        return jwt().authorities(Arrays.stream(roles)
+            .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+            .collect(Collectors.toList()));
     }
 }

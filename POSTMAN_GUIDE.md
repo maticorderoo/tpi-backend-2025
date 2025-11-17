@@ -55,7 +55,7 @@ La colección incluye 3 tipos de usuarios:
 - **Tracking** - Seguimiento público del contenedor
 - **Calcular Estimación** - Usa distance-client y métricas de flota (OPERADOR)
 - **Actualizar Costo Final** - Cuando se completa la entrega (OPERADOR)
-- **Cambiar Estado** - Override manual de estados (OPERADOR)
+- **Contenedores Pendientes** - Lista contenedores y tramos sin finalizar desde Orders (OPERADOR)
 
 ### 🚛 Fleet Service
 
@@ -159,6 +159,7 @@ GET /api/orders/{{solicitud_id}}/tracking
 ```
 - Debe mostrar el estado actual del contenedor y la información principal de la ruta
 - Estados: BORRADOR → PROGRAMADA → EN_RETIRO → EN_VIAJE → EN_DEPOSITO → ENTREGADO
+- Los cambios de estado se propagan automáticamente desde Logistics vía endpoints internos protegidos por `X-Internal-Secret`; no hay overrides manuales.
 
 ### 5. Seguridad por Roles
 - Intentar crear camión con token de CLIENTE → debe dar 403 Forbidden
@@ -219,6 +220,38 @@ GET /api/orders/{{solicitud_id}}/tracking
 - `POST /api/orders/{id}/estimacion` - Calcular costo/tiempo
 - `PUT /api/orders/{id}/costo` - Actualizar costo final
 - `POST /api/orders/{id}/estado` - Cambiar estado manual
+
+#### Body requerido para `POST /api/orders`
+
+El alta de solicitudes pide exclusivamente los datos definidos en el enunciado:
+
+- Información del cliente (`nombre`, `email`, `telefono`).
+- Datos del contenedor (`peso`, `volumen`, `codigo` opcional si ya existe).
+- Origen y destino con sus coordenadas obligatorias.
+
+Ejemplo válido:
+
+```json
+{
+  "cliente": {
+    "nombre": "ACME Corp",
+    "email": "contacto@acme.com",
+    "telefono": "+54 11 5555-1111"
+  },
+  "contenedor": {
+    "peso": 1200.5,
+    "volumen": 28.4
+  },
+  "origen": "Buenos Aires, Puerto Madero",
+  "origenLat": -34.6037,
+  "origenLng": -58.3816,
+  "destino": "Córdoba, barrio Güemes",
+  "destinoLat": -31.4201,
+  "destinoLng": -64.1888
+}
+```
+
+> `estadiaEstimada` y otros cálculos económicos quedan en manos de Logistics; el cliente no debe enviarlos.
 
 ### Fleet Service
 - `POST /api/trucks` - Crear camión

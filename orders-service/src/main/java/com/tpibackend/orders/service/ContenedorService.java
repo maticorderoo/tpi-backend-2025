@@ -7,8 +7,6 @@ import com.tpibackend.orders.model.Contenedor;
 import com.tpibackend.orders.model.Solicitud;
 import com.tpibackend.orders.repository.ContenedorRepository;
 import com.tpibackend.orders.repository.SolicitudRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,23 +28,23 @@ public class ContenedorService {
     }
 
     /**
-     * Actualiza manualmente el estado de un contenedor.
-     * Solo disponible para usuarios con rol OPERADOR.
+     * Actualiza el estado del contenedor derivado desde Logistics.
      */
     @Transactional
-    public ContenedorResponseDto actualizarEstadoManual(Long solicitudId, ContenedorEstadoUpdateRequest request) {
+    public ContenedorResponseDto actualizarEstadoDesdeLogistics(Long solicitudId,
+            ContenedorEstadoUpdateRequest request, String usuario) {
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
             .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
-        
+
         Contenedor contenedor = solicitud.getContenedor();
         if (contenedor == null) {
             throw new OrdersNotFoundException("La solicitud no tiene un contenedor asociado");
         }
 
-        String usuario = obtenerUsuarioActual();
-        estadoService.actualizarEstadoManual(contenedor, request.estado(), usuario);
-        
+        estadoService.actualizarEstadoManual(contenedor, solicitud, request.estado(), usuario);
+
         contenedorRepository.save(contenedor);
+        solicitudRepository.save(solicitud);
 
         return ContenedorResponseDto.builder()
             .id(contenedor.getId())
@@ -54,13 +52,5 @@ public class ContenedorService {
             .volumen(contenedor.getVolumen())
             .estado(contenedor.getEstado())
             .build();
-    }
-
-    private String obtenerUsuarioActual() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            return authentication.getName();
-        }
-        return "system";
     }
 }

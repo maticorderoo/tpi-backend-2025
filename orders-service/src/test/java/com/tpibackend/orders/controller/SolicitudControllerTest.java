@@ -33,6 +33,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @Import(SecurityConfig.class)
 class SolicitudControllerTest {
 
+    private static final String BASE_URL = "/orders";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -54,8 +56,14 @@ class SolicitudControllerTest {
         SolicitudCreateRequest request = new SolicitudCreateRequest();
         request.setCliente(new com.tpibackend.orders.dto.request.ClienteRequestDto());
         request.setContenedor(new com.tpibackend.orders.dto.request.ContenedorRequestDto());
+        request.setOrigen("Buenos Aires");
+        request.setOrigenLat(-34.6037);
+        request.setOrigenLng(-58.3816);
+        request.setDestino("Córdoba");
+        request.setDestinoLat(-31.4201);
+        request.setDestinoLng(-64.1888);
 
-        mockMvc.perform(post("/api/orders")
+        mockMvc.perform(post(BASE_URL)
                 .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE")))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -75,7 +83,7 @@ class SolicitudControllerTest {
             .build();
         when(solicitudService.obtenerSeguimientoPorContenedor(2L)).thenReturn(seguimiento);
 
-    mockMvc.perform(get("/api/orders/2/tracking")
+    mockMvc.perform(get(BASE_URL + "/2/tracking")
                 .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
             .andExpect(status().isOk())
@@ -97,7 +105,7 @@ class SolicitudControllerTest {
         estimacionRequest.setOrigen("Buenos Aires");
         estimacionRequest.setDestino("Rosario");
 
-        mockMvc.perform(post("/api/orders/10/estimacion")
+        mockMvc.perform(post(BASE_URL + "/10/estimacion")
                 .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_OPERADOR")))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +113,7 @@ class SolicitudControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.costoEstimado").value(100.00));
 
-        mockMvc.perform(post("/api/orders/10/estimacion")
+        mockMvc.perform(post(BASE_URL + "/10/estimacion")
                 .with(jwt()
                     .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE")))
                 .contentType(MediaType.APPLICATION_JSON)

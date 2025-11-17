@@ -18,14 +18,18 @@ import org.springframework.web.client.RestTemplate;
 public class OrdersClient {
 
     private static final Logger log = LoggerFactory.getLogger(OrdersClient.class);
+    private static final String INTERNAL_SECRET_HEADER = "X-Internal-Secret";
 
     private final RestTemplate restTemplate;
     private final String baseUrl;
+    private final String sharedSecret;
 
     public OrdersClient(RestTemplate restTemplate,
-            @Value("${clients.orders.base-url:http://orders-service:8080/api/orders}") String baseUrl) {
+            @Value("${clients.orders.base-url:http://orders-service:8080/api/orders/internal/logistics}") String baseUrl,
+            @Value("${clients.orders.shared-secret:logistics-shared-secret}") String sharedSecret) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
+        this.sharedSecret = sharedSecret;
     }
 
     public void actualizarEstado(Long solicitudId, String estado) {
@@ -36,6 +40,7 @@ public class OrdersClient {
             }
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set(INTERNAL_SECRET_HEADER, sharedSecret);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(Map.of("estado", estadoPayload), headers);
             restTemplate.put(baseUrl + "/" + solicitudId + "/estado", entity);
         } catch (RestClientException ex) {
@@ -47,6 +52,7 @@ public class OrdersClient {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set(INTERNAL_SECRET_HEADER, sharedSecret);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(
                     Map.of("costoFinal", costoFinal), headers);
             restTemplate.put(baseUrl + "/" + solicitudId + "/costo", entity);

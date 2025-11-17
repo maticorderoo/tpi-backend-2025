@@ -16,7 +16,6 @@ import org.springframework.util.StringUtils;
 
 import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceData;
-import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.request.AsignarRutaRequest;
 import com.tpibackend.logistics.dto.request.CrearRutaRequest;
 import com.tpibackend.logistics.dto.request.DepositStopRequest;
@@ -26,6 +25,7 @@ import com.tpibackend.logistics.dto.response.RutaResponse;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.exception.NotFoundException;
 import com.tpibackend.logistics.mapper.LogisticsMapper;
+import com.tpibackend.logistics.integration.OrdersSyncGateway;
 import com.tpibackend.logistics.model.Deposito;
 import com.tpibackend.logistics.model.Ruta;
 import com.tpibackend.logistics.model.Tramo;
@@ -44,16 +44,16 @@ public class RutaService {
     private final RutaRepository rutaRepository;
     private final DepositoRepository depositoRepository;
     private final DistanceClient distanceClient;
-    private final OrdersClient ordersClient;
+    private final OrdersSyncGateway ordersSyncGateway;
 
     public RutaService(RutaRepository rutaRepository,
             DepositoRepository depositoRepository,
             DistanceClient distanceClient,
-            OrdersClient ordersClient) {
+            OrdersSyncGateway ordersSyncGateway) {
         this.rutaRepository = rutaRepository;
         this.depositoRepository = depositoRepository;
         this.distanceClient = distanceClient;
-        this.ordersClient = ordersClient;
+        this.ordersSyncGateway = ordersSyncGateway;
     }
 
     public RutaResponse crearRuta(CrearRutaRequest request) {
@@ -152,8 +152,8 @@ public class RutaService {
         rutaRepository.save(ruta);
 
         log.info("Ruta {} asignada a la solicitud {}", ruta.getId(), request.solicitudId());
-        // TODO: Reemplazar por evento asincrónico; Logistics no debería mutar Orders vía REST directo
-        ordersClient.actualizarEstado(request.solicitudId(), "PROGRAMADA");
+        // TODO: reemplazar notificación directa por eventos cuando se disponga de broker
+        ordersSyncGateway.notificarEstado(request.solicitudId(), "PROGRAMADA");
 
         return LogisticsMapper.toRutaResponse(ruta);
     }

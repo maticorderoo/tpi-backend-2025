@@ -12,7 +12,6 @@ import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceData;
 import com.tpibackend.logistics.client.FleetClient;
 import com.tpibackend.logistics.client.FleetClient.TruckInfo;
-import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
 import com.tpibackend.logistics.dto.request.FinTramoRequest;
 import com.tpibackend.logistics.dto.request.InicioTramoRequest;
@@ -20,6 +19,8 @@ import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.exception.NotFoundException;
 import com.tpibackend.logistics.mapper.LogisticsMapper;
+import com.tpibackend.logistics.integration.OrdersSyncGateway;
+import com.tpibackend.logistics.integration.OrdersSyncGateway;
 import com.tpibackend.logistics.model.Deposito;
 import com.tpibackend.logistics.model.Ruta;
 import com.tpibackend.logistics.model.Tramo;
@@ -37,18 +38,18 @@ public class TramoService {
     private final TramoRepository tramoRepository;
     private final DepositoRepository depositoRepository;
     private final FleetClient fleetClient;
-    private final OrdersClient ordersClient;
+    private final OrdersSyncGateway ordersSyncGateway;
     private final DistanceClient distanceClient;
 
     public TramoService(TramoRepository tramoRepository,
             DepositoRepository depositoRepository,
             FleetClient fleetClient,
-            OrdersClient ordersClient,
+            OrdersSyncGateway ordersSyncGateway,
             DistanceClient distanceClient) {
         this.tramoRepository = tramoRepository;
         this.depositoRepository = depositoRepository;
         this.fleetClient = fleetClient;
-        this.ordersClient = ordersClient;
+        this.ordersSyncGateway = ordersSyncGateway;
         this.distanceClient = distanceClient;
     }
 
@@ -105,7 +106,7 @@ public class TramoService {
         Ruta ruta = tramo.getRuta();
         if (ruta.getSolicitudId() != null) {
             // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
-            ordersClient.actualizarEstado(ruta.getSolicitudId(), "EN_TRANSITO");
+            ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "EN_TRANSITO");
         }
 
         log.info("Tramo {} iniciado", tramoId);
@@ -157,8 +158,8 @@ public class TramoService {
         if (ruta.getSolicitudId() != null &&
                 ruta.getTramos().stream().allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO)) {
             // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
-            ordersClient.actualizarEstado(ruta.getSolicitudId(), "ENTREGADA");
-            ordersClient.actualizarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal());
+            ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "ENTREGADA");
+            ordersSyncGateway.notificarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal());
         }
 
         return LogisticsMapper.toTramoResponse(tramo);

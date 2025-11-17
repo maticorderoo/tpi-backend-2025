@@ -77,8 +77,16 @@
             },
             "url": {
               "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": ["{{keycloak_url}}"],
-              "path": ["realms", "tpi-2025", "protocol", "openid-connect", "token"]
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
             }
           }
         },
@@ -138,8 +146,16 @@
             },
             "url": {
               "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": ["{{keycloak_url}}"],
-              "path": ["realms", "tpi-2025", "protocol", "openid-connect", "token"]
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
             }
           }
         },
@@ -199,8 +215,16 @@
             },
             "url": {
               "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": ["{{keycloak_url}}"],
-              "path": ["realms", "tpi-2025", "protocol", "openid-connect", "token"]
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
             }
           }
         }
@@ -243,8 +267,13 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/orders",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
             }
           }
         },
@@ -254,8 +283,14 @@
             "method": "GET",
             "url": {
               "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders", "{{solicitud_id}}"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}"
+              ]
             }
           }
         },
@@ -265,8 +300,15 @@
             "method": "GET",
             "url": {
               "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/tracking",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders", "{{solicitud_id}}", "tracking"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "tracking"
+              ]
             },
             "description": "Endpoint público para seguimiento del contenedor"
           }
@@ -287,8 +329,15 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/estimacion",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders", "{{solicitud_id}}", "estimacion"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "estimacion"
+              ]
             },
             "description": "Calcula costo y tiempo usando distance-client y métricas de flota"
           }
@@ -309,30 +358,25 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/costo",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders", "{{solicitud_id}}", "costo"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "costo"
+              ]
             }
           }
         },
         {
-          "name": "Cambiar Estado Manualmente (OPERADOR)",
+          "name": "Contenedores Pendientes (OPERADOR)",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"estado\": \"PROGRAMADA\"\n}"
-            },
-            "url": {
-              "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/estado",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders", "{{solicitud_id}}", "estado"]
-            }
+            "method": "GET",
+            "header": [],
+            "url": "{{orders_base_url}}/containers/pendientes",
+            "description": "Consulta los contenedores con tramos pendientes filtrando por estado o depósito."
           }
         }
       ]
@@ -375,8 +419,13 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/trucks",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "trucks"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ]
                 }
               }
             },
@@ -386,8 +435,13 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/trucks",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "trucks"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ]
                 }
               }
             },
@@ -397,8 +451,13 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/trucks?disponible=true",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "trucks"],
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ],
                   "query": [
                     {
                       "key": "disponible",
@@ -414,8 +473,13 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/trucks?disponible=false",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "trucks"],
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ],
                   "query": [
                     {
                       "key": "disponible",
@@ -431,8 +495,14 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/trucks/{{camion_id}}",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "trucks", "{{camion_id}}"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks",
+                    "{{camion_id}}"
+                  ]
                 }
               }
             },
@@ -452,8 +522,14 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/trucks/{{camion_id}}",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "trucks", "{{camion_id}}"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks",
+                    "{{camion_id}}"
+                  ]
                 }
               }
             }
@@ -493,8 +569,13 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/tarifas",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "tarifas"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas"
+                  ]
                 }
               }
             },
@@ -504,8 +585,13 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/tarifas",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "tarifas"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas"
+                  ]
                 }
               }
             },
@@ -515,8 +601,15 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/tarifas/tipo/CARGO_GESTION_POR_TRAMO",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "tarifas", "tipo", "CARGO_GESTION_POR_TRAMO"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas",
+                    "tipo",
+                    "CARGO_GESTION_POR_TRAMO"
+                  ]
                 }
               }
             },
@@ -536,8 +629,14 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/tarifas/{{tarifa_id}}",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "tarifas", "{{tarifa_id}}"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas",
+                    "{{tarifa_id}}"
+                  ]
                 }
               }
             }
@@ -552,8 +651,15 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/fleet/metrics/promedios",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "fleet", "metrics", "promedios"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "fleet",
+                    "metrics",
+                    "promedios"
+                  ]
                 },
                 "description": "Retorna consumo promedio y costo por km promedio de camiones disponibles"
               }
@@ -600,8 +706,14 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/depositos",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "depositos"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos"
+                  ]
                 }
               }
             },
@@ -611,8 +723,14 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/depositos",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "depositos"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos"
+                  ]
                 }
               }
             },
@@ -622,8 +740,15 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/depositos/{{deposito_id}}",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "depositos", "{{deposito_id}}"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos",
+                    "{{deposito_id}}"
+                  ]
                 }
               }
             },
@@ -643,8 +768,15 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/depositos/{{deposito_id}}",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "depositos", "{{deposito_id}}"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos",
+                    "{{deposito_id}}"
+                  ]
                 }
               }
             }
@@ -688,8 +820,14 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/routes",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "routes"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "routes"
+                  ]
                 },
                 "description": "Crea ruta con tramos calculados usando distance-client"
               }
@@ -700,8 +838,15 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "routes", "{{ruta_id}}"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "routes",
+                    "{{ruta_id}}"
+                  ]
                 }
               }
             },
@@ -721,8 +866,16 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}/asignaciones",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "routes", "{{ruta_id}}", "asignaciones"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "routes",
+                    "{{ruta_id}}",
+                    "asignaciones"
+                  ]
                 }
               }
             }
@@ -747,8 +900,16 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignaciones",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "asignaciones"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "{{tramo_id}}",
+                    "asignaciones"
+                  ]
                 },
                 "description": "Valida capacidad del camión antes de asignar"
               }
@@ -769,8 +930,16 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/inicios",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "inicios"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "{{tramo_id}}",
+                    "inicios"
+                  ]
                 }
               }
             },
@@ -790,8 +959,16 @@
                 },
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizaciones",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "finalizaciones"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "{{tramo_id}}",
+                    "finalizaciones"
+                  ]
                 },
                 "description": "Recalcula distancia real con distance-client"
               }
@@ -802,8 +979,16 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/tramos/camion/{{camion_id}}",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "camion", "{{camion_id}}"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "camion",
+                    "{{camion_id}}"
+                  ]
                 },
                 "description": "Para TRANSPORTISTA ver sus tramos asignados"
               }
@@ -814,8 +999,17 @@
                 "method": "GET",
                 "url": {
                   "raw": "{{gateway_base_url}}/api/logistics/tramos/deposito/{{deposito_id}}/contenedores",
-                  "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "deposito", "{{deposito_id}}", "contenedores"]
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "deposito",
+                    "{{deposito_id}}",
+                    "contenedores"
+                  ]
                 },
                 "description": "Lista contenedores esperando en el depósito"
               }
@@ -879,8 +1073,16 @@
             },
             "url": {
               "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": ["{{keycloak_url}}"],
-              "path": ["realms", "tpi-2025", "protocol", "openid-connect", "token"]
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
             }
           }
         },
@@ -913,8 +1115,14 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/logistics/depositos",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "depositos"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "depositos"
+              ]
             }
           }
         },
@@ -947,8 +1155,13 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/trucks",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "trucks"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "trucks"
+              ]
             }
           }
         },
@@ -968,8 +1181,13 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/tarifas",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "tarifas"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarifas"
+              ]
             }
           }
         },
@@ -1022,8 +1240,16 @@
             },
             "url": {
               "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": ["{{keycloak_url}}"],
-              "path": ["realms", "tpi-2025", "protocol", "openid-connect", "token"]
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
             }
           }
         },
@@ -1058,8 +1284,13 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/orders",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
             }
           }
         },
@@ -1112,8 +1343,16 @@
             },
             "url": {
               "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": ["{{keycloak_url}}"],
-              "path": ["realms", "tpi-2025", "protocol", "openid-connect", "token"]
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
             }
           }
         },
@@ -1133,8 +1372,15 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/estimacion",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders", "{{solicitud_id}}", "estimacion"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "estimacion"
+              ]
             }
           }
         },
@@ -1171,8 +1417,14 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/logistics/routes",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "routes"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "routes"
+              ]
             }
           }
         },
@@ -1192,8 +1444,16 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}/asignaciones",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "routes", "{{ruta_id}}", "asignaciones"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "routes",
+                "{{ruta_id}}",
+                "asignaciones"
+              ]
             }
           }
         },
@@ -1213,8 +1473,16 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignaciones",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "asignaciones"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "asignaciones"
+              ]
             }
           }
         },
@@ -1267,8 +1535,16 @@
             },
             "url": {
               "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": ["{{keycloak_url}}"],
-              "path": ["realms", "tpi-2025", "protocol", "openid-connect", "token"]
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
             }
           }
         },
@@ -1288,8 +1564,16 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/inicios",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "inicios"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "inicios"
+              ]
             }
           }
         },
@@ -1309,8 +1593,16 @@
             },
             "url": {
               "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizaciones",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "finalizaciones"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "finalizaciones"
+              ]
             }
           }
         },
@@ -1323,8 +1615,15 @@
             "method": "GET",
             "url": {
               "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/tracking",
-              "host": ["{{gateway_base_url}}"],
-              "path": ["api", "orders", "{{solicitud_id}}", "tracking"]
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "tracking"
+              ]
             }
           }
         }

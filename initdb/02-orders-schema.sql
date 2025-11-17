@@ -13,6 +13,7 @@ CREATE TABLE clientes (
 -- Identificación, peso, volumen, estado, cliente asociado
 CREATE TABLE contenedores (
   id         bigserial PRIMARY KEY,
+  codigo     varchar(50) NOT NULL UNIQUE,
   peso       numeric(19,2) NOT NULL,
   volumen    numeric(19,2) NOT NULL,
   estado     varchar(30) NOT NULL DEFAULT 'BORRADOR',
@@ -33,12 +34,12 @@ CREATE TABLE solicitudes (
   costo_final             numeric(19,2),
   tiempo_real_minutos     bigint,
   estadia_estimada        numeric(19,2),
-  origen                  varchar(255),
-  origen_lat              double precision,
-  origen_lng              double precision,
-  destino                 varchar(255),
-  destino_lat             double precision,
-  destino_lng             double precision,
+  origen                  varchar(255) NOT NULL,
+  origen_lat              double precision NOT NULL,
+  origen_lng              double precision NOT NULL,
+  destino                 varchar(255) NOT NULL,
+  destino_lat             double precision NOT NULL,
+  destino_lng             double precision NOT NULL,
   fecha_creacion          timestamptz NOT NULL,
   updated_at              timestamptz,
   updated_by              varchar(100)

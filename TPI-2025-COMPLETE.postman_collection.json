@@ -263,7 +263,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corporation\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1234\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires, Argentina\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"Córdoba, Argentina\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888,\n  \"estadiaEstimada\": 500.0\n}"
+              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corporation\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1234\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires, Argentina\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"Córdoba, Argentina\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888\n}"
             },
             "url": "{{orders_base_url}}"
           }
@@ -319,20 +319,12 @@
           }
         },
         {
-          "name": "Cambiar Estado Manualmente (OPERADOR)",
+          "name": "Contenedores Pendientes (OPERADOR)",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"estado\": \"PROGRAMADA\"\n}"
-            },
-            "url": "{{orders_base_url}}/{{solicitud_id}}/estado"
+            "method": "GET",
+            "header": [],
+            "url": "{{orders_base_url}}/containers/pendientes",
+            "description": "Consulta los contenedores con tramos pendientes filtrando por estado o depósito."
           }
         }
       ]
@@ -963,7 +955,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"acme@example.com\",\n    \"telefono\": \"+54-11-1111-2222\"\n  },\n  \"contenedor\": {\n    \"peso\": 1500.0,\n    \"volumen\": 30.0\n  },\n  \"origen\": \"Buenos Aires\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"Córdoba\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888,\n  \"estadiaEstimada\": 500.0\n}"
+              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"acme@example.com\",\n    \"telefono\": \"+54-11-1111-2222\"\n  },\n  \"contenedor\": {\n    \"peso\": 1500.0,\n    \"volumen\": 30.0\n  },\n  \"origen\": \"Buenos Aires\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"Córdoba\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888\n}"
             },
             "url": "{{orders_base_url}}"
           }
