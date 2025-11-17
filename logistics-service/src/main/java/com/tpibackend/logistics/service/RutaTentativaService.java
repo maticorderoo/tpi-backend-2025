@@ -1,7 +1,6 @@
 package com.tpibackend.logistics.service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceResult;
+import com.tpibackend.logistics.client.FleetClient.TarifaActiva;
 import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse.Punto;
@@ -21,6 +21,7 @@ import com.tpibackend.logistics.dto.response.RutaResponse;
 import com.tpibackend.logistics.dto.response.RutaTentativaResponse;
 import com.tpibackend.logistics.dto.response.TramoTentativoResponse;
 import com.tpibackend.logistics.exception.NotFoundException;
+import com.tpibackend.logistics.exception.TarifaNoConfiguradaException;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.integration.OrdersSyncGateway;
 import com.tpibackend.logistics.model.Deposito;
@@ -83,19 +84,21 @@ public class RutaTentativaService {
         // borrar las tentativas previas para la solicitud
         rutaTentativaRepository.deleteBySolicitudId(solicitudId);
 
+        TarifaActiva tarifa = obtenerTarifaActivaParaTentativas();
+
         List<RutaTentativa> rutas = new ArrayList<>();
-        rutas.add(construirRutaTentativa(solicitudId, List.of(origen, destino)));
+        rutas.add(construirRutaTentativa(solicitudId, List.of(origen, destino), tarifa));
 
         for (LocationNode deposito : depositos) {
-            rutas.add(construirRutaTentativa(solicitudId, List.of(origen, deposito, destino)));
+            rutas.add(construirRutaTentativa(solicitudId, List.of(origen, deposito, destino), tarifa));
         }
 
         for (int i = 0; i < depositos.size(); i++) {
             for (int j = i + 1; j < depositos.size(); j++) {
                 LocationNode primero = depositos.get(i);
                 LocationNode segundo = depositos.get(j);
-                rutas.add(construirRutaTentativa(solicitudId, List.of(origen, primero, segundo, destino)));
-                rutas.add(construirRutaTentativa(solicitudId, List.of(origen, segundo, primero, destino)));
+                rutas.add(construirRutaTentativa(solicitudId, List.of(origen, primero, segundo, destino), tarifa));
+                rutas.add(construirRutaTentativa(solicitudId, List.of(origen, segundo, primero, destino), tarifa));
             }
         }
 
@@ -117,7 +120,7 @@ public class RutaTentativaService {
                 .toList();
     }
 
-    private RutaTentativa construirRutaTentativa(Long solicitudId, List<LocationNode> nodos) {
+    private RutaTentativa construirRutaTentativa(Long solicitudId, List<LocationNode> nodos, TarifaActiva tarifa) {
         RutaTentativa ruta = new RutaTentativa();
         ruta.setSolicitudId(solicitudId);
 
@@ -149,7 +152,7 @@ public class RutaTentativaService {
 
             double distancia = resultado != null ? resultado.distanceKm() : 0d;
             long tiempo = resultado != null ? Math.round(resultado.durationMinutes()) : 0L;
-            CostoTentativo costo = calcularCosto(distancia, tiempo, destino);
+            CostoTentativo costo = calcularCosto(distancia, tiempo, destino, tarifa);
 
             TramoTentativo tramo = new TramoTentativo();
             tramo.setOrden(i + 1);
@@ -187,16 +190,11 @@ public class RutaTentativaService {
         return ruta;
     }
 
-    private CostoTentativo calcularCosto(double distanciaKm, long tiempoMinutos, LocationNode destino) {
-        BigDecimal distancia = BigDecimal.valueOf(distanciaKm);
-        BigDecimal costoBase = tarifaService.calcularCostoBasePorDistancia(distanciaKm);
-        BigDecimal costoCombustible = tarifaService.calcularCostoCombustible(distanciaKm);
+    private CostoTentativo calcularCosto(double distanciaKm, long tiempoMinutos, LocationNode destino, TarifaActiva tarifa) {
+        BigDecimal costoBase = tarifaService.calcularCostoPorDistancia(distanciaKm, tarifa);
+        BigDecimal costoTiempo = tarifaService.calcularCostoPorTiempo(tiempoMinutos, tarifa);
 
-        BigDecimal horas = BigDecimal.valueOf(tiempoMinutos)
-                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
-        BigDecimal costoTiempo = tarifaService.costoTiempoHora().multiply(horas);
-
-        BigDecimal total = costoBase.add(costoCombustible).add(costoTiempo);
+        BigDecimal total = costoBase.add(costoTiempo);
 
         int diasEstadia = 0;
         BigDecimal costoEstadiaDia = BigDecimal.ZERO;
@@ -208,6 +206,15 @@ public class RutaTentativaService {
             total = total.add(costoEstadia);
         }
         return new CostoTentativo(total, diasEstadia, costoEstadiaDia, costoEstadia);
+    }
+
+    private TarifaActiva obtenerTarifaActivaParaTentativas() {
+        try {
+            return tarifaService.obtenerTarifaActiva();
+        } catch (TarifaNoConfiguradaException ex) {
+            throw new TarifaNoConfiguradaException(
+                    "No se puede generar rutas tentativas porque no hay tarifa activa configurada en Flota");
+        }
     }
 
     private TramoTipo determinarTipo(LocationType origenTipo, LocationType destinoTipo) {

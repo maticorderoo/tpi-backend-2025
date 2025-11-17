@@ -106,34 +106,4 @@ class SolicitudControllerTest {
             .andExpect(jsonPath("$.estadoContenedor").value("PROGRAMADA"));
     }
 
-    @Test
-    void calcularEstimacion_requiereRolOperador() throws Exception {
-        SolicitudResponseDto response = SolicitudResponseDto.builder()
-            .id(10L)
-            .costoEstimado(new BigDecimal("100.00"))
-            .tiempoEstimadoMinutos(120L)
-            .build();
-        when(solicitudService.calcularEstimacion(eq(10L), any())).thenReturn(response);
-
-        var estimacionRequest = new com.tpibackend.orders.dto.request.EstimacionRequest();
-        estimacionRequest.setPrecioCombustible(new BigDecimal("2"));
-        estimacionRequest.setEstadiaEstimada(BigDecimal.ZERO);
-        estimacionRequest.setOrigen("Buenos Aires");
-        estimacionRequest.setDestino("Rosario");
-
-        mockMvc.perform(post(BASE_URL + "/10/estimacion")
-                .with(jwt()
-                    .authorities(new SimpleGrantedAuthority("ROLE_OPERADOR")))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(estimacionRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.costoEstimado").value(100.00));
-
-        mockMvc.perform(post(BASE_URL + "/10/estimacion")
-                .with(jwt()
-                    .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE")))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(estimacionRequest)))
-            .andExpect(status().isForbidden());
-    }
 }

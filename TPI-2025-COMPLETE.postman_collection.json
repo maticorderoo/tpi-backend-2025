@@ -388,7 +388,7 @@
           }
         },
         {
-          "name": "2. OPERADOR - Calcular estimación de costos y tiempos",
+          "name": "[OBSOLETO] 2. OPERADOR - Calcular estimación de costos y tiempos",
           "request": {
             "method": "POST",
             "header": [

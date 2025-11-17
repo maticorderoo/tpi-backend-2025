@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.exception.NotFoundException;
+import com.tpibackend.logistics.exception.TarifaNoConfiguradaException;
 
 @Component
 public class FleetClient {
@@ -56,6 +57,29 @@ public class FleetClient {
         }
     }
 
+    public TarifaActiva obtenerTarifaActiva() {
+        URI uri = buildUri("/fleet/tarifas/activa");
+        log.info("Consultando FleetService GET {}", uri);
+        try {
+            ResponseEntity<TarifaActiva> response = restTemplate.getForEntity(uri, TarifaActiva.class);
+            log.info("FleetService GET {} -> {}", uri, response.getStatusCode().value());
+            TarifaActiva body = response.getBody();
+            if (body == null) {
+                throw new BusinessException("Flota no devolvió una tarifa activa");
+            }
+            return body;
+        } catch (HttpStatusCodeException ex) {
+            log.error("FleetService GET {} respondió {} {}", uri, ex.getStatusCode().value(), ex.getStatusText());
+            if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
+                throw new TarifaNoConfiguradaException("No hay tarifa activa configurada en Flota");
+            }
+            throw new BusinessException("No se pudo obtener la tarifa activa desde Flota: " + ex.getStatusCode());
+        } catch (RestClientException ex) {
+            log.error("Error consultando FleetService GET {}: {}", uri, ex.getMessage());
+            throw new BusinessException("Error consultando FleetService: " + ex.getMessage());
+        }
+    }
+
     public void actualizarDisponibilidad(Long camionId, boolean disponible, String motivo) {
         URI uri = buildUri("/fleet/trucks/{id}/disponibilidad", camionId);
         log.info("FleetService PUT {} disponible={} motivo={}", uri, disponible, motivo);
@@ -75,6 +99,14 @@ public class FleetClient {
             @JsonProperty("capPeso") BigDecimal capacidadPeso,
             @JsonProperty("capVolumen") BigDecimal capacidadVolumen,
             @JsonProperty("disponible") Boolean disponible) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record TarifaActiva(Long id,
+            String nombre,
+            @JsonProperty("costoKm") BigDecimal costoKm,
+            @JsonProperty("costoHora") BigDecimal costoHora,
+            String moneda) {
     }
 
     public record DisponibilidadRequest(Boolean disponible, String motivoNoDisponibilidad) {

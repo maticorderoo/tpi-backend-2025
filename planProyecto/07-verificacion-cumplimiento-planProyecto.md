@@ -35,7 +35,7 @@
 - Se corroboró que la API de tracking se mantiene libre de eventos administrativos y solo depende de contenedor+ruta. No se requirieron cambios adicionales (documentado en TODOs).【F:planProyecto/04-eliminar-solicitud-evento.md†L8-L26】
 
 ### 05 - Logistics, distance-client y cálculo de costos.md
-- Verificado que Orders sigue llamando únicamente al endpoint `/api/logistics/routes/estimaciones/distancia` mediante el cliente HTTP, sin dependencia directa de la librería externa.【F:orders-service/src/main/resources/application.properties†L24-L28】
+- Verificado que se eliminó la dependencia a `/api/logistics/routes/estimaciones/distancia` desde Orders; las estimaciones se obtienen en Logistics al generar rutas tentativas.【F:orders-service/src/main/resources/application.properties†L22-L25】
 
 ### 06 - Pruebas E2E y limpieza final.md
 - Se actualizó la colección Postman y la guía para reflejar los flujos descritos (roles, secuencia y endpoints).【F:POSTMAN_GUIDE.md†L135-L248】【F:TPI-2025-COMPLETE.postman_collection.json†L617-L716】

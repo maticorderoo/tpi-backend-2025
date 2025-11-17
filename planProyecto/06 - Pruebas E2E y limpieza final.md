@@ -10,7 +10,7 @@ Resultado esperado: solicitud creada en estado BORRADOR/PROGRAMADA, contenedor a
 Operador
 Login (rol OPERADOR).
 Listar solicitudes pendientes: GET /api/orders?estadoContenedor=BORRADOR.
-Calcular estimación: POST /api/orders/{id}/estimacion.
+Calcular estimación: (obsoleto, la estimación se obtiene al confirmar rutas tentativas en Logistics).
 Configurar depósitos: POST /api/logistics/depositos.
 Planificar ruta: POST /api/logistics/routes con origen/destino/depósitos.
 Asignar ruta a solicitud: POST /api/logistics/routes/{rutaId}/asignaciones.
@@ -37,7 +37,7 @@ TPI-2025.postman_collection
 │   ├── Listar solicitudes (cuando exista)
 │   └── Consultar tracking
 ├── 02-Operador
-│   ├── Calcular estimacion
+│   ├── Calcular estimacion (OBSOLETO)
 │   ├── CRUD Depositos
 │   ├── Crear ruta
 │   ├── Asignar ruta a solicitud
