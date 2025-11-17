@@ -7,10 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -45,7 +46,7 @@ public class FleetClient {
             return new TruckLookupResult(response.getBody(), uri, response.getStatusCode());
         } catch (HttpStatusCodeException ex) {
             log.error("FleetService GET {} respondió {} {}", uri, ex.getStatusCode().value(), ex.getStatusText());
-            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+            if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
                 throw new NotFoundException("Camión " + camionId + " no encontrado en Flota");
             }
             throw new BusinessException("No se pudo obtener el camión desde Flota: " + ex.getStatusCode());
@@ -79,7 +80,7 @@ public class FleetClient {
     public record DisponibilidadRequest(Boolean disponible, String motivoNoDisponibilidad) {
     }
 
-    public record TruckLookupResult(TruckInfo truck, URI uri, HttpStatus statusCode) {
+    public record TruckLookupResult(TruckInfo truck, URI uri, HttpStatusCode statusCode) {
     }
 
     private URI buildUri(String path, Object... uriVariables) {
