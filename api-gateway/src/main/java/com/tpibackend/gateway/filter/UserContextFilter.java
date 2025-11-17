@@ -27,10 +27,12 @@ public class UserContextFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         return exchange.getPrincipal()
-                .defaultIfEmpty(null)
-                .flatMap(principal -> chain.filter(exchange.mutate()
-                        .request(augmentRequest(exchange.getRequest(), principal))
-                        .build()));
+            .flatMap(principal -> chain.filter(exchange.mutate()
+                .request(augmentRequest(exchange.getRequest(), principal))
+                .build()))
+            .switchIfEmpty(chain.filter(exchange.mutate()
+                .request(augmentRequest(exchange.getRequest(), null))
+                .build()));
     }
 
     private ServerHttpRequest augmentRequest(ServerHttpRequest request, Principal principal) {
