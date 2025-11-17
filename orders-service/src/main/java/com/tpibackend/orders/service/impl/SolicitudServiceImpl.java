@@ -5,6 +5,7 @@ import com.tpibackend.orders.client.LogisticsClient;
 import com.tpibackend.orders.dto.response.DistanceEstimationResponse;
 import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
+import com.tpibackend.orders.dto.request.UbicacionRequestDto;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
@@ -84,12 +85,14 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud solicitud = new Solicitud();
         solicitud.setCliente(cliente);
         solicitud.setContenedor(contenedor);
-        solicitud.setOrigen(request.getOrigen());
-        solicitud.setOrigenLat(request.getOrigenLat());
-        solicitud.setOrigenLng(request.getOrigenLng());
-        solicitud.setDestino(request.getDestino());
-        solicitud.setDestinoLat(request.getDestinoLat());
-        solicitud.setDestinoLng(request.getDestinoLng());
+        UbicacionRequestDto origen = request.getOrigen();
+        UbicacionRequestDto destino = request.getDestino();
+        solicitud.setOrigen(origen.getDireccion());
+        solicitud.setOrigenLat(origen.getLatitud());
+        solicitud.setOrigenLng(origen.getLongitud());
+        solicitud.setDestino(destino.getDireccion());
+        solicitud.setDestinoLat(destino.getLatitud());
+        solicitud.setDestinoLng(destino.getLongitud());
         solicitud.setFechaCreacion(OffsetDateTime.now());
 
         // Inicializar estados automáticamente

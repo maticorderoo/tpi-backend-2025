@@ -54,14 +54,28 @@ class SolicitudControllerTest {
         when(solicitudService.crearSolicitud(any())).thenReturn(responseDto);
 
         SolicitudCreateRequest request = new SolicitudCreateRequest();
-        request.setCliente(new com.tpibackend.orders.dto.request.ClienteRequestDto());
-        request.setContenedor(new com.tpibackend.orders.dto.request.ContenedorRequestDto());
-        request.setOrigen("Buenos Aires");
-        request.setOrigenLat(-34.6037);
-        request.setOrigenLng(-58.3816);
-        request.setDestino("Córdoba");
-        request.setDestinoLat(-31.4201);
-        request.setDestinoLng(-64.1888);
+        com.tpibackend.orders.dto.request.ClienteRequestDto cliente = new com.tpibackend.orders.dto.request.ClienteRequestDto();
+        cliente.setNombre("ACME Corp");
+        cliente.setEmail("contacto@acme.com");
+        cliente.setTelefono("+54 11 5555-1111");
+        request.setCliente(cliente);
+
+        com.tpibackend.orders.dto.request.ContenedorRequestDto contenedor = new com.tpibackend.orders.dto.request.ContenedorRequestDto();
+        contenedor.setPeso(new BigDecimal("1200.5"));
+        contenedor.setVolumen(new BigDecimal("28.4"));
+        request.setContenedor(contenedor);
+
+        com.tpibackend.orders.dto.request.UbicacionRequestDto origen = new com.tpibackend.orders.dto.request.UbicacionRequestDto();
+        origen.setDireccion("Buenos Aires");
+        origen.setLatitud(-34.6037);
+        origen.setLongitud(-58.3816);
+        request.setOrigen(origen);
+
+        com.tpibackend.orders.dto.request.UbicacionRequestDto destino = new com.tpibackend.orders.dto.request.UbicacionRequestDto();
+        destino.setDireccion("Córdoba");
+        destino.setLatitud(-31.4201);
+        destino.setLongitud(-64.1888);
+        request.setDestino(destino);
 
         mockMvc.perform(post(BASE_URL)
                 .with(jwt()

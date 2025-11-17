@@ -227,7 +227,7 @@ El alta de solicitudes pide exclusivamente los datos definidos en el enunciado:
 
 - Información del cliente (`nombre`, `email`, `telefono`).
 - Datos del contenedor (`peso`, `volumen`, `codigo` opcional si ya existe).
-- Origen y destino con sus coordenadas obligatorias.
+- Origen y destino como objetos con dirección + latitud/longitud obligatorias.
 
 Ejemplo válido:
 
@@ -242,12 +242,16 @@ Ejemplo válido:
     "peso": 1200.5,
     "volumen": 28.4
   },
-  "origen": "Buenos Aires, Puerto Madero",
-  "origenLat": -34.6037,
-  "origenLng": -58.3816,
-  "destino": "Córdoba, barrio Güemes",
-  "destinoLat": -31.4201,
-  "destinoLng": -64.1888
+  "origen": {
+    "direccion": "Buenos Aires, Puerto Madero",
+    "latitud": -34.6037,
+    "longitud": -58.3816
+  },
+  "destino": {
+    "direccion": "Córdoba, barrio Güemes",
+    "latitud": -31.4201,
+    "longitud": -64.1888
+  }
 }
 ```
 

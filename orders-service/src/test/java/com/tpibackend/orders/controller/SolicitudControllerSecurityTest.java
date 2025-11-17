@@ -119,18 +119,23 @@ class SolicitudControllerSecurityTest {
         ClienteRequestDto cliente = new ClienteRequestDto();
         cliente.setNombre("Cliente Prueba");
         cliente.setEmail("cliente@correo.com");
+        cliente.setTelefono("+54 11 5555-2222");
         request.setCliente(cliente);
         ContenedorRequestDto contenedor = new ContenedorRequestDto();
         contenedor.setPeso(BigDecimal.TEN);
         contenedor.setVolumen(BigDecimal.ONE);
         // El estado se gestiona automáticamente, no se debe setear
         request.setContenedor(contenedor);
-        request.setOrigen("Buenos Aires");
-        request.setOrigenLat(-34.6037);
-        request.setOrigenLng(-58.3816);
-        request.setDestino("Cordoba");
-        request.setDestinoLat(-31.4201);
-        request.setDestinoLng(-64.1888);
+        com.tpibackend.orders.dto.request.UbicacionRequestDto origen = new com.tpibackend.orders.dto.request.UbicacionRequestDto();
+        origen.setDireccion("Buenos Aires");
+        origen.setLatitud(-34.6037);
+        origen.setLongitud(-58.3816);
+        request.setOrigen(origen);
+        com.tpibackend.orders.dto.request.UbicacionRequestDto destino = new com.tpibackend.orders.dto.request.UbicacionRequestDto();
+        destino.setDireccion("Cordoba");
+        destino.setLatitud(-31.4201);
+        destino.setLongitud(-64.1888);
+        request.setDestino(destino);
         return request;
     }
 
