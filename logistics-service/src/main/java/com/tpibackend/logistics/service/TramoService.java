@@ -69,8 +69,8 @@ public class TramoService {
 
     public TramoResponse asignarCamion(Long tramoId, AsignarCamionRequest request) {
         Tramo tramo = obtenerTramo(tramoId);
-        if (tramo.getEstado() == TramoEstado.FINALIZADO) {
-            throw new BusinessException("El tramo ya fue finalizado");
+        if (tramo.getEstado() == TramoEstado.INICIADO || tramo.getEstado() == TramoEstado.FINALIZADO) {
+            throw new BusinessException("No se puede asignar camión a un tramo " + tramo.getEstado());
         }
 
         Ruta ruta = tramo.getRuta();
@@ -96,12 +96,19 @@ public class TramoService {
             throw new BusinessException("El camión no soporta el volumen requerido");
         }
 
+        if (camionTieneTramosIniciados(request.camionId(), tramo.getId())) {
+            throw new BusinessException("El camión " + request.camionId() + " ya se encuentra realizando otro tramo");
+        }
+
+        Long camionAnterior = tramo.getCamionId();
+
         tramo.setCamionId(request.camionId());
         tramo.setEstado(TramoEstado.ASIGNADO);
         tramoRepository.save(tramo);
 
-        fleetClient.actualizarDisponibilidad(request.camionId(), false,
-                "Asignado al tramo " + tramoId + " (pendiente de inicio)");
+        if (camionAnterior != null && !Objects.equals(camionAnterior, request.camionId())) {
+            sincronizarDisponibilidadCamion(camionAnterior);
+        }
 
         log.info("Camión {} asignado al tramo {}", request.camionId(), tramoId);
         return LogisticsMapper.toTramoResponse(tramo);
@@ -114,6 +121,11 @@ public class TramoService {
         }
         if (tramo.getEstado() != TramoEstado.ASIGNADO) {
             throw new BusinessException("El tramo no puede iniciarse en estado " + tramo.getEstado());
+        }
+
+        if (camionTieneTramosIniciados(tramo.getCamionId(), tramo.getId())) {
+            throw new BusinessException(
+                    "El camión " + tramo.getCamionId() + " ya se encuentra realizando otro tramo en curso");
         }
 
         OffsetDateTime inicio = OffsetDateTime.now();
@@ -164,7 +176,7 @@ public class TramoService {
         tramo.setEstado(TramoEstado.FINALIZADO);
         tramoRepository.save(tramo);
 
-        actualizarDisponibilidadSegunPendientes(tramo);
+        sincronizarDisponibilidadCamion(tramo.getCamionId());
 
         Ruta ruta = tramo.getRuta();
         List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(ruta.getId());
@@ -183,7 +195,7 @@ public class TramoService {
             boolean rutaFinalizada = tramosRuta.stream()
                     .allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO);
             if (rutaFinalizada) {
-                ordersSyncGateway.notificarFinalizacion(ruta.getSolicitudId(), "ENTREGADA", "ENTREGADO",
+                ordersSyncGateway.notificarFinalizacion(ruta.getSolicitudId(), "ENTREGADO", "ENTREGADO",
                         ruta.getCostoTotalReal(), ruta.getTiempoRealMinutos());
             } else if (destinoEsDeposito(tramo)) {
                 ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "EN_TRANSITO", "EN_DEPOSITO");
@@ -341,16 +353,25 @@ public class TramoService {
         return tramo.getCostoEstadiaDia() != null ? tramo.getCostoEstadiaDia() : BigDecimal.ZERO;
     }
 
-    private void actualizarDisponibilidadSegunPendientes(Tramo tramoFinalizado) {
-        Long camionId = tramoFinalizado.getCamionId();
+    private boolean camionTieneTramosIniciados(Long camionId, Long tramoAExcluir) {
+        if (camionId == null) {
+            return false;
+        }
+        return tramoRepository.findByCamionIdOrderByRutaIdAsc(camionId).stream()
+                .filter(t -> tramoAExcluir == null || !t.getId().equals(tramoAExcluir))
+                .anyMatch(t -> t.getEstado() == TramoEstado.INICIADO);
+    }
+
+    private boolean camionTieneTramosIniciados(Long camionId) {
+        return camionTieneTramosIniciados(camionId, null);
+    }
+
+    private void sincronizarDisponibilidadCamion(Long camionId) {
         if (camionId == null) {
             return;
         }
-        boolean tienePendientes = tramoRepository.findByCamionIdOrderByRutaIdAsc(camionId).stream()
-                .filter(t -> !t.getId().equals(tramoFinalizado.getId()))
-                .anyMatch(t -> t.getEstado() == TramoEstado.ASIGNADO || t.getEstado() == TramoEstado.INICIADO);
-        if (tienePendientes) {
-            fleetClient.actualizarDisponibilidad(camionId, false, "Asignado a otros tramos");
+        if (camionTieneTramosIniciados(camionId)) {
+            fleetClient.actualizarDisponibilidad(camionId, false, "En tránsito");
         } else {
             fleetClient.actualizarDisponibilidad(camionId, true, null);
         }
