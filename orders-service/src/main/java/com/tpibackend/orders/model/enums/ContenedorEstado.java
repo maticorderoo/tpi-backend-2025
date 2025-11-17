@@ -4,7 +4,7 @@ public enum ContenedorEstado {
     BORRADOR,
     PROGRAMADA,
     EN_RETIRO,
-    EN_VIAJE,
+    EN_TRANSITO,
     EN_DEPOSITO,
     ENTREGADO,
     CANCELADO

@@ -249,7 +249,7 @@ public class RutaTentativaService {
 
         ordersSyncGateway.notificarPlanificacion(solicitudId, ruta.getCostoTotalAprox(),
                 ruta.getTiempoEstimadoMinutos(), ruta.getId());
-        ordersSyncGateway.notificarEstado(solicitudId, "PROGRAMADA");
+        ordersSyncGateway.notificarEstado(solicitudId, "PROGRAMADA", "PROGRAMADA");
 
         return LogisticsMapper.toRutaResponse(ruta);
     }

@@ -160,7 +160,7 @@ public class RutaService {
         ordersSyncGateway.notificarPlanificacion(request.solicitudId(), ruta.getCostoTotalAprox(),
                 ruta.getTiempoEstimadoMinutos(), ruta.getId());
         // TODO: reemplazar notificación directa por eventos cuando se disponga de broker
-        ordersSyncGateway.notificarEstado(request.solicitudId(), "PROGRAMADA");
+        ordersSyncGateway.notificarEstado(request.solicitudId(), "PROGRAMADA", "PROGRAMADA");
 
         return LogisticsMapper.toRutaResponse(ruta);
     }

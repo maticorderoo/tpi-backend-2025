@@ -7,8 +7,11 @@ import jakarta.validation.constraints.NotNull;
  * Payload interno utilizado por Logistics para propagar estados del contenedor.
  */
 public record ContenedorEstadoUpdateRequest(
-    @NotNull(message = "El estado es obligatorio")
-    ContenedorEstado estado,
-    
+    @NotNull(message = "El estado de la solicitud es obligatorio")
+    ContenedorEstado estadoSolicitud,
+
+    @NotNull(message = "El estado del contenedor es obligatorio")
+    ContenedorEstado estadoContenedor,
+
     String observaciones
 ) {}

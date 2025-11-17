@@ -23,10 +23,11 @@ public class RestOrdersSyncGateway implements OrdersSyncGateway {
     }
 
     @Override
-    public void notificarEstado(Long solicitudId, String estado) {
-        log.debug("Notificando estado {} a Orders para solicitud {}", estado, solicitudId);
+    public void notificarEstado(Long solicitudId, String estadoSolicitud, String estadoContenedor) {
+        log.debug("Notificando estado solicitud={} contenedor={} a Orders para solicitud {}",
+                estadoSolicitud, estadoContenedor, solicitudId);
         // TODO: reemplazar por publicación de eventos/logística cuando se disponga de broker.
-        ordersClient.actualizarEstado(solicitudId, estado);
+        ordersClient.actualizarEstado(solicitudId, estadoSolicitud, estadoContenedor);
     }
 
     @Override

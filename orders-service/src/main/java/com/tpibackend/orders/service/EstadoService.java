@@ -20,7 +20,7 @@ public class EstadoService {
      * Estado inicial: BORRADOR
      */
     public void inicializarEstados(Contenedor contenedor, Solicitud solicitud, String usuario) {
-        actualizarEstadoContenedor(contenedor, solicitud, ContenedorEstado.BORRADOR, usuario);
+        actualizarEstados(contenedor, solicitud, ContenedorEstado.BORRADOR, ContenedorEstado.BORRADOR, usuario);
     }
 
     /**
@@ -28,7 +28,7 @@ public class EstadoService {
      * Contenedor: BORRADOR -> PROGRAMADA
      */
     public void confirmarPlan(Contenedor contenedor, Solicitud solicitud, String usuario) {
-        actualizarEstadoContenedor(contenedor, solicitud, ContenedorEstado.PROGRAMADA, usuario);
+        actualizarEstados(contenedor, solicitud, ContenedorEstado.PROGRAMADA, ContenedorEstado.PROGRAMADA, usuario);
     }
 
     /**
@@ -37,37 +37,37 @@ public class EstadoService {
      */
     public void iniciarRetiro(Contenedor contenedor, Solicitud solicitud, String usuario) {
         if (contenedor.getEstado() == ContenedorEstado.PROGRAMADA) {
-            actualizarEstadoContenedor(contenedor, solicitud, ContenedorEstado.EN_RETIRO, usuario);
+            actualizarEstados(contenedor, solicitud, ContenedorEstado.EN_RETIRO, ContenedorEstado.EN_RETIRO, usuario);
         }
     }
 
     /**
      * Actualiza estado del contenedor cuando inicia un tramo de viaje.
-     * Contenedor: EN_RETIRO/EN_DEPOSITO -> EN_VIAJE
+     * Contenedor: EN_RETIRO/EN_DEPOSITO -> EN_TRANSITO
      */
     public void iniciarViaje(Contenedor contenedor, Solicitud solicitud, String usuario) {
         if (contenedor.getEstado() == ContenedorEstado.EN_RETIRO
             || contenedor.getEstado() == ContenedorEstado.EN_DEPOSITO) {
-            actualizarEstadoContenedor(contenedor, solicitud, ContenedorEstado.EN_VIAJE, usuario);
+            actualizarEstados(contenedor, solicitud, ContenedorEstado.EN_TRANSITO, ContenedorEstado.EN_TRANSITO, usuario);
         }
     }
 
     /**
      * Actualiza estado del contenedor cuando inicia un tramo de depósito.
-     * Contenedor: EN_VIAJE -> EN_DEPOSITO
+     * Contenedor: EN_TRANSITO -> EN_DEPOSITO (la solicitud se mantiene en tránsito)
      */
     public void iniciarDeposito(Contenedor contenedor, Solicitud solicitud, String usuario) {
-        if (contenedor.getEstado() == ContenedorEstado.EN_VIAJE) {
-            actualizarEstadoContenedor(contenedor, solicitud, ContenedorEstado.EN_DEPOSITO, usuario);
+        if (contenedor.getEstado() == ContenedorEstado.EN_TRANSITO) {
+            actualizarEstados(contenedor, solicitud, ContenedorEstado.EN_TRANSITO, ContenedorEstado.EN_DEPOSITO, usuario);
         }
     }
 
     /**
      * Actualiza estados cuando se finaliza el último tramo (entrega).
-     * Contenedor: EN_VIAJE/EN_DEPOSITO -> ENTREGADO
+     * Contenedor: EN_TRANSITO/EN_DEPOSITO -> ENTREGADO
      */
     public void finalizarEntrega(Contenedor contenedor, Solicitud solicitud, String usuario) {
-        actualizarEstadoContenedor(contenedor, solicitud, ContenedorEstado.ENTREGADO, usuario);
+        actualizarEstados(contenedor, solicitud, ContenedorEstado.ENTREGADO, ContenedorEstado.ENTREGADO, usuario);
     }
 
     /**
@@ -75,25 +75,28 @@ public class EstadoService {
      * Contenedor: * -> CANCELADO
      */
     public void cancelarSolicitud(Contenedor contenedor, Solicitud solicitud, String usuario) {
-        actualizarEstadoContenedor(contenedor, solicitud, ContenedorEstado.CANCELADO, usuario);
+        actualizarEstados(contenedor, solicitud, ContenedorEstado.CANCELADO, ContenedorEstado.CANCELADO, usuario);
     }
 
     /**
      * Permite actualización interna del estado del contenedor.
      */
     public void actualizarEstadoManual(Contenedor contenedor, Solicitud solicitud,
-            ContenedorEstado nuevoEstado, String usuario) {
-        actualizarEstadoContenedor(contenedor, solicitud, nuevoEstado, usuario);
+            ContenedorEstado estadoSolicitud, ContenedorEstado estadoContenedor, String usuario) {
+        actualizarEstados(contenedor, solicitud, estadoSolicitud, estadoContenedor, usuario);
     }
 
-    private void actualizarEstadoContenedor(Contenedor contenedor, Solicitud solicitud,
-            ContenedorEstado nuevoEstado, String usuario) {
-        contenedor.setEstado(nuevoEstado);
-        contenedor.setUpdatedAt(OffsetDateTime.now());
-        contenedor.setUpdatedBy(usuario);
-        if (solicitud != null) {
-            solicitud.setEstado(nuevoEstado);
-            solicitud.setUpdatedAt(OffsetDateTime.now());
+    private void actualizarEstados(Contenedor contenedor, Solicitud solicitud,
+            ContenedorEstado estadoSolicitud, ContenedorEstado estadoContenedor, String usuario) {
+        OffsetDateTime now = OffsetDateTime.now();
+        if (contenedor != null && estadoContenedor != null) {
+            contenedor.setEstado(estadoContenedor);
+            contenedor.setUpdatedAt(now);
+            contenedor.setUpdatedBy(usuario);
+        }
+        if (solicitud != null && estadoSolicitud != null) {
+            solicitud.setEstado(estadoSolicitud);
+            solicitud.setUpdatedAt(now);
             solicitud.setUpdatedBy(usuario);
         }
     }

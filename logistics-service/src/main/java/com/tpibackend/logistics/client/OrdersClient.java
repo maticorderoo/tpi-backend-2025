@@ -38,19 +38,26 @@ public class OrdersClient {
         this.sharedSecret = sharedSecret;
     }
 
-    public void actualizarEstado(Long solicitudId, String estado) {
+    public void actualizarEstado(Long solicitudId, String estadoSolicitud, String estadoContenedor) {
         try {
-            String estadoPayload = estado != null ? estado.toUpperCase(Locale.ROOT) : null;
-            if (estadoPayload == null) {
+            Map<String, Object> payload = new HashMap<>();
+            if (estadoSolicitud != null) {
+                payload.put("estadoSolicitud", estadoSolicitud.toUpperCase(Locale.ROOT));
+            }
+            if (estadoContenedor != null) {
+                payload.put("estadoContenedor", estadoContenedor.toUpperCase(Locale.ROOT));
+            }
+            if (payload.isEmpty()) {
                 return;
             }
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set(INTERNAL_SECRET_HEADER, sharedSecret);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(Map.of("estado", estadoPayload), headers);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
             restTemplate.put(baseUrl + "/" + solicitudId + "/estado", entity);
         } catch (RestClientException ex) {
-            log.warn("No se pudo notificar al servicio de Orders sobre el estado {}: {}", estado, ex.getMessage());
+            log.warn("No se pudo notificar al servicio de Orders sobre el estado {}-{}: {}",
+                    estadoSolicitud, estadoContenedor, ex.getMessage());
         }
     }
 

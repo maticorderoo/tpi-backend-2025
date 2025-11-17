@@ -41,7 +41,8 @@ public class ContenedorService {
             throw new OrdersNotFoundException("La solicitud no tiene un contenedor asociado");
         }
 
-        estadoService.actualizarEstadoManual(contenedor, solicitud, request.estado(), usuario);
+        estadoService.actualizarEstadoManual(contenedor, solicitud,
+                request.estadoSolicitud(), request.estadoContenedor(), usuario);
 
         contenedorRepository.save(contenedor);
         solicitudRepository.save(solicitud);

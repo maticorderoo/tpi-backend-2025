@@ -126,9 +126,9 @@ public class TramoService {
         fleetClient.actualizarDisponibilidad(tramo.getCamionId(), false, "En tránsito - Tramo " + tramoId);
 
         Ruta ruta = tramo.getRuta();
-        if (ruta.getSolicitudId() != null && esPrimerTramoEnRuta(tramo)) {
+        if (ruta.getSolicitudId() != null) {
             // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
-            ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "EN_TRANSITO");
+            ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "EN_TRANSITO", "EN_TRANSITO");
         }
 
         log.info("Tramo {} iniciado", tramoId);
@@ -178,11 +178,16 @@ public class TramoService {
 
         log.info("Tramo {} finalizado con costo {}", tramoId, costoReal);
 
-        if (ruta.getSolicitudId() != null &&
-                tramosRuta.stream().allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO)) {
-            // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
-            ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "ENTREGADA");
-            ordersSyncGateway.notificarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal(), tiempoRealTotal);
+        if (ruta.getSolicitudId() != null) {
+            boolean rutaFinalizada = tramosRuta.stream()
+                    .allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO);
+            if (rutaFinalizada) {
+                // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
+                ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "ENTREGADA", "ENTREGADO");
+                ordersSyncGateway.notificarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal(), tiempoRealTotal);
+            } else if (destinoEsDeposito(tramo)) {
+                ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "EN_TRANSITO", "EN_DEPOSITO");
+            }
         }
 
         return LogisticsMapper.toTramoResponse(tramo);
@@ -294,13 +299,8 @@ public class TramoService {
         return LogisticsMapper.toTramoResponse(obtenerTramo(tramoId));
     }
 
-    private boolean esPrimerTramoEnRuta(Tramo tramo) {
-        Ruta ruta = tramo.getRuta();
-        if (ruta == null || ruta.getId() == null) {
-            return false;
-        }
-        List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(ruta.getId());
-        return !tramosRuta.isEmpty() && tramosRuta.get(0).getId().equals(tramo.getId());
+    private boolean destinoEsDeposito(Tramo tramo) {
+        return tramo.getDestinoTipo() == LocationType.DEPOSITO;
     }
 
     private int calcularDiasEstadiaReal(Tramo tramo) {
