@@ -691,22 +691,6 @@
                 "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/finalizaciones",
                 "description": "Recalcula distancia real con distance-client"
               }
-            },
-            {
-              "name": "Listar Tramos de un Camión",
-              "request": {
-                "method": "GET",
-                "url": "{{logistics_base_url}}/tramos/camion/{{camion_id}}",
-                "description": "Para TRANSPORTISTA ver sus tramos asignados"
-              }
-            },
-            {
-              "name": "Contenedores en Depósito",
-              "request": {
-                "method": "GET",
-                "url": "{{logistics_base_url}}/tramos/deposito/{{deposito_id}}/contenedores",
-                "description": "Lista contenedores esperando en el depósito"
-              }
             }
           ]
         }

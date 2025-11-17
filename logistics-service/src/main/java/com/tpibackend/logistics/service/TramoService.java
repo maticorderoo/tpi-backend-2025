@@ -237,17 +237,13 @@ public class TramoService {
         }
     }
 
-    public java.util.List<TramoResponse> obtenerTramosPorCamion(Long camionId) {
-        log.debug("Obteniendo tramos para camión {}", camionId);
-        return tramoRepository.findByCamionIdOrderByRutaIdAsc(camionId)
-                .stream()
-                .map(LogisticsMapper::toTramoResponse)
-                .collect(java.util.stream.Collectors.toList());
-    }
-
     public java.util.List<TramoResponse> listarTramos(Long camionId) {
         if (camionId != null) {
-            return obtenerTramosPorCamion(camionId);
+            log.debug("Listando tramos del camión {}", camionId);
+            return tramoRepository.findByCamionIdOrderByRutaIdAsc(camionId)
+                    .stream()
+                    .map(LogisticsMapper::toTramoResponse)
+                    .collect(java.util.stream.Collectors.toList());
         }
         return tramoRepository.findAll().stream()
                 .map(LogisticsMapper::toTramoResponse)
@@ -355,42 +351,4 @@ public class TramoService {
         }
     }
 
-    public java.util.List<TramoResponse> obtenerContenedoresEnDeposito(Long depositoId) {
-        log.debug("Obteniendo contenedores en depósito {}", depositoId);
-        
-        // Buscar tramos cuyo destino sea el depósito especificado
-        java.util.List<Tramo> tramosEnDeposito = tramoRepository.findAll().stream()
-                .filter(tramo -> {
-                    // El tramo debe estar FINALIZADO (contenedor llegó al depósito)
-                    if (tramo.getEstado() != TramoEstado.FINALIZADO) {
-                        return false;
-                    }
-                    
-                    // El destino debe ser el depósito buscado
-                    if (tramo.getDestinoTipo() != LocationType.DEPOSITO 
-                            || !depositoId.equals(tramo.getDestinoId())) {
-                        return false;
-                    }
-                    
-                    // Verificar que el siguiente tramo (si existe) no haya iniciado
-                    Ruta ruta = tramo.getRuta();
-                    java.util.List<Tramo> tramosRuta = ruta.getTramos();
-                    int indexActual = tramosRuta.indexOf(tramo);
-                    
-                    // Si no hay siguiente tramo, el contenedor ya llegó a destino final
-                    if (indexActual == tramosRuta.size() - 1) {
-                        return false;
-                    }
-                    
-                    // Verificar que el siguiente tramo no haya iniciado
-                    Tramo siguienteTramo = tramosRuta.get(indexActual + 1);
-                    return siguienteTramo.getEstado() == TramoEstado.ESTIMADO 
-                            || siguienteTramo.getEstado() == TramoEstado.ASIGNADO;
-                })
-                .collect(java.util.stream.Collectors.toList());
-        
-        return tramosEnDeposito.stream()
-                .map(LogisticsMapper::toTramoResponse)
-                .collect(java.util.stream.Collectors.toList());
-    }
 }

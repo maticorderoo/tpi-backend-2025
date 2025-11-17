@@ -972,47 +972,6 @@
                 },
                 "description": "Recalcula distancia real con distance-client"
               }
-            },
-            {
-              "name": "Listar Tramos de un Camión",
-              "request": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/tramos/camion/{{camion_id}}",
-                  "host": [
-                    "{{gateway_base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "logistics",
-                    "tramos",
-                    "camion",
-                    "{{camion_id}}"
-                  ]
-                },
-                "description": "Para TRANSPORTISTA ver sus tramos asignados"
-              }
-            },
-            {
-              "name": "Contenedores en Depósito",
-              "request": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/tramos/deposito/{{deposito_id}}/contenedores",
-                  "host": [
-                    "{{gateway_base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "logistics",
-                    "tramos",
-                    "deposito",
-                    "{{deposito_id}}",
-                    "contenedores"
-                  ]
-                },
-                "description": "Lista contenedores esperando en el depósito"
-              }
             }
           ]
         }

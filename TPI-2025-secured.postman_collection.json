@@ -306,16 +306,6 @@
       "name": "🚚 Transportista",
       "item": [
         {
-          "name": "Tramos asignados al camión",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token_transportista}}" }
-            ],
-            "url": "{{gateway_base_url}}/api/logistics/tramos/camion/{{camion_id}}"
-          }
-        },
-        {
           "name": "Iniciar tramo",
           "request": {
             "method": "POST",
