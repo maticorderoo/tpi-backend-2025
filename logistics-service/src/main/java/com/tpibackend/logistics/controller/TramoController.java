@@ -60,7 +60,7 @@ public class TramoController {
         return ResponseEntity.ok(tramoService.obtenerDetalle(tramoId));
     }
 
-    @PostMapping("/{tramoId}/asignaciones")
+    @PostMapping({"/{tramoId}/asignaciones", "/{tramoId}/asignar-camion"})
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Asignar camión a tramo",
             description = "Asigna un camión disponible a un tramo. Requiere rol OPERADOR.",

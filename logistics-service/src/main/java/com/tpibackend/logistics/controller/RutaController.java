@@ -22,8 +22,10 @@ import com.tpibackend.logistics.dto.request.EstimacionDistanciaRequest;
 import com.tpibackend.logistics.dto.response.EstimacionDistanciaResponse;
 import com.tpibackend.logistics.dto.response.RutaResponse;
 import com.tpibackend.logistics.dto.response.RutaTentativaResponse;
+import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.service.RutaService;
 import com.tpibackend.logistics.service.RutaTentativaService;
+import com.tpibackend.logistics.service.TramoService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -45,10 +47,14 @@ public class RutaController {
 
     private final RutaService rutaService;
     private final RutaTentativaService rutaTentativaService;
+    private final TramoService tramoService;
 
-    public RutaController(RutaService rutaService, RutaTentativaService rutaTentativaService) {
+    public RutaController(RutaService rutaService,
+            RutaTentativaService rutaTentativaService,
+            TramoService tramoService) {
         this.rutaService = rutaService;
         this.rutaTentativaService = rutaTentativaService;
+        this.tramoService = tramoService;
     }
 
     @PostMapping
@@ -121,6 +127,20 @@ public class RutaController {
         log.debug("Asignando ruta {} a solicitud {}", rutaId, request.solicitudId());
         RutaResponse response = rutaService.asignarRuta(rutaId, request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{rutaId}/tramos")
+    @PreAuthorize("hasRole('OPERADOR')")
+    @Operation(summary = "Listar tramos de una ruta confirmada",
+            description = "Permite al operador ver el detalle de los tramos planificados para coordinar camiones.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Listado de tramos",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = TramoResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "Ruta no encontrada")
+            })
+    public ResponseEntity<List<TramoResponse>> listarTramosPorRuta(@PathVariable Long rutaId) {
+        return ResponseEntity.ok(tramoService.listarTramosPorRuta(rutaId));
     }
 
     @GetMapping("/solicitudes/{solicitudId}")

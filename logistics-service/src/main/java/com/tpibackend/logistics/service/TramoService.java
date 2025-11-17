@@ -3,6 +3,7 @@ package com.tpibackend.logistics.service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,21 +14,23 @@ import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceResult;
 import com.tpibackend.logistics.client.FleetClient;
 import com.tpibackend.logistics.client.FleetClient.TruckInfo;
+import com.tpibackend.logistics.client.OrdersClient;
+import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
 import com.tpibackend.logistics.dto.request.FinTramoRequest;
 import com.tpibackend.logistics.dto.request.InicioTramoRequest;
 import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.exception.NotFoundException;
+import com.tpibackend.logistics.integration.OrdersSyncGateway;
 import com.tpibackend.logistics.mapper.LogisticsMapper;
-import com.tpibackend.logistics.integration.OrdersSyncGateway;
-import com.tpibackend.logistics.integration.OrdersSyncGateway;
 import com.tpibackend.logistics.model.Deposito;
 import com.tpibackend.logistics.model.Ruta;
 import com.tpibackend.logistics.model.Tramo;
 import com.tpibackend.logistics.model.enums.LocationType;
 import com.tpibackend.logistics.model.enums.TramoEstado;
 import com.tpibackend.logistics.repository.DepositoRepository;
+import com.tpibackend.logistics.repository.RutaRepository;
 import com.tpibackend.logistics.repository.TramoRepository;
 
 @Service
@@ -41,17 +44,23 @@ public class TramoService {
     private final FleetClient fleetClient;
     private final OrdersSyncGateway ordersSyncGateway;
     private final DistanceClient distanceClient;
+    private final RutaRepository rutaRepository;
+    private final OrdersClient ordersClient;
 
     public TramoService(TramoRepository tramoRepository,
             DepositoRepository depositoRepository,
             FleetClient fleetClient,
             OrdersSyncGateway ordersSyncGateway,
-            DistanceClient distanceClient) {
+            DistanceClient distanceClient,
+            RutaRepository rutaRepository,
+            OrdersClient ordersClient) {
         this.tramoRepository = tramoRepository;
         this.depositoRepository = depositoRepository;
         this.fleetClient = fleetClient;
         this.ordersSyncGateway = ordersSyncGateway;
         this.distanceClient = distanceClient;
+        this.rutaRepository = rutaRepository;
+        this.ordersClient = ordersClient;
     }
 
     public TramoResponse asignarCamion(Long tramoId, AsignarCamionRequest request) {
@@ -65,8 +74,8 @@ public class TramoService {
         }
 
         Ruta ruta = tramo.getRuta();
-        BigDecimal pesoCarga = request.pesoCarga() != null ? request.pesoCarga() : ruta.getPesoTotal();
-        BigDecimal volumenCarga = request.volumenCarga() != null ? request.volumenCarga() : ruta.getVolumenTotal();
+        BigDecimal pesoCarga = resolverPesoCarga(ruta, request);
+        BigDecimal volumenCarga = resolverVolumenCarga(ruta, request);
 
         if (camion.capacidadPeso() != null && pesoCarga != null
                 && camion.capacidadPeso().compareTo(pesoCarga) < 0) {
@@ -80,6 +89,9 @@ public class TramoService {
         tramo.setCamionId(request.camionId());
         tramo.setEstado(TramoEstado.ASIGNADO);
         tramoRepository.save(tramo);
+
+        fleetClient.actualizarDisponibilidad(request.camionId(), false,
+                "Asignado al tramo " + tramoId + " (pendiente de inicio)");
 
         log.info("Camión {} asignado al tramo {}", request.camionId(), tramoId);
         return LogisticsMapper.toTramoResponse(tramo);
@@ -218,6 +230,47 @@ public class TramoService {
         return tramoRepository.findAll().stream()
                 .map(LogisticsMapper::toTramoResponse)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<TramoResponse> listarTramosPorRuta(Long rutaId) {
+        List<Tramo> tramos = tramoRepository.findByRutaIdOrderByIdAsc(rutaId);
+        if (tramos.isEmpty() && !rutaRepository.existsById(rutaId)) {
+            throw new NotFoundException("Ruta " + rutaId + " no encontrada");
+        }
+        return tramos.stream()
+                .map(LogisticsMapper::toTramoResponse)
+                .toList();
+    }
+
+    private BigDecimal resolverPesoCarga(Ruta ruta, AsignarCamionRequest request) {
+        if (request.pesoCarga() != null) {
+            return request.pesoCarga();
+        }
+        if (ruta.getPesoTotal() != null && ruta.getPesoTotal().compareTo(BigDecimal.ZERO) > 0) {
+            return ruta.getPesoTotal();
+        }
+        return obtenerDatosSolicitud(ruta).map(SolicitudLogisticaResponse::pesoContenedor).orElse(null);
+    }
+
+    private BigDecimal resolverVolumenCarga(Ruta ruta, AsignarCamionRequest request) {
+        if (request.volumenCarga() != null) {
+            return request.volumenCarga();
+        }
+        if (ruta.getVolumenTotal() != null && ruta.getVolumenTotal().compareTo(BigDecimal.ZERO) > 0) {
+            return ruta.getVolumenTotal();
+        }
+        return obtenerDatosSolicitud(ruta).map(SolicitudLogisticaResponse::volumenContenedor).orElse(null);
+    }
+
+    private java.util.Optional<SolicitudLogisticaResponse> obtenerDatosSolicitud(Ruta ruta) {
+        if (ruta.getSolicitudId() == null) {
+            return java.util.Optional.empty();
+        }
+        java.util.Optional<SolicitudLogisticaResponse> solicitud = ordersClient.obtenerSolicitud(ruta.getSolicitudId());
+        if (solicitud.isEmpty()) {
+            log.warn("No se pudo recuperar información de la solicitud {} para validar camiones", ruta.getSolicitudId());
+        }
+        return solicitud;
     }
 
     public TramoResponse obtenerDetalle(Long tramoId) {
