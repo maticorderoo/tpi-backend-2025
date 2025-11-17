@@ -1,22 +1,22 @@
 package com.tpibackend.distance.mapper;
 
 import com.tpibackend.distance.model.DirectionsApiResponse;
-import com.tpibackend.distance.model.DistanceData;
+import com.tpibackend.distance.model.DistanceResult;
 
 /**
- * Mapper para convertir respuestas de Google Directions API a DistanceData.
+ * Mapper para convertir respuestas de Google Directions API a DistanceResult.
  * Suma distancias y duraciones de todos los legs (tramos) de la ruta.
  */
 public class DistanceResponseMapper {
 
     /**
-     * Convierte una respuesta de Google Directions en DistanceData.
+     * Convierte una respuesta de Google Directions en DistanceResult.
      * 
      * @param response respuesta de la API (no debe ser null)
      * @return DistanceData con km y minutos totales
      * @throws IllegalArgumentException si la respuesta no tiene rutas válidas
      */
-    public static DistanceData from(DirectionsApiResponse response) {
+    public static DistanceResult from(DirectionsApiResponse response) {
         if (response == null || response.routes == null || response.routes.isEmpty()) {
             throw new IllegalArgumentException("La respuesta no contiene rutas válidas");
         }
@@ -38,6 +38,6 @@ public class DistanceResponseMapper {
         double distanceKm = totalMeters / 1000.0;
         double durationMinutes = totalSeconds / 60.0;
 
-        return new DistanceData(distanceKm, durationMinutes);
+        return new DistanceResult(distanceKm, durationMinutes);
     }
 }

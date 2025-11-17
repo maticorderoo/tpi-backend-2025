@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import com.tpibackend.distance.model.DistanceData;
+import com.tpibackend.distance.model.DistanceResult;
 
 /**
  * Aplicación de prueba para validar el DistanceClient.
@@ -25,7 +25,7 @@ public class TestApp {
             
             try {
                 // Córdoba a Mendoza
-                DistanceData data = distanceClient.getDistance(
+                DistanceResult data = distanceClient.getDistanceAndDuration(
                     -31.4167, -64.1833,   // Córdoba Capital
                     -32.8908, -68.8272,   // Mendoza
                     "driving"

@@ -92,6 +92,12 @@ public class Tramo {
     @Column(name = "distancia_km_real")
     private Double distanciaKmReal;
 
+    @Column(name = "tiempo_estimado_minutos")
+    private Long tiempoEstimadoMinutos = 0L;
+
+    @Column(name = "tiempo_real_minutos")
+    private Long tiempoRealMinutos = 0L;
+
     @Column(name = "dias_estadia")
     private Integer diasEstadia = 0;
 
@@ -273,6 +279,22 @@ public class Tramo {
 
     public void setDistanciaKmReal(Double distanciaKmReal) {
         this.distanciaKmReal = distanciaKmReal;
+    }
+
+    public Long getTiempoEstimadoMinutos() {
+        return tiempoEstimadoMinutos;
+    }
+
+    public void setTiempoEstimadoMinutos(Long tiempoEstimadoMinutos) {
+        this.tiempoEstimadoMinutos = tiempoEstimadoMinutos;
+    }
+
+    public Long getTiempoRealMinutos() {
+        return tiempoRealMinutos;
+    }
+
+    public void setTiempoRealMinutos(Long tiempoRealMinutos) {
+        this.tiempoRealMinutos = tiempoRealMinutos;
     }
 
     public Integer getDiasEstadia() {

@@ -20,6 +20,8 @@ CREATE TABLE rutas (
   cant_depositos      int NOT NULL,
   costo_total_aprox   numeric(14,2),
   costo_total_real    numeric(14,2),
+  tiempo_estimado_minutos bigint,
+  tiempo_real_minutos     bigint,
   peso_total          numeric(12,2),
   volumen_total       numeric(12,2),
   created_at          timestamptz NOT NULL,
@@ -50,6 +52,8 @@ CREATE TABLE tramos (
   camion_id                  bigint,
   distancia_km_estimada      double precision,
   distancia_km_real          double precision,
+  tiempo_estimado_minutos    bigint,
+  tiempo_real_minutos        bigint,
   dias_estadia               int DEFAULT 0,
   costo_estadia_dia          numeric(12,2),
   costo_estadia              numeric(12,2),
@@ -59,3 +63,8 @@ CREATE TABLE tramos (
 
 CREATE INDEX ix_tramos_ruta ON tramos(ruta_id);
 CREATE INDEX ix_rutas_solicitud ON rutas(solicitud_id);
+
+INSERT INTO depositos (nombre, direccion, lat, lng, costo_estadia_dia) VALUES
+  ('Depósito Buenos Aires', 'Dock Sud, Buenos Aires', -34.659, -58.329, 15000),
+  ('Depósito Córdoba', 'Av. Circunvalación, Córdoba', -31.424, -64.185, 12000),
+  ('Depósito Rosario', 'Zona Franca, Rosario', -32.957, -60.639, 13500);

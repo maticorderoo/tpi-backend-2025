@@ -1,6 +1,12 @@
 package com.tpibackend.logistics.model.enums;
 
 public enum TramoTipo {
-    TRASLADO,
-    ESPERA
+    // backward-compatible alias
+    ORIGEN_DESTINO,
+
+    // canonical names
+    ORIGEN_A_DESTINO,
+    ORIGEN_A_DEPOSITO,
+    DEPOSITO_A_DEPOSITO,
+    DEPOSITO_A_DESTINO
 }

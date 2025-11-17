@@ -10,6 +10,8 @@ public record RutaResponse(
         Integer cantDepositos,
         BigDecimal costoTotalAprox,
         BigDecimal costoTotalReal,
+        Long tiempoEstimadoMinutos,
+        Long tiempoRealMinutos,
         BigDecimal pesoTotal,
         BigDecimal volumenTotal,
         List<TramoResponse> tramos

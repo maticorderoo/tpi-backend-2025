@@ -40,6 +40,12 @@ public class Ruta {
     @Column(name = "costo_total_real", precision = 14, scale = 2)
     private BigDecimal costoTotalReal = BigDecimal.ZERO;
 
+    @Column(name = "tiempo_estimado_minutos")
+    private Long tiempoEstimadoMinutos = 0L;
+
+    @Column(name = "tiempo_real_minutos")
+    private Long tiempoRealMinutos = 0L;
+
     @Column(name = "peso_total", precision = 12, scale = 2)
     private BigDecimal pesoTotal = BigDecimal.ZERO;
 
@@ -103,6 +109,22 @@ public class Ruta {
         return costoTramos.add(cargoGestion);
     }
 
+    public long calcularTiempoEstimado() {
+        return tramos.stream()
+                .map(Tramo::getTiempoEstimadoMinutos)
+                .filter(valor -> valor != null)
+                .mapToLong(Long::longValue)
+                .sum();
+    }
+
+    public long calcularTiempoReal() {
+        return tramos.stream()
+                .map(Tramo::getTiempoRealMinutos)
+                .filter(valor -> valor != null)
+                .mapToLong(Long::longValue)
+                .sum();
+    }
+
     public Long getId() {
         return id;
     }
@@ -149,6 +171,22 @@ public class Ruta {
 
     public void setCostoTotalReal(BigDecimal costoTotalReal) {
         this.costoTotalReal = costoTotalReal;
+    }
+
+    public Long getTiempoEstimadoMinutos() {
+        return tiempoEstimadoMinutos;
+    }
+
+    public void setTiempoEstimadoMinutos(Long tiempoEstimadoMinutos) {
+        this.tiempoEstimadoMinutos = tiempoEstimadoMinutos;
+    }
+
+    public Long getTiempoRealMinutos() {
+        return tiempoRealMinutos;
+    }
+
+    public void setTiempoRealMinutos(Long tiempoRealMinutos) {
+        this.tiempoRealMinutos = tiempoRealMinutos;
     }
 
     public BigDecimal getPesoTotal() {

@@ -13,6 +13,8 @@ public class RutaResumenDto {
     Integer cantDepositos;
     BigDecimal costoTotalAprox;
     BigDecimal costoTotalReal;
+    Long tiempoEstimadoMinutos;
+    Long tiempoRealMinutos;
     BigDecimal pesoTotal;
     BigDecimal volumenTotal;
     List<TramoResumenDto> tramos;

@@ -9,7 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tpibackend.logistics.config.SecurityConfig;
 import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.exception.SecurityExceptionHandler;
+import com.tpibackend.logistics.model.enums.LocationType;
+import com.tpibackend.logistics.model.enums.TramoEstado;
+import com.tpibackend.logistics.model.enums.TramoTipo;
 import com.tpibackend.logistics.service.TramoService;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -53,9 +57,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void asignarCamionConOperadorDevuelve200() throws Exception {
-        when(tramoService.asignarCamion(any(), any())).thenReturn(
-            new TramoResponse(1L, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null)
-        );
+        when(tramoService.asignarCamion(any(), any())).thenReturn(tramoResponse());
 
         mockMvc.perform(post("/api/logistics/tramos/2/asignaciones")
                 .with(jwtWithRoles("OPERADOR"))
@@ -83,9 +85,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void iniciarTramoConTransportistaDevuelve200() throws Exception {
-        when(tramoService.iniciarTramo(any(), any())).thenReturn(
-            new TramoResponse(1L, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null)
-        );
+        when(tramoService.iniciarTramo(any(), any())).thenReturn(tramoResponse());
 
         mockMvc.perform(post("/api/logistics/tramos/2/inicios")
                 .with(jwtWithRoles("TRANSPORTISTA"))
@@ -113,9 +113,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void finalizarTramoConTransportistaDevuelve200() throws Exception {
-        when(tramoService.finalizarTramo(any(), any())).thenReturn(
-            new TramoResponse(1L, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null)
-        );
+        when(tramoService.finalizarTramo(any(), any())).thenReturn(tramoResponse());
 
         mockMvc.perform(post("/api/logistics/tramos/2/finalizaciones")
                 .with(jwtWithRoles("TRANSPORTISTA"))
@@ -130,5 +128,30 @@ class TramoControllerSecurityTest {
 
     private RequestPostProcessor jwtWithRoles(String... roles) {
         return jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))));
+    }
+
+    private TramoResponse tramoResponse() {
+        return new TramoResponse(
+            1L,
+            1L,
+            LocationType.ORIGEN,
+            10L,
+            LocationType.DESTINO,
+            20L,
+            TramoTipo.ORIGEN_DESTINO,
+            TramoEstado.ESTIMADO,
+            BigDecimal.ZERO,
+            null,
+            OffsetDateTime.now(),
+            null,
+            null,
+            15d,
+            null,
+            90L,
+            null,
+            0,
+            null,
+            null
+        );
     }
 }

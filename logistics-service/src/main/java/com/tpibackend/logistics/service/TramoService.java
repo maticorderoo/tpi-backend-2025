@@ -1,6 +1,7 @@
 package com.tpibackend.logistics.service;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 
 import org.slf4j.Logger;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tpibackend.distance.DistanceClient;
-import com.tpibackend.distance.model.DistanceData;
+import com.tpibackend.distance.model.DistanceResult;
 import com.tpibackend.logistics.client.FleetClient;
 import com.tpibackend.logistics.client.FleetClient.TruckInfo;
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
@@ -126,6 +127,8 @@ public class TramoService {
         double distanciaReal = resolverDistanciaReal(tramo, request);
         tramo.setDistanciaKmReal(distanciaReal);
         tramo.setDiasEstadia(request.diasEstadia());
+        long minutosReales = Duration.between(tramo.getFechaHoraInicio(), tramo.getFechaHoraFin()).toMinutes();
+        tramo.setTiempoRealMinutos(minutosReales < 0 ? 0 : minutosReales);
 
         BigDecimal costoEstadiaDia = tramo.getCostoEstadiaDia();
         if (tramo.getDestinoTipo() == LocationType.DEPOSITO && tramo.getDestinoId() != null) {
@@ -152,6 +155,7 @@ public class TramoService {
 
         Ruta ruta = tramo.getRuta();
         ruta.setCostoTotalReal(ruta.calcularCostoTotalReal());
+        ruta.setTiempoRealMinutos(ruta.calcularTiempoReal());
 
         log.info("Tramo {} finalizado con costo {}", tramoId, costoReal);
 
@@ -181,7 +185,7 @@ public class TramoService {
         }
 
         try {
-            DistanceData data = distanceClient.getDistance(
+            DistanceResult data = distanceClient.getDistanceAndDuration(
                     tramo.getOrigenLat(), tramo.getOrigenLng(),
                     tramo.getDestinoLat(), tramo.getDestinoLng());
             double distancia = data.distanceKm();
@@ -190,6 +194,7 @@ public class TramoService {
                 return fallback;
             }
             log.info("Distancia real para tramo {} calculada en {} km", tramo.getId(), distancia);
+            tramo.setTiempoRealMinutos(Math.round(data.durationMinutes()));
             return distancia;
         } catch (Exception ex) {
             log.warn("No se pudo calcular distancia real con distance-client para tramo {}. Usando fallback {} km",

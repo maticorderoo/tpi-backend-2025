@@ -23,6 +23,8 @@ public record TramoResponse(
         Long camionId,
         Double distanciaKmEstimada,
         Double distanciaKmReal,
+        Long tiempoEstimadoMinutos,
+        Long tiempoRealMinutos,
         Integer diasEstadia,
         BigDecimal costoEstadiaDia,
         BigDecimal costoEstadia

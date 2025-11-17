@@ -1,5 +1,7 @@
 package com.tpibackend.logistics.controller;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,7 +21,9 @@ import com.tpibackend.logistics.dto.request.CrearRutaRequest;
 import com.tpibackend.logistics.dto.request.EstimacionDistanciaRequest;
 import com.tpibackend.logistics.dto.response.EstimacionDistanciaResponse;
 import com.tpibackend.logistics.dto.response.RutaResponse;
+import com.tpibackend.logistics.dto.response.RutaTentativaResponse;
 import com.tpibackend.logistics.service.RutaService;
+import com.tpibackend.logistics.service.RutaTentativaService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,9 +44,11 @@ public class RutaController {
     private static final Logger log = LoggerFactory.getLogger(RutaController.class);
 
     private final RutaService rutaService;
+    private final RutaTentativaService rutaTentativaService;
 
-    public RutaController(RutaService rutaService) {
+    public RutaController(RutaService rutaService, RutaTentativaService rutaTentativaService) {
         this.rutaService = rutaService;
+        this.rutaTentativaService = rutaTentativaService;
     }
 
     @PostMapping
@@ -139,5 +145,20 @@ public class RutaController {
         return rutaService.obtenerRutaPorSolicitud(solicitudId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/solicitudes/{solicitudId}/rutas-tentativas")
+    @PreAuthorize("hasRole('OPERADOR')")
+    @Operation(summary = "Generar rutas tentativas",
+            description = "Devuelve todas las rutas tentativas calculadas con depósitos intermedios disponibles.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Rutas generadas",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = RutaTentativaResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
+            })
+    public ResponseEntity<List<RutaTentativaResponse>> generarTentativas(@PathVariable Long solicitudId) {
+        List<RutaTentativaResponse> rutas = rutaTentativaService.generarTentativas(solicitudId);
+        return ResponseEntity.ok(rutas);
     }
 }

@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.tpibackend.distance.DistanceClient;
-import com.tpibackend.distance.model.DistanceData;
+import com.tpibackend.distance.model.DistanceResult;
 import com.tpibackend.logistics.dto.request.AsignarRutaRequest;
 import com.tpibackend.logistics.dto.request.CrearRutaRequest;
 import com.tpibackend.logistics.dto.request.DepositStopRequest;
@@ -93,12 +93,12 @@ public class RutaService {
             tramo.setDestinoId(destino.referenciaId());
             tramo.setDestinoLat(destino.lat());
             tramo.setDestinoLng(destino.lng());
-            tramo.setTipo(TramoTipo.TRASLADO);
+            tramo.setTipo(determinarTipo(origen.tipo(), destino.tipo()));
             tramo.setEstado(TramoEstado.ESTIMADO);
 
-            DistanceData distanceData = null;
+            DistanceResult distanceData = null;
             try {
-                distanceData = distanceClient.getDistance(origen.lat(), origen.lng(), destino.lat(), destino.lng());
+                distanceData = distanceClient.getDistanceAndDuration(origen.lat(), origen.lng(), destino.lat(), destino.lng());
             } catch (Exception ex) {
                 log.warn("No fue posible calcular distancia estimada entre {} y {}: {}",
                         origen.descripcion(), destino.descripcion(), ex.getMessage());
@@ -106,6 +106,8 @@ public class RutaService {
 
             double distancia = distanceData != null ? distanceData.distanceKm() : 0d;
             tramo.setDistanciaKmEstimada(distancia);
+            long tiempo = distanceData != null ? Math.round(distanceData.durationMinutes()) : 0L;
+            tramo.setTiempoEstimadoMinutos(tiempo);
 
             BigDecimal costoBase = request.costoKmBase().multiply(BigDecimal.valueOf(distancia));
             BigDecimal costoCombustible = request.consumoLitrosKm()
@@ -133,6 +135,7 @@ public class RutaService {
         tramos.forEach(ruta::addTramo);
         ruta.setCantTramos(tramos.size());
         ruta.setCostoTotalAprox(ruta.calcularCostoTotalAprox());
+        ruta.setTiempoEstimadoMinutos(ruta.calcularTiempoEstimado());
         rutaRepository.save(ruta);
 
         log.info("Ruta {} generada con {} tramos", ruta.getId(), ruta.getCantTramos());
@@ -163,7 +166,7 @@ public class RutaService {
             throw new BusinessException("Se requieren origen y destino para estimar distancia");
         }
         try {
-            DistanceData distanceData = distanceClient.getDistance(origen.trim(), destino.trim());
+            DistanceResult distanceData = distanceClient.getDistanceAndDuration(origen.trim(), destino.trim());
             return new EstimacionDistanciaResponse(distanceData.distanceKm(), distanceData.durationMinutes());
         } catch (Exception ex) {
             log.error("No fue posible calcular distancia entre {} y {}", origen, destino, ex);
@@ -220,5 +223,18 @@ public class RutaService {
 
     private record ResolvedLocation(LocationType tipo, Long referenciaId, double lat, double lng,
             String descripcion, Deposito deposito) {
+    }
+
+    private TramoTipo determinarTipo(LocationType origenTipo, LocationType destinoTipo) {
+        if (origenTipo == LocationType.DEPOSITO && destinoTipo == LocationType.DEPOSITO) {
+            return TramoTipo.DEPOSITO_A_DEPOSITO;
+        }
+        if (origenTipo == LocationType.DEPOSITO) {
+            return TramoTipo.DEPOSITO_A_DESTINO;
+        }
+        if (destinoTipo == LocationType.DEPOSITO) {
+            return TramoTipo.ORIGEN_A_DEPOSITO;
+        }
+        return TramoTipo.ORIGEN_A_DESTINO;
     }
 }

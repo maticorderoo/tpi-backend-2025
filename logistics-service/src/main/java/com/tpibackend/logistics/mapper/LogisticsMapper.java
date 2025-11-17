@@ -25,6 +25,8 @@ public final class LogisticsMapper {
                 ruta.getCantDepositos(),
                 ruta.getCostoTotalAprox(),
                 ruta.getCostoTotalReal(),
+                ruta.getTiempoEstimadoMinutos(),
+                ruta.getTiempoRealMinutos(),
                 ruta.getPesoTotal(),
                 ruta.getVolumenTotal(),
                 tramos);
@@ -47,6 +49,8 @@ public final class LogisticsMapper {
                 tramo.getCamionId(),
                 tramo.getDistanciaKmEstimada(),
                 tramo.getDistanciaKmReal(),
+                tramo.getTiempoEstimadoMinutos(),
+                tramo.getTiempoRealMinutos(),
                 tramo.getDiasEstadia(),
                 tramo.getCostoEstadiaDia(),
                 tramo.getCostoEstadia());

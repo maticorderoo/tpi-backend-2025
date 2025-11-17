@@ -121,6 +121,8 @@ public class LogisticsClient {
                 .cantDepositos(response.cantDepositos())
                 .costoTotalAprox(response.costoTotalAprox())
                 .costoTotalReal(response.costoTotalReal())
+                .tiempoEstimadoMinutos(response.tiempoEstimadoMinutos())
+                .tiempoRealMinutos(response.tiempoRealMinutos())
                 .pesoTotal(response.pesoTotal())
                 .volumenTotal(response.volumenTotal())
                 .tramos(tramos)
@@ -144,6 +146,8 @@ public class LogisticsClient {
                 .camionId(tramo.camionId())
                 .distanciaKmEstimada(tramo.distanciaKmEstimada())
                 .distanciaKmReal(tramo.distanciaKmReal())
+                .tiempoEstimadoMinutos(tramo.tiempoEstimadoMinutos())
+                .tiempoRealMinutos(tramo.tiempoRealMinutos())
                 .diasEstadia(tramo.diasEstadia())
                 .costoEstadiaDia(tramo.costoEstadiaDia())
                 .costoEstadia(tramo.costoEstadia())
@@ -152,6 +156,7 @@ public class LogisticsClient {
 
     private record RutaResponse(Long id, Long solicitudId, Integer cantTramos, Integer cantDepositos,
                                 BigDecimal costoTotalAprox, BigDecimal costoTotalReal,
+                                Long tiempoEstimadoMinutos, Long tiempoRealMinutos,
                                 BigDecimal pesoTotal, BigDecimal volumenTotal,
                                 List<TramoResponse> tramos) {
     }
@@ -161,6 +166,7 @@ public class LogisticsClient {
                                  BigDecimal costoAprox, BigDecimal costoReal,
                                  OffsetDateTime fechaHoraInicio, OffsetDateTime fechaHoraFin,
                                  Long camionId, Double distanciaKmEstimada, Double distanciaKmReal,
+                                 Long tiempoEstimadoMinutos, Long tiempoRealMinutos,
                                  Integer diasEstadia, BigDecimal costoEstadiaDia, BigDecimal costoEstadia) {
     }
 

@@ -3,16 +3,21 @@ package com.tpibackend.logistics.client;
 import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 
 @Component
 public class OrdersClient {
@@ -58,6 +63,23 @@ public class OrdersClient {
             restTemplate.put(baseUrl + "/" + solicitudId + "/costo", entity);
         } catch (RestClientException ex) {
             log.warn("No se pudo actualizar el costo final de la solicitud {}: {}", solicitudId, ex.getMessage());
+        }
+    }
+
+    public Optional<SolicitudLogisticaResponse> obtenerSolicitud(Long solicitudId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(INTERNAL_SECRET_HEADER, sharedSecret);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<SolicitudLogisticaResponse> response = restTemplate.exchange(
+                    baseUrl + "/" + solicitudId,
+                    HttpMethod.GET,
+                    entity,
+                    SolicitudLogisticaResponse.class);
+            return Optional.ofNullable(response.getBody());
+        } catch (RestClientException ex) {
+            log.warn("No se pudo obtener la solicitud {} desde Orders: {}", solicitudId, ex.getMessage());
+            return Optional.empty();
         }
     }
 }

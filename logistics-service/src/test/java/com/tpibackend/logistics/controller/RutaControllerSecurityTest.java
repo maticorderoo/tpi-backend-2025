@@ -10,8 +10,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tpibackend.logistics.config.SecurityConfig;
 import com.tpibackend.logistics.dto.response.RutaResponse;
+import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.exception.SecurityExceptionHandler;
+import com.tpibackend.logistics.model.enums.LocationType;
+import com.tpibackend.logistics.model.enums.TramoEstado;
+import com.tpibackend.logistics.model.enums.TramoTipo;
 import com.tpibackend.logistics.service.RutaService;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -57,9 +63,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void crearRutaConRolOperadorDevuelve201() throws Exception {
-        when(rutaService.crearRuta(any())).thenReturn(
-            new RutaResponse(1L, null, 0, 0, null, null, null, null, List.of())
-        );
+        when(rutaService.crearRuta(any())).thenReturn(rutaResponse());
 
         mockMvc.perform(post("/api/logistics/routes")
                 .with(jwtWithRoles("OPERADOR"))
@@ -87,9 +91,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void asignarRutaConOperadorDevuelve200() throws Exception {
-        when(rutaService.asignarRuta(any(), any())).thenReturn(
-            new RutaResponse(1L, null, 0, 0, null, null, null, null, List.of())
-        );
+        when(rutaService.asignarRuta(any(), any())).thenReturn(rutaResponse());
 
         mockMvc.perform(post("/api/logistics/routes/1/asignaciones")
                 .with(jwtWithRoles("OPERADOR"))
@@ -113,7 +115,7 @@ class RutaControllerSecurityTest {
     @Test
     void obtenerRutaConOperadorDevuelve200() throws Exception {
         when(rutaService.obtenerRutaPorSolicitud(any())).thenReturn(
-            java.util.Optional.of(new RutaResponse(1L, null, 0, 0, null, null, null, null, List.of()))
+            java.util.Optional.of(rutaResponse())
         );
 
         mockMvc.perform(get("/api/logistics/routes/solicitudes/1").with(jwtWithRoles("OPERADOR")))
@@ -136,5 +138,46 @@ class RutaControllerSecurityTest {
 
     private RequestPostProcessor jwtWithRoles(String... roles) {
         return jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))));
+    }
+
+    private RutaResponse rutaResponse() {
+        return new RutaResponse(
+            1L,
+            99L,
+            0,
+            0,
+            BigDecimal.ZERO,
+            null,
+            0L,
+            null,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            List.of(tramoResponse())
+        );
+    }
+
+    private TramoResponse tramoResponse() {
+        return new TramoResponse(
+            1L,
+            1L,
+            LocationType.ORIGEN,
+            1L,
+            LocationType.DESTINO,
+            2L,
+            TramoTipo.ORIGEN_DESTINO,
+            TramoEstado.ESTIMADO,
+            BigDecimal.ZERO,
+            null,
+            OffsetDateTime.now(),
+            null,
+            null,
+            10d,
+            null,
+            60L,
+            null,
+            0,
+            null,
+            null
+        );
     }
 }

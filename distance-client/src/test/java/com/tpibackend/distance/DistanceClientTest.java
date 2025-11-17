@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tpibackend.distance.mapper.DistanceResponseMapper;
 import com.tpibackend.distance.model.DirectionsApiResponse;
-import com.tpibackend.distance.model.DistanceData;
+import com.tpibackend.distance.model.DistanceResult;
 
 /**
  * Tests para DistanceClient y DistanceResponseMapper.
@@ -46,7 +46,7 @@ class DistanceClientTest {
         assertFalse(response.routes.isEmpty(), "Debe haber al menos una ruta");
         
         // Usar el mapper
-        DistanceData data = DistanceResponseMapper.from(response);
+        DistanceResult data = DistanceResponseMapper.from(response);
         
         assertNotNull(data, "DistanceData no debe ser null");
         
@@ -87,8 +87,8 @@ class DistanceClientTest {
         double mendozaLat = -32.8908;
         double mendozaLng = -68.8272;
         
-        DistanceData data = distanceClient.getDistance(
-            cordobaLat, cordobaLng, 
+        DistanceResult data = distanceClient.getDistanceAndDuration(
+            cordobaLat, cordobaLng,
             mendozaLat, mendozaLng,
             "driving"
         );
@@ -117,8 +117,8 @@ class DistanceClientTest {
         double buenosAiresLng = -58.3816;
         
         // Sin especificar mode (debería usar "driving" por defecto)
-        DistanceData data = distanceClient.getDistance(
-            cordobaLat, cordobaLng, 
+        DistanceResult data = distanceClient.getDistanceAndDuration(
+            cordobaLat, cordobaLng,
             buenosAiresLat, buenosAiresLng
         );
         
