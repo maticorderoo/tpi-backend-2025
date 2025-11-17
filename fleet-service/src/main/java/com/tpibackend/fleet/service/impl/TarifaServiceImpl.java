@@ -32,10 +32,12 @@ public class TarifaServiceImpl implements TarifaService {
 
     @Override
     public TarifaResponse create(TarifaRequest request) {
-        validateTipo(request.tipo(), null);
+        validateNombre(request.nombre(), null);
         Tarifa tarifa = new Tarifa();
-        tarifa.setTipo(request.tipo());
-        tarifa.setValor(request.valor());
+        tarifa.setNombre(request.nombre());
+        tarifa.setCostoKm(request.costoKm());
+        tarifa.setCostoHora(request.costoHora());
+        tarifa.setMoneda(request.moneda());
         Tarifa saved = tarifaRepository.save(tarifa);
         LOGGER.info("Tarifa creada con id {}", saved.getId());
         return toResponse(saved);
@@ -45,9 +47,11 @@ public class TarifaServiceImpl implements TarifaService {
     public TarifaResponse update(Long id, TarifaRequest request) {
         Tarifa tarifa = tarifaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarifa no encontrada"));
-        validateTipo(request.tipo(), id);
-        tarifa.setTipo(request.tipo());
-        tarifa.setValor(request.valor());
+        validateNombre(request.nombre(), id);
+        tarifa.setNombre(request.nombre());
+        tarifa.setCostoKm(request.costoKm());
+        tarifa.setCostoHora(request.costoHora());
+        tarifa.setMoneda(request.moneda());
         Tarifa saved = tarifaRepository.save(tarifa);
         LOGGER.info("Tarifa actualizada con id {}", saved.getId());
         return toResponse(saved);
@@ -61,16 +65,29 @@ public class TarifaServiceImpl implements TarifaService {
         LOGGER.info("Tarifa eliminada con id {}", tarifa.getId());
     }
 
-    private void validateTipo(String tipo, Long id) {
-        if (id == null && tarifaRepository.existsByTipoIgnoreCase(tipo)) {
-            throw new BusinessException("Ya existe una tarifa con el tipo indicado");
+    @Override
+    public TarifaResponse obtenerActiva() {
+        Tarifa tarifa = tarifaRepository.findTopByOrderByCreatedAtDescIdDesc()
+                .orElseThrow(() -> new ResourceNotFoundException("No hay tarifas configuradas"));
+        return toResponse(tarifa);
+    }
+
+    private void validateNombre(String nombre, Long id) {
+        if (id == null && tarifaRepository.existsByNombreIgnoreCase(nombre)) {
+            throw new BusinessException("Ya existe una tarifa con el nombre indicado");
         }
-        if (id != null && tarifaRepository.existsByTipoIgnoreCaseAndIdNot(tipo, id)) {
-            throw new BusinessException("Ya existe una tarifa con el tipo indicado");
+        if (id != null && tarifaRepository.existsByNombreIgnoreCaseAndIdNot(nombre, id)) {
+            throw new BusinessException("Ya existe una tarifa con el nombre indicado");
         }
     }
 
     private TarifaResponse toResponse(Tarifa tarifa) {
-        return new TarifaResponse(tarifa.getId(), tarifa.getTipo(), tarifa.getValor());
+        return new TarifaResponse(
+                tarifa.getId(),
+                tarifa.getNombre(),
+                tarifa.getCostoKm(),
+                tarifa.getCostoHora(),
+                tarifa.getMoneda(),
+                tarifa.getCreatedAt());
     }
 }

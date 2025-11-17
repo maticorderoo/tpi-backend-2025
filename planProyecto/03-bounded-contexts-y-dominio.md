@@ -44,7 +44,7 @@
 - Generar eventos logisticos que disparen cambios de estado/costo en Orders y disponibilidad en Fleet.
 
 **Datos que expone y consume**
-- Expone: CRUD de rutas y depositos, asignacion/inicio/fin de tramos, consultas operativas sobre rutas y endpoint interno de estimacion de distancia (`/api/logistics/routes/estimaciones/distancia`).
+- Expone: CRUD de rutas y depósitos, asignación/inicio/fin de tramos, consultas operativas sobre rutas y un endpoint interno de estimación de distancia (`/api/logistics/routes/estimaciones/distancia`) usado sólo como utilitario interno.
 - Consume: metricas de disponibilidad/costo de Fleet (camiones y tarifas) y las ordenes publicadas por Orders (IDs de solicitud y datos del contenedor) para asociar rutas.
 
 ### Fleet
@@ -82,7 +82,7 @@
 - Convertir legs de Google en un unico dato agregado usable por Logistics (km/minutos), manteniendo trazabilidad para auditoria.
 
 **Datos que expone y consume**
-- No expone endpoints publicos; Logistics se encarga de traducirlo en `/api/logistics/routes/estimaciones/distancia`.
+- No expone endpoints públicos; Logistics se encarga de encapsular distance-client en `/api/logistics/routes/estimaciones/distancia`, aunque Orders ya no lo consume directamente.
 - Consume: coordenadas (lat/lng) provistas por Logistics y la API key configurada para Google Maps.
 
 ## 2. Matriz Entidad ↔ Microservicio ideal
@@ -123,7 +123,7 @@
 1. **Alinear el modelo de Orders con el DER**: agregar campos `estado`, `origen`, `destino`, `origenLat/Lng`, `destinoLat/Lng` y persistirlos en `orders-service` junto con validaciones; actualizar DTOs, mappers y scripts SQL (`initdb/02-orders-schema.sql`) para que el agregado `Solicitud` complete el contexto de planeamiento.
 2. **Centralizar contenedores en Orders**: mover las consultas de contenedores pendientes y su exposicion REST desde Logistics hacia Orders, eliminando `ContenedorController`/`ContenedorService` en Logistics y publicando una API de busqueda en Orders.
 3. **Orquestar estados y costos mediante eventos**: reemplazar las llamadas directas de Logistics (`OrdersClient`) por eventos asincronicos “ruta programada / tramo iniciado / tramo finalizado” y hacer que Orders consuma esos eventos para actualizar el estado visible del contenedor/solicitud y el costo final; en paralelo, retirar el endpoint manual de estado en Orders.
-4. **Blindar la capability de distancia**: documentar y versionar el contrato del endpoint `/api/logistics/routes/estimaciones/distancia` y remover cualquier dependencia directa a `distance-client` fuera de Logistics para que la libreria quede encapsulada.
+4. **Blindar la capability de distancia**: documentar y versionar el endpoint `/api/logistics/routes/estimaciones/distancia` sólo para uso interno y remover cualquier dependencia directa a `distance-client` fuera de Logistics.
 5. **Formalizar los contratos Fleet -> Logistics -> Orders**: publicar DTOs compartidos para disponibilidad de camiones y metricas, asegurando que Logistics solo manipule IDs y que Fleet siga siendo el unico en cambiar disponibilidad (`fleet-service/src/main/java/com/tpibackend/fleet/controller/CamionController.java:141`), mientras Orders solo lea los promedios expuestos (`fleet-service/src/main/java/com/tpibackend/fleet/controller/MetricsController.java:32`).
 
 Este plan sienta las bases para que el siguiente ciclo implemente los cambios tecnicos (migracion de controladores, agregados y eventos) respetando los bounded contexts definidos.

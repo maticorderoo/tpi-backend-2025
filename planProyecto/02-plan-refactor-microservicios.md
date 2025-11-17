@@ -20,8 +20,8 @@
 
 ## 3. Cambios aplicados en este paso
 ### 3.1 Distance-client ahora es capability de Logistics
-- **Archivos**: `logistics-service/.../RutaController.java`, `RutaService.java`, nuevos DTOs `EstimacionDistanciaRequest/Response`, `orders-service/pom.xml`, `OrdersServiceApplication.java`, `SolicitudServiceImpl.java`, `LogisticsClient.java`, `DistanceEstimationResponse.java`, `application.properties`, tests asociados.
-- **Modificación**: Logistics expone `POST /api/logistics/routes/estimaciones/distancia` (context path + `@RequestMapping("/logistics/routes")`) que encapsula `distance-client`. Orders dejó de importar la librería, añadió `spring-boot-starter-webflux` para conservar `WebClient`, y ahora obtiene la estimación a través de `LogisticsClient` y DTO propio.
+- **Archivos**: `logistics-service/.../RutaController.java`, `RutaService.java`, nuevos DTOs `EstimacionDistanciaRequest/Response`, `orders-service/pom.xml`, `OrdersServiceApplication.java`, `SolicitudServiceImpl.java`, `LogisticsClient.java`, `DistanceEstimationResponse.java` (eliminado tras mover las estimaciones a Logistics), `application.properties`, tests asociados.
+- **Modificación**: Logistics mantiene `POST /api/logistics/routes/estimaciones/distancia` (context path + `@RequestMapping("/logistics/routes")`) para encapsular `distance-client`, pero Orders ya no consume ese endpoint porque las estimaciones se resuelven en Logistics al generar rutas tentativas.
 - **Justificación**: se reduce el acoplamiento directo al proveedor externo y se prepara a Logistics como único dueño del cálculo de distancias. Orders sólo depende de su microservicio hermano mediante HTTP.
 
 ### 3.2 Marcado de acoplamientos Orders ↔ Logistics

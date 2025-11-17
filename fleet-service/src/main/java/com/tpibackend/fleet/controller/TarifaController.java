@@ -43,6 +43,14 @@ public class TarifaController {
         return tarifaService.findAll();
     }
 
+    @GetMapping("/activa")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @Operation(summary = "Tarifa activa",
+            description = "Obtiene la última tarifa creada para usar en cálculos de costos. Requiere rol OPERADOR.")
+    public TarifaResponse obtenerActiva() {
+        return tarifaService.obtenerActiva();
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")

@@ -1,21 +1,16 @@
 package com.tpibackend.orders.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.when;
 
-import com.tpibackend.orders.client.FleetMetricsClient;
 import com.tpibackend.orders.client.LogisticsClient;
-import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.request.ClienteRequestDto;
 import com.tpibackend.orders.dto.request.ContenedorRequestDto;
-import com.tpibackend.orders.dto.response.DistanceEstimationResponse;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
-import com.tpibackend.orders.exception.OrdersValidationException;
 import com.tpibackend.orders.mapper.SolicitudMapper;
 import com.tpibackend.orders.model.Cliente;
 import com.tpibackend.orders.model.Contenedor;
@@ -46,9 +41,6 @@ class SolicitudServiceImplTest {
     private SolicitudRepository solicitudRepository;
 
     @Mock
-    private FleetMetricsClient fleetMetricsClient;
-
-    @Mock
     private LogisticsClient logisticsClient;
 
     @Mock
@@ -66,7 +58,6 @@ class SolicitudServiceImplTest {
             contenedorRepository,
             solicitudRepository,
             solicitudMapper,
-            fleetMetricsClient,
             logisticsClient,
             estadoService
         );
@@ -137,49 +128,4 @@ class SolicitudServiceImplTest {
         assertThat(response.getDestino()).isEqualTo("Córdoba");
     }
 
-    @Test
-    void calcularEstimacion_debeActualizarCostoYTiempo() {
-        Solicitud solicitud = new Solicitud();
-        solicitud.setId(10L);
-        solicitud.setCliente(new Cliente());
-        solicitud.setContenedor(new Contenedor());
-
-        when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-        when(logisticsClient.estimarDistancia("Buenos Aires", "Rosario"))
-            .thenReturn(Optional.of(new DistanceEstimationResponse(300.0, 360.0)));
-        when(fleetMetricsClient.getFleetAverages())
-            .thenReturn(new FleetMetricsClient.FleetAveragesResponse(new BigDecimal("15"), new BigDecimal("0.3")));
-        when(solicitudRepository.save(any(Solicitud.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        EstimacionRequest request = new EstimacionRequest();
-        request.setPrecioCombustible(new BigDecimal("2"));
-        request.setEstadiaEstimada(new BigDecimal("100"));
-        request.setOrigen("Buenos Aires");
-        request.setDestino("Rosario");
-
-        SolicitudResponseDto response = solicitudService.calcularEstimacion(10L, request);
-
-        BigDecimal costoEsperado = new BigDecimal("300").multiply(new BigDecimal("15"))
-            .add(new BigDecimal("300").multiply(new BigDecimal("0.3")).multiply(new BigDecimal("2")))
-            .add(new BigDecimal("100"));
-        assertThat(response.getCostoEstimado()).isEqualByComparingTo(costoEsperado.setScale(2));
-        assertThat(response.getTiempoEstimadoMinutos()).isEqualTo(360L);
-    }
-
-    @Test
-    void calcularEstimacion_sinOrigenODestino_debeFallar() {
-        Solicitud solicitud = new Solicitud();
-        solicitud.setId(10L);
-        solicitud.setCliente(new Cliente());
-        solicitud.setContenedor(new Contenedor());
-        when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-
-        EstimacionRequest request = new EstimacionRequest();
-        request.setPrecioCombustible(new BigDecimal("2"));
-        request.setEstadiaEstimada(new BigDecimal("100"));
-
-        assertThatThrownBy(() -> solicitudService.calcularEstimacion(10L, request))
-            .isInstanceOf(OrdersValidationException.class)
-            .hasMessageContaining("origen y destino");
-    }
 }

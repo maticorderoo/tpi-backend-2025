@@ -47,7 +47,6 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/orders/orders").hasAnyRole(ROLE_CLIENTE, ROLE_ADMIN)
                         .pathMatchers(HttpMethod.GET, "/api/orders/orders/*/tracking").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
                         .pathMatchers(HttpMethod.GET, "/api/orders/orders/*").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.POST, "/api/orders/orders/*/estimacion").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
                         .pathMatchers(HttpMethod.PUT, "/api/orders/orders/*/costo").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
                         .pathMatchers("/api/orders/orders/containers/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
                         .pathMatchers(HttpMethod.GET, "/api/logistics/seguimiento/pendientes").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)

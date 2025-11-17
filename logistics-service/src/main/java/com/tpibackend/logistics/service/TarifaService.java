@@ -5,54 +5,42 @@ import java.math.RoundingMode;
 
 import org.springframework.stereotype.Service;
 
+import com.tpibackend.logistics.client.FleetClient;
+import com.tpibackend.logistics.client.FleetClient.TarifaActiva;
 import com.tpibackend.logistics.config.EstimacionProperties;
 
 @Service
 public class TarifaService {
 
+    private final FleetClient fleetClient;
     private final EstimacionProperties estimacionProperties;
 
-    public TarifaService(EstimacionProperties estimacionProperties) {
+    public TarifaService(FleetClient fleetClient, EstimacionProperties estimacionProperties) {
+        this.fleetClient = fleetClient;
         this.estimacionProperties = estimacionProperties;
     }
 
-    public BigDecimal costoKmBase() {
-        return estimacionProperties.getCostoKmBase();
+    public TarifaActiva obtenerTarifaActiva() {
+        return fleetClient.obtenerTarifaActiva();
     }
 
-    public BigDecimal consumoLitrosKm() {
-        return estimacionProperties.getConsumoLitrosKm();
+    public BigDecimal calcularCostoPorDistancia(double distanciaKm, TarifaActiva tarifa) {
+        TarifaActiva datos = requireTarifa(tarifa);
+        return defaultZero(datos.costoKm()).multiply(distancia(distanciaKm));
     }
 
-    public BigDecimal precioCombustible() {
-        return estimacionProperties.getPrecioCombustible();
-    }
-
-    public BigDecimal costoTiempoHora() {
-        return estimacionProperties.getCostoTiempoHora();
+    public BigDecimal calcularCostoPorTiempo(long minutos, TarifaActiva tarifa) {
+        if (minutos <= 0) {
+            return BigDecimal.ZERO;
+        }
+        TarifaActiva datos = requireTarifa(tarifa);
+        BigDecimal horas = BigDecimal.valueOf(minutos)
+                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+        return defaultZero(datos.costoHora()).multiply(horas);
     }
 
     public int diasEstadiaDeposito() {
         return estimacionProperties.getDiasEstadiaDeposito();
-    }
-
-    public BigDecimal calcularCostoBasePorDistancia(double distanciaKm) {
-        return costoKmBase().multiply(distancia(distanciaKm));
-    }
-
-    public BigDecimal calcularCostoCombustible(double distanciaKm) {
-        return consumoLitrosKm()
-                .multiply(distancia(distanciaKm))
-                .multiply(precioCombustible());
-    }
-
-    public BigDecimal calcularCostoTiempo(long minutos) {
-        if (minutos <= 0) {
-            return BigDecimal.ZERO;
-        }
-        BigDecimal horas = BigDecimal.valueOf(minutos)
-                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
-        return costoTiempoHora().multiply(horas);
     }
 
     public BigDecimal calcularCostoEstadia(int dias, BigDecimal costoEstadiaDia) {
@@ -62,8 +50,19 @@ public class TarifaService {
         return costoEstadiaDia.multiply(BigDecimal.valueOf(dias));
     }
 
+    private TarifaActiva requireTarifa(TarifaActiva tarifa) {
+        if (tarifa == null) {
+            throw new IllegalArgumentException("Se requiere una tarifa activa para calcular costos");
+        }
+        return tarifa;
+    }
+
     private BigDecimal distancia(double distanciaKm) {
         double value = distanciaKm < 0 ? 0d : distanciaKm;
         return BigDecimal.valueOf(value);
+    }
+
+    private BigDecimal defaultZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }

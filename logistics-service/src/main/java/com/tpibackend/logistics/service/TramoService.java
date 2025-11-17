@@ -17,6 +17,7 @@ import com.tpibackend.distance.model.DistanceResult;
 import com.tpibackend.logistics.client.FleetClient;
 import com.tpibackend.logistics.client.FleetClient.TruckInfo;
 import com.tpibackend.logistics.client.FleetClient.TruckLookupResult;
+import com.tpibackend.logistics.client.FleetClient.TarifaActiva;
 import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
@@ -128,6 +129,8 @@ public class TramoService {
                     "El camión " + tramo.getCamionId() + " ya se encuentra realizando otro tramo en curso");
         }
 
+        validarOrdenDeInicio(tramo);
+
         OffsetDateTime inicio = OffsetDateTime.now();
         tramo.setEstado(TramoEstado.INICIADO);
         tramo.setFechaHoraInicio(inicio);
@@ -144,6 +147,27 @@ public class TramoService {
 
         log.info("Tramo {} iniciado", tramoId);
         return LogisticsMapper.toTramoResponse(tramo);
+    }
+
+    private void validarOrdenDeInicio(Tramo tramo) {
+        List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(tramo.getRuta().getId());
+        boolean tramoEncontrado = false;
+
+        for (Tramo tramoRuta : tramosRuta) {
+            if (tramoRuta.getId().equals(tramo.getId())) {
+                tramoEncontrado = true;
+                break;
+            }
+
+            if (tramoRuta.getEstado() != TramoEstado.FINALIZADO) {
+                throw new BusinessException(
+                        "No se puede iniciar este tramo porque existen tramos anteriores de la misma ruta que aún no están finalizados");
+            }
+        }
+
+        if (!tramoEncontrado) {
+            throw new BusinessException("El tramo no pertenece a la ruta configurada");
+        }
     }
 
     public TramoResponse finalizarTramo(Long tramoId) {
@@ -168,10 +192,10 @@ public class TramoService {
         BigDecimal costoEstadia = tarifaService.calcularCostoEstadia(diasEstadia, costoEstadiaDia);
         tramo.setCostoEstadia(costoEstadia);
 
-        BigDecimal costoBase = tarifaService.calcularCostoBasePorDistancia(distanciaReal);
-        BigDecimal costoCombustible = tarifaService.calcularCostoCombustible(distanciaReal);
-        BigDecimal costoTiempo = tarifaService.calcularCostoTiempo(tramo.getTiempoRealMinutos());
-        BigDecimal costoReal = costoBase.add(costoCombustible).add(costoTiempo).add(costoEstadia);
+        TarifaActiva tarifa = tarifaService.obtenerTarifaActiva();
+        BigDecimal costoDistancia = tarifaService.calcularCostoPorDistancia(distanciaReal, tarifa);
+        BigDecimal costoTiempo = tarifaService.calcularCostoPorTiempo(tramo.getTiempoRealMinutos(), tarifa);
+        BigDecimal costoReal = costoDistancia.add(costoTiempo).add(costoEstadia);
         tramo.setCostoReal(costoReal);
         tramo.setEstado(TramoEstado.FINALIZADO);
         tramoRepository.save(tramo);

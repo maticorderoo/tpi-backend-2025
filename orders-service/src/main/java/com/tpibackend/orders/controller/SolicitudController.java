@@ -1,6 +1,5 @@
 package com.tpibackend.orders.controller;
 
-import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
@@ -141,38 +140,6 @@ public class SolicitudController {
             })
     public ResponseEntity<SeguimientoResponseDto> obtenerSeguimiento(@PathVariable("id") Long id) {
         return ResponseEntity.ok(solicitudService.obtenerSeguimientoPorContenedor(id));
-    }
-
-    @PostMapping("/{id}/estimacion")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
-    @Operation(
-            summary = "Calcular estimación de costo y tiempo",
-            description = "Calcula el costo y tiempo estimado utilizando distance-client y métricas de flota. Requiere rol OPERADOR.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = EstimacionRequest.class),
-                    examples = @ExampleObject(name = "estimacion",
-                            value = "{\n  \"combustiblePrecioLitro\": 750,\n  \"tiempoCargaHoras\": 4\n}"))),
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Estimación calculada",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = SolicitudResponseDto.class))),
-                    @ApiResponse(responseCode = "401", description = "No autenticado",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    examples = @ExampleObject(name = "unauthorized",
-                                            value = "{\"error\":\"unauthorized\"}"))),
-                    @ApiResponse(responseCode = "403", description = "Acceso prohibido",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    examples = @ExampleObject(name = "forbidden",
-                                            value = "{\"error\":\"forbidden\"}"))),
-                    @ApiResponse(responseCode = "404", description = "Solicitud no encontrada"),
-                    @ApiResponse(responseCode = "409", description = "Solicitud no admite estimación")
-            }
-    )
-    public ResponseEntity<SolicitudResponseDto> calcularEstimacion(
-        @PathVariable Long id,
-        @Valid @RequestBody EstimacionRequest request
-    ) {
-        return ResponseEntity.ok(solicitudService.calcularEstimacion(id, request));
     }
 
     @PutMapping("/{id}/costo")

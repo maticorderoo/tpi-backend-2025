@@ -8,9 +8,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TarifaRepository extends JpaRepository<Tarifa, Long> {
 
-    boolean existsByTipoIgnoreCase(String tipo);
+    boolean existsByNombreIgnoreCase(String nombre);
 
-    boolean existsByTipoIgnoreCaseAndIdNot(String tipo, Long id);
+    boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
 
-    Optional<Tarifa> findByTipoIgnoreCase(String tipo);
+    Optional<Tarifa> findTopByOrderByCreatedAtDescIdDesc();
 }

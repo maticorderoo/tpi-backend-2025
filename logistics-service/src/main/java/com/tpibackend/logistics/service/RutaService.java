@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceResult;
+import com.tpibackend.logistics.client.FleetClient.TarifaActiva;
 import com.tpibackend.logistics.dto.request.AsignarRutaRequest;
 import com.tpibackend.logistics.dto.request.CrearRutaRequest;
 import com.tpibackend.logistics.dto.request.DepositStopRequest;
@@ -65,6 +66,8 @@ public class RutaService {
         ruta.setPesoTotal(defaultZero(request.pesoCarga()));
         ruta.setVolumenTotal(defaultZero(request.volumenCarga()));
 
+        TarifaActiva tarifa = tarifaService.obtenerTarifaActiva();
+
         List<DepositStopRequest> depositStops = request.depositosIntermedios() == null
                 ? Collections.emptyList()
                 : request.depositosIntermedios();
@@ -112,9 +115,8 @@ public class RutaService {
             long tiempo = distanceData != null ? Math.round(distanceData.durationMinutes()) : 0L;
             tramo.setTiempoEstimadoMinutos(tiempo);
 
-            BigDecimal costoBase = tarifaService.calcularCostoBasePorDistancia(distancia);
-            BigDecimal costoCombustible = tarifaService.calcularCostoCombustible(distancia);
-            BigDecimal costoTiempo = tarifaService.calcularCostoTiempo(tiempo);
+            BigDecimal costoBase = tarifaService.calcularCostoPorDistancia(distancia, tarifa);
+            BigDecimal costoTiempo = tarifaService.calcularCostoPorTiempo(tiempo, tarifa);
 
             int diasEstadia = 0;
             BigDecimal costoEstadiaDia = BigDecimal.ZERO;
@@ -128,7 +130,7 @@ public class RutaService {
             tramo.setCostoEstadiaDia(costoEstadiaDia);
             tramo.setCostoEstadia(costoEstadia);
 
-            BigDecimal costoAprox = costoBase.add(costoCombustible).add(costoTiempo).add(costoEstadia);
+            BigDecimal costoAprox = costoBase.add(costoTiempo).add(costoEstadia);
             tramo.setCostoAprox(costoAprox);
 
             tramos.add(tramo);

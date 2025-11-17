@@ -13,4 +13,6 @@ public interface TarifaService {
     TarifaResponse update(Long id, TarifaRequest request);
 
     void delete(Long id);
+
+    TarifaResponse obtenerActiva();
 }

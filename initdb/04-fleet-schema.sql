@@ -16,9 +16,12 @@ CREATE TABLE camiones (
 );
 
 -- Tabla: Tarifa
--- De acuerdo con el diseño de cada grupo
+-- Tarifas administradas desde fleet-service
 CREATE TABLE tarifas (
-  id    bigserial PRIMARY KEY,
-  tipo  varchar(255) NOT NULL UNIQUE,
-  valor numeric(12,2) NOT NULL
+  id         bigserial PRIMARY KEY,
+  nombre     varchar(255) NOT NULL UNIQUE,
+  costo_km   numeric(12,2) NOT NULL,
+  costo_hora numeric(12,2) NOT NULL,
+  moneda     varchar(10) NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );

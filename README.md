@@ -69,7 +69,7 @@ El sistema incluye 3 usuarios de prueba ya configurados:
 |--------------------|:------:|:--------:|:-------------:|:-----:|---------|
 | `POST /api/orders/orders` | ✅ | ➖ | ➖ | ✅ | Crear solicitudes propias (el servicio valida que el email del cliente coincida con el token). |
 | `GET /api/orders/orders/**` | ✅ | ✅ | ➖ | ✅ | Cliente sólo accede a su solicitud; operador/admin ven todas. |
-| `POST /api/orders/orders/{id}/estimacion` y `PUT /costo` | ➖ | ✅ | ➖ | ✅ | Sólo logística / admin pueden recalcular costos. |
+| `PUT /api/orders/orders/{id}/costo` | ➖ | ✅ | ➖ | ✅ | Sólo logística / admin pueden actualizar el costo final. |
 | `GET /api/orders/orders/containers/**` | ➖ | ✅ | ➖ | ✅ | Contenedores pendientes para planificación. |
 | `GET /api/logistics/rutas/**`, `/depositos/**` | ➖ | ✅ | ➖ | ✅ | Administración logística. |
 | `GET /api/logistics/tramos/**` | ➖ | ✅ | ✅ | ✅ | Transporte puede ver tramos asignados; admin ve todo. |
@@ -178,7 +178,7 @@ El flujo recomendado:
 3. Crear un camión y consultar métricas en Fleet.
 4. Generar ruta y asignarla a la solicitud en Logistics.
 5. Asignar camión, iniciar y finalizar tramos.
-6. Volver a Orders para recalcular estimaciones y seguimiento.
+6. Volver a Orders para consultar el seguimiento actualizado.
 
 Para entornos con seguridad, asigná tokens Keycloak con roles `CLIENTE`, `OPERADOR` y `TRANSPORTISTA` según corresponda. Para pruebas sin autenticación, ejecutá los scripts `run-dev-noauth` y omite el header `Authorization`.
 

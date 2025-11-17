@@ -1,7 +1,7 @@
 05 - Logistics, distance-client y cálculo de costos
 1. Flujos de uso de distance-client
 1.1 Calcular rutas tentativas y tramos (planificación)
-Orders solicita estimación: orders-service llama a POST /api/logistics/routes/estimaciones/distancia para obtener distancia/tiempo entre origen y destino (ya implementado en LogisticsClient.estimarDistancia y RutaService.estimarDistancia, pero sin validar inputs rich).
+Orders ya no expone POST /api/orders/{id}/estimacion: las estimaciones se generan en Logistics al confirmar rutas tentativas usando `/api/logistics/routes/solicitudes/{id}/rutas-tentativas`.
 Operador arma ruta: en Logistics, RutaService.crearRuta recibe origen, destino y depósitos intermedios. Flujo ideal:
 Para cada punto consecutivo (origen → depósito 1, depósito 1 → depósito 2, ..., último depósito → destino), invocar DistanceClient.getDistance.
 Persistir distanciaKmEstimada, tiempo estimado en cada Tramo.
