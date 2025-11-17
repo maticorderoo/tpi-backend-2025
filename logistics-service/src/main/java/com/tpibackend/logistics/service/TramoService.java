@@ -17,6 +17,7 @@ import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceResult;
 import com.tpibackend.logistics.client.FleetClient;
 import com.tpibackend.logistics.client.FleetClient.TruckInfo;
+import com.tpibackend.logistics.client.FleetClient.TruckLookupResult;
 import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
@@ -80,7 +81,11 @@ public class TramoService {
             throw new BusinessException("No se pudo determinar el peso/volumen del contenedor asociado al tramo");
         }
 
-        TruckInfo camion = fleetClient.obtenerCamion(request.camionId());
+        log.info("Validando camión {} en FleetService", request.camionId());
+        TruckLookupResult camionLookup = fleetClient.obtenerCamion(request.camionId());
+        log.info("FleetService respondió {} consultando camión {} en {}", camionLookup.statusCode().value(),
+                request.camionId(), camionLookup.uri());
+        TruckInfo camion = camionLookup.truck();
         if (camion.disponible() != null && !camion.disponible()) {
             throw new BusinessException("El camión " + request.camionId() + " no está disponible");
         }

@@ -33,7 +33,7 @@ public class FleetClient {
         this.baseUrl = baseUrl;
     }
 
-    public TruckInfo obtenerCamion(Long camionId) {
+    public TruckLookupResult obtenerCamion(Long camionId) {
         URI uri = buildUri("/fleet/trucks/{id}", camionId);
         log.info("Consultando FleetService GET {}", uri);
         try {
@@ -42,7 +42,7 @@ public class FleetClient {
             if (response.getBody() == null) {
                 throw new BusinessException("No se obtuvo información del camión " + camionId);
             }
-            return response.getBody();
+            return new TruckLookupResult(response.getBody(), uri, response.getStatusCode());
         } catch (HttpStatusCodeException ex) {
             log.error("FleetService GET {} respondió {} {}", uri, ex.getStatusCode().value(), ex.getStatusText());
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -77,6 +77,9 @@ public class FleetClient {
     }
 
     public record DisponibilidadRequest(Boolean disponible, String motivoNoDisponibilidad) {
+    }
+
+    public record TruckLookupResult(TruckInfo truck, URI uri, HttpStatus statusCode) {
     }
 
     private URI buildUri(String path, Object... uriVariables) {
