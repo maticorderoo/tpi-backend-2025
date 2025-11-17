@@ -29,7 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping({"/logistics/depots", "/logistics/depositos", "/depositos"})
+@RequestMapping("/logistics/depositos")
 @Validated
 @Tag(name = "Depósitos", description = "Gestión de depósitos intermedios")
 @SecurityRequirement(name = "bearerAuth")

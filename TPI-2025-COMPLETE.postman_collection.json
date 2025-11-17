@@ -614,7 +614,7 @@
                   "mode": "raw",
                   "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
                 },
-                "url": "{{logistics_base_url}}/rutas",
+                "url": "{{logistics_base_url}}/routes",
                 "description": "Crea ruta con tramos calculados usando distance-client"
               }
             },
@@ -622,7 +622,7 @@
               "name": "Obtener Ruta por ID",
               "request": {
                 "method": "GET",
-                "url": "{{logistics_base_url}}/rutas/{{ruta_id}}"
+                "url": "{{logistics_base_url}}/routes/{{ruta_id}}"
               }
             },
             {
@@ -639,7 +639,7 @@
                   "mode": "raw",
                   "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
                 },
-                "url": "{{logistics_base_url}}/rutas/{{ruta_id}}/asignar"
+                "url": "{{logistics_base_url}}/routes/{{ruta_id}}/asignaciones"
               }
             }
           ]
@@ -661,7 +661,7 @@
                   "mode": "raw",
                   "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
                 },
-                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/asignar-camion",
+                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/asignaciones",
                 "description": "Valida capacidad del camión antes de asignar"
               }
             },
@@ -679,7 +679,7 @@
                   "mode": "raw",
                   "raw": "{}"
                 },
-                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/inicio"
+                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/inicios"
               }
             },
             {
@@ -696,7 +696,7 @@
                   "mode": "raw",
                   "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35,\n  \"diasEstadia\": 1\n}"
                 },
-                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/fin",
+                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/finalizaciones",
                 "description": "Recalcula distancia real con distance-client"
               }
             },
@@ -1078,7 +1078,7 @@
               "mode": "raw",
               "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
             },
-            "url": "{{logistics_base_url}}/rutas"
+            "url": "{{logistics_base_url}}/routes"
           }
         },
         {
@@ -1095,7 +1095,7 @@
               "mode": "raw",
               "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
             },
-            "url": "{{logistics_base_url}}/rutas/{{ruta_id}}/asignar"
+            "url": "{{logistics_base_url}}/routes/{{ruta_id}}/asignaciones"
           }
         },
         {
@@ -1112,7 +1112,7 @@
               "mode": "raw",
               "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
             },
-            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/asignar-camion"
+            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/asignaciones"
           }
         },
         {
@@ -1191,7 +1191,7 @@
               "mode": "raw",
               "raw": "{}"
             },
-            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/inicio"
+            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/inicios"
           }
         },
         {
@@ -1208,7 +1208,7 @@
               "mode": "raw",
               "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35,\n  \"diasEstadia\": 1\n}"
             },
-            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/fin"
+            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/finalizaciones"
           }
         },
         {

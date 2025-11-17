@@ -205,6 +205,19 @@ public class TramoService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    public java.util.List<TramoResponse> listarTramos(Long camionId) {
+        if (camionId != null) {
+            return obtenerTramosPorCamion(camionId);
+        }
+        return tramoRepository.findAll().stream()
+                .map(LogisticsMapper::toTramoResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public TramoResponse obtenerDetalle(Long tramoId) {
+        return LogisticsMapper.toTramoResponse(obtenerTramo(tramoId));
+    }
+
     public java.util.List<TramoResponse> obtenerContenedoresEnDeposito(Long depositoId) {
         log.debug("Obteniendo contenedores en depósito {}", depositoId);
         

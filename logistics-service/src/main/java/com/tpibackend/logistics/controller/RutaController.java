@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping({"/logistics/routes", "/logistics/rutas", "/routes", "/rutas"})
+@RequestMapping("/logistics/routes")
 @Validated
 @Tag(name = "Rutas", description = "Gestión de rutas y asignaciones")
 @SecurityRequirement(name = "bearerAuth")
@@ -87,7 +87,7 @@ public class RutaController {
         return ResponseEntity.ok(rutaService.estimarDistancia(request.origen(), request.destino()));
     }
 
-    @PostMapping("/{rutaId}/asignar")
+    @PostMapping("/{rutaId}/asignaciones")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Asignar ruta a solicitud",
             description = "Vincula una ruta planificada a una solicitud. Requiere rol OPERADOR.",
@@ -117,7 +117,7 @@ public class RutaController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/solicitud/{solicitudId}")
+    @GetMapping("/solicitudes/{solicitudId}")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Obtener ruta por solicitud",
             description = "Consulta la ruta asociada a una solicitud. Requiere rol OPERADOR.",

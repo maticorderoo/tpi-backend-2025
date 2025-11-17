@@ -687,9 +687,9 @@
                   "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
                 },
                 "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/rutas",
+                  "raw": "{{gateway_base_url}}/api/logistics/routes",
                   "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "rutas"]
+                  "path": ["api", "logistics", "routes"]
                 },
                 "description": "Crea ruta con tramos calculados usando distance-client"
               }
@@ -699,9 +699,9 @@
               "request": {
                 "method": "GET",
                 "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/rutas/{{ruta_id}}",
+                  "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}",
                   "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "rutas", "{{ruta_id}}"]
+                  "path": ["api", "logistics", "routes", "{{ruta_id}}"]
                 }
               }
             },
@@ -720,9 +720,9 @@
                   "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
                 },
                 "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/rutas/{{ruta_id}}/asignar",
+                  "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}/asignaciones",
                   "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "rutas", "{{ruta_id}}", "asignar"]
+                  "path": ["api", "logistics", "routes", "{{ruta_id}}", "asignaciones"]
                 }
               }
             }
@@ -746,9 +746,9 @@
                   "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
                 },
                 "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignar",
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignaciones",
                   "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "asignar"]
+                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "asignaciones"]
                 },
                 "description": "Valida capacidad del camión antes de asignar"
               }
@@ -768,9 +768,9 @@
                   "raw": "{}"
                 },
                 "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/iniciar",
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/inicios",
                   "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "iniciar"]
+                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "inicios"]
                 }
               }
             },
@@ -789,9 +789,9 @@
                   "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35\n}"
                 },
                 "url": {
-                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizar",
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizaciones",
                   "host": ["{{gateway_base_url}}"],
-                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "finalizar"]
+                  "path": ["api", "logistics", "tramos", "{{tramo_id}}", "finalizaciones"]
                 },
                 "description": "Recalcula distancia real con distance-client"
               }
@@ -1170,9 +1170,9 @@
               "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
             },
             "url": {
-              "raw": "{{gateway_base_url}}/api/logistics/rutas",
+              "raw": "{{gateway_base_url}}/api/logistics/routes",
               "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "rutas"]
+              "path": ["api", "logistics", "routes"]
             }
           }
         },
@@ -1191,9 +1191,9 @@
               "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
             },
             "url": {
-              "raw": "{{gateway_base_url}}/api/logistics/rutas/{{ruta_id}}/asignar",
+              "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}/asignaciones",
               "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "rutas", "{{ruta_id}}", "asignar"]
+              "path": ["api", "logistics", "routes", "{{ruta_id}}", "asignaciones"]
             }
           }
         },
@@ -1212,9 +1212,9 @@
               "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
             },
             "url": {
-              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignar",
+              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignaciones",
               "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "asignar"]
+              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "asignaciones"]
             }
           }
         },
@@ -1287,9 +1287,9 @@
               "raw": "{}"
             },
             "url": {
-              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/iniciar",
+              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/inicios",
               "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "iniciar"]
+              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "inicios"]
             }
           }
         },
@@ -1308,9 +1308,9 @@
               "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35\n}"
             },
             "url": {
-              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizar",
+              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizaciones",
               "host": ["{{gateway_base_url}}"],
-              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "finalizar"]
+              "path": ["api", "logistics", "tramos", "{{tramo_id}}", "finalizaciones"]
             }
           }
         },

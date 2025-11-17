@@ -136,14 +136,14 @@ Las siguientes variables se auto-gestionan durante el flujo:
 
 ### 1. Validación de Capacidad
 ```
-POST /api/logistics/tramos/{{tramo_id}}/asignar
+POST /api/logistics/tramos/{{tramo_id}}/asignaciones
 ```
 - Enviar un camión con capacidad menor al contenedor
 - Debe retornar error 400 con mensaje de capacidad insuficiente
 
 ### 2. Integración con Distance Client
 ```
-POST /api/logistics/rutas
+POST /api/logistics/routes
 ```
 - La ruta debe calcular automáticamente las distancias entre puntos usando Google Maps
 
@@ -237,13 +237,13 @@ GET /api/orders/{{solicitud_id}}/tracking
 - `GET /api/logistics/depositos` - Listar depósitos
 - `GET /api/logistics/depositos/{id}` - Obtener depósito
 - `PUT /api/logistics/depositos/{id}` - Actualizar depósito
-- `POST /api/logistics/rutas` - Crear ruta
-- `GET /api/logistics/rutas/{id}` - Obtener ruta
-- `POST /api/logistics/rutas/{id}/asignar` - Asignar a solicitud
-- `POST /api/logistics/tramos/{id}/asignar` - Asignar camión
-- `POST /api/logistics/tramos/{id}/iniciar` - Iniciar tramo
-- `POST /api/logistics/tramos/{id}/finalizar` - Finalizar tramo
-- `GET /api/logistics/tramos/camion/{id}` - Tramos de un camión
+- `POST /api/logistics/routes` - Crear ruta
+- `GET /api/logistics/routes/{id}` - Obtener ruta
+- `POST /api/logistics/routes/{id}/asignaciones` - Asignar a solicitud
+- `POST /api/logistics/tramos/{id}/asignaciones` - Asignar camión
+- `POST /api/logistics/tramos/{id}/inicios` - Iniciar tramo
+- `POST /api/logistics/tramos/{id}/finalizaciones` - Finalizar tramo
+- `GET /api/logistics/tramos?camionId=` - Tramos filtrados por camión
 - `GET /api/logistics/tramos/deposito/{id}/contenedores` - Contenedores en depósito
 
 ## 📝 Notas Importantes

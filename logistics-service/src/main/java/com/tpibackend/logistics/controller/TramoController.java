@@ -7,11 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
@@ -30,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping({"/logistics/legs", "/logistics/tramos", "/legs", "/tramos"})
+@RequestMapping("/logistics/tramos")
 @Validated
 @Tag(name = "Tramos", description = "Gestión operativa de tramos")
 @SecurityRequirement(name = "bearerAuth")
@@ -44,7 +44,23 @@ public class TramoController {
         this.tramoService = tramoService;
     }
 
-    @PostMapping({"/{tramoId}/asignar-camion", "/{tramoId}/assign-truck"})
+    @GetMapping
+    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA')")
+    @Operation(summary = "Listar tramos",
+            description = "Obtiene los tramos operativos, permitiendo filtrar por camión asignado. Requiere rol OPERADOR o TRANSPORTISTA.")
+    public ResponseEntity<java.util.List<TramoResponse>> listar(@RequestParam(required = false) Long camionId) {
+        return ResponseEntity.ok(tramoService.listarTramos(camionId));
+    }
+
+    @GetMapping("/{tramoId}")
+    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA')")
+    @Operation(summary = "Detalle de tramo",
+            description = "Devuelve el detalle del tramo con su estado actual. Requiere rol OPERADOR o TRANSPORTISTA.")
+    public ResponseEntity<TramoResponse> obtenerDetalle(@PathVariable Long tramoId) {
+        return ResponseEntity.ok(tramoService.obtenerDetalle(tramoId));
+    }
+
+    @PostMapping("/{tramoId}/asignaciones")
     @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Asignar camión a tramo",
             description = "Asigna un camión disponible a un tramo. Requiere rol OPERADOR.",
@@ -73,8 +89,7 @@ public class TramoController {
         return ResponseEntity.ok(tramoService.asignarCamion(tramoId, request));
     }
 
-    @PostMapping("/{tramoId}/inicio")
-    @PatchMapping("/{tramoId}/start")
+    @PostMapping("/{tramoId}/inicios")
     @PreAuthorize("hasRole('TRANSPORTISTA')")
     @Operation(summary = "Marcar inicio del tramo",
             description = "Marca el inicio efectivo del tramo asignado. Requiere rol TRANSPORTISTA.",
@@ -103,8 +118,7 @@ public class TramoController {
         return ResponseEntity.ok(tramoService.iniciarTramo(tramoId, request));
     }
 
-    @PostMapping("/{tramoId}/fin")
-    @PatchMapping("/{tramoId}/finish")
+    @PostMapping("/{tramoId}/finalizaciones")
     @PreAuthorize("hasRole('TRANSPORTISTA')")
     @Operation(summary = "Marcar fin del tramo",
             description = "Registra la finalización del tramo en curso. Requiere rol TRANSPORTISTA.",

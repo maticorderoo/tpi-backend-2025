@@ -40,7 +40,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void crearRutaSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(post("/api/logistics/rutas")
+        mockMvc.perform(post("/api/logistics/routes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearRutaJson()))
             .andExpect(status().isUnauthorized());
@@ -48,7 +48,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void crearRutaConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(post("/api/logistics/rutas")
+        mockMvc.perform(post("/api/logistics/routes")
                 .with(jwtWithRoles("CLIENTE"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearRutaJson()))
@@ -61,7 +61,7 @@ class RutaControllerSecurityTest {
             new RutaResponse(1L, null, 0, 0, null, null, null, null, List.of())
         );
 
-        mockMvc.perform(post("/api/logistics/rutas")
+        mockMvc.perform(post("/api/logistics/routes")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearRutaJson()))
@@ -70,7 +70,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void asignarRutaSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(post("/api/logistics/rutas/1/asignar")
+        mockMvc.perform(post("/api/logistics/routes/1/asignaciones")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"solicitudId\":1}"))
             .andExpect(status().isUnauthorized());
@@ -78,7 +78,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void asignarRutaConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(post("/api/logistics/rutas/1/asignar")
+        mockMvc.perform(post("/api/logistics/routes/1/asignaciones")
                 .with(jwtWithRoles("TRANSPORTISTA"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"solicitudId\":1}"))
@@ -91,7 +91,7 @@ class RutaControllerSecurityTest {
             new RutaResponse(1L, null, 0, 0, null, null, null, null, List.of())
         );
 
-        mockMvc.perform(post("/api/logistics/rutas/1/asignar")
+        mockMvc.perform(post("/api/logistics/routes/1/asignaciones")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"solicitudId\":1}"))
@@ -100,13 +100,13 @@ class RutaControllerSecurityTest {
 
     @Test
     void obtenerRutaSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/logistics/rutas/solicitud/1"))
+        mockMvc.perform(get("/api/logistics/routes/solicitudes/1"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     void obtenerRutaConRolNoPermitidoDevuelve403() throws Exception {
-        mockMvc.perform(get("/api/logistics/rutas/solicitud/1").with(jwtWithRoles("TRANSPORTISTA")))
+        mockMvc.perform(get("/api/logistics/routes/solicitudes/1").with(jwtWithRoles("TRANSPORTISTA")))
             .andExpect(status().isForbidden());
     }
 
@@ -116,7 +116,7 @@ class RutaControllerSecurityTest {
             java.util.Optional.of(new RutaResponse(1L, null, 0, 0, null, null, null, null, List.of()))
         );
 
-        mockMvc.perform(get("/api/logistics/rutas/solicitud/1").with(jwtWithRoles("OPERADOR")))
+        mockMvc.perform(get("/api/logistics/routes/solicitudes/1").with(jwtWithRoles("OPERADOR")))
             .andExpect(status().isOk());
     }
 

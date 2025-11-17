@@ -3,7 +3,6 @@ package com.tpibackend.logistics.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,7 +36,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void asignarCamionSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(post("/api/logistics/tramos/2/asignar-camion")
+        mockMvc.perform(post("/api/logistics/tramos/2/asignaciones")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"camionId\":1,\"pesoCarga\":100,\"volumenCarga\":10}"))
             .andExpect(status().isUnauthorized());
@@ -45,7 +44,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void asignarCamionConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(post("/api/logistics/tramos/2/asignar-camion")
+        mockMvc.perform(post("/api/logistics/tramos/2/asignaciones")
                 .with(jwtWithRoles("TRANSPORTISTA"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"camionId\":1,\"pesoCarga\":100,\"volumenCarga\":10}"))
@@ -58,7 +57,7 @@ class TramoControllerSecurityTest {
             new TramoResponse(1L, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         );
 
-        mockMvc.perform(post("/api/logistics/tramos/2/asignar-camion")
+        mockMvc.perform(post("/api/logistics/tramos/2/asignaciones")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"camionId\":1,\"pesoCarga\":100,\"volumenCarga\":10}"))
@@ -67,7 +66,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void iniciarTramoSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(patch("/api/logistics/tramos/2/start")
+        mockMvc.perform(post("/api/logistics/tramos/2/inicios")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"fechaHoraInicio\":\"" + OffsetDateTime.now().toString() + "\"}"))
             .andExpect(status().isUnauthorized());
@@ -75,7 +74,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void iniciarTramoConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(patch("/api/logistics/tramos/2/start")
+        mockMvc.perform(post("/api/logistics/tramos/2/inicios")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"fechaHoraInicio\":\"" + OffsetDateTime.now().toString() + "\"}"))
@@ -88,7 +87,7 @@ class TramoControllerSecurityTest {
             new TramoResponse(1L, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         );
 
-        mockMvc.perform(patch("/api/logistics/tramos/2/start")
+        mockMvc.perform(post("/api/logistics/tramos/2/inicios")
                 .with(jwtWithRoles("TRANSPORTISTA"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"fechaHoraInicio\":\"" + OffsetDateTime.now().toString() + "\"}"))
@@ -97,7 +96,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void finalizarTramoSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(patch("/api/logistics/tramos/2/finish")
+        mockMvc.perform(post("/api/logistics/tramos/2/finalizaciones")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(finTramoJson()))
             .andExpect(status().isUnauthorized());
@@ -105,7 +104,7 @@ class TramoControllerSecurityTest {
 
     @Test
     void finalizarTramoConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(patch("/api/logistics/tramos/2/finish")
+        mockMvc.perform(post("/api/logistics/tramos/2/finalizaciones")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(finTramoJson()))
@@ -118,7 +117,7 @@ class TramoControllerSecurityTest {
             new TramoResponse(1L, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         );
 
-        mockMvc.perform(patch("/api/logistics/tramos/2/finish")
+        mockMvc.perform(post("/api/logistics/tramos/2/finalizaciones")
                 .with(jwtWithRoles("TRANSPORTISTA"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(finTramoJson()))
