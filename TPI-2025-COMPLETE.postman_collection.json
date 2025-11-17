@@ -1,48 +1,18 @@
 {
   "info": {
-    "name": "TPI Backend 2025 - Complete",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Colección completa con todos los endpoints del TPI Backend 2025",
-    "_postman_id": "tpi-backend-2025-complete",
-    "version": "2.0.0"
-  },
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{jwt_token}}",
-        "type": "string"
-      }
-    ]
+    "_postman_id": "29fdc895-a8d6-4e70-bf5d-1acc6f5cf520",
+    "name": "TPI-2025-COMPLETE",
+    "description": "\n            Colección alineada con el flujo end-to-end del TPI 2025. Ejecutar en este orden sugerido:\n\n1. Obtener los tokens por rol en `Auth / Keycloak`.\n2. Como CLIENTE, crear y consultar solicitudes.\n3. Como OPERADOR, planificar y estimar la solicitud, generar rutas tentativas, confirmar y asignar camiones.\n4. Como TRANSPORTISTA, iniciar/finalizar tramos asignados.\n5. Consultar seguimiento/pendientes para verificar el cierre.\n6. Usar las carpetas de Flota y Admin para gestión de camiones, tarifas y depósitos.\n\nTodos los endpoints apuntan al API Gateway (`{{base_url_gateway}}`) y utilizan los paths reales definidos en los microservicios y gateway Spring Cloud.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "🔐 Authentication",
-      "description": "Autenticación con Keycloak",
+      "name": "Auth / Keycloak",
+      "description": "Token endpoint real del realm `tpi-2025`. Usa las credenciales importadas desde Keycloak.",
       "item": [
         {
-          "name": "Login - Cliente",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('jwt_token', jsonData.access_token);",
-                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
-                  "    console.log('✅ Token de CLIENTE guardado');",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Obtener token CLIENTE",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
@@ -60,199 +30,365 @@
                 },
                 {
                   "key": "client_id",
-                  "value": "tpi-client",
+                  "value": "{{keycloak_client_id}}",
                   "type": "text"
                 },
                 {
                   "key": "username",
-                  "value": "cliente01",
+                  "value": "{{cliente_username}}",
                   "type": "text"
                 },
                 {
                   "key": "password",
-                  "value": "cliente123",
+                  "value": "{{cliente_password}}",
                   "type": "text"
                 }
               ]
             },
             "url": {
-              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "raw": "{{keycloak_auth_url}}",
               "host": [
-                "{{keycloak_url}}"
+                "{{keycloak_auth_url}}"
+              ],
+              "path": []
+            },
+            "description": "Recupera un access token para el rol CLIENTE usando Resource Owner Password Credentials."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set(\"token_cliente\", json.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener token OPERADOR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{keycloak_client_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{operador_username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{operador_password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_auth_url}}",
+              "host": [
+                "{{keycloak_auth_url}}"
+              ],
+              "path": []
+            },
+            "description": "Recupera un access token para el rol OPERADOR usando Resource Owner Password Credentials."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set(\"token_operador\", json.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener token TRANSPORTISTA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{keycloak_client_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{transportista_username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{transportista_password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_auth_url}}",
+              "host": [
+                "{{keycloak_auth_url}}"
+              ],
+              "path": []
+            },
+            "description": "Recupera un access token para el rol TRANSPORTISTA usando Resource Owner Password Credentials."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set(\"token_transportista\", json.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener token ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{keycloak_client_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_auth_url}}",
+              "host": [
+                "{{keycloak_auth_url}}"
+              ],
+              "path": []
+            },
+            "description": "Recupera un access token para el rol ADMIN usando Resource Owner Password Credentials."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set(\"token_admin\", json.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cliente",
+      "description": "Operaciones disponibles para CLIENTE: crear solicitudes, consultar el detalle y hacer seguimiento del contenedor.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token_cliente}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "1. CLIENTE - Crear solicitud de transporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\",\n    \"cuit\": \"30-12345678-9\"\n  },\n  \"contenedor\": {\n    \"codigo\": \"CONT-XYZ-1234\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"Córdoba\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_gateway}}/orders",
+              "host": [
+                "{{base_url_gateway}}"
               ],
               "path": [
-                "realms",
-                "tpi-2025",
-                "protocol",
-                "openid-connect",
-                "token"
+                "orders"
               ]
-            }
+            },
+            "description": "Crea una solicitud completa registrando cliente y contenedor si no existían. Guarda el `id` devuelto en `{{solicitud_id}}` y el contenedor en `{{contenedor_id}}`."
           }
         },
         {
-          "name": "Login - Operador",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('jwt_token', jsonData.access_token);",
-                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
-                  "    console.log('✅ Token de OPERADOR guardado');",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "1. CLIENTE - Consultar solicitud por ID",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
-              }
-            ],
-            "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "grant_type",
-                  "value": "password",
-                  "type": "text"
-                },
-                {
-                  "key": "client_id",
-                  "value": "tpi-client",
-                  "type": "text"
-                },
-                {
-                  "key": "username",
-                  "value": "operador01",
-                  "type": "text"
-                },
-                {
-                  "key": "password",
-                  "value": "operador123",
-                  "type": "text"
-                }
-              ]
-            },
+            "method": "GET",
             "url": {
-              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "raw": "{{base_url_gateway}}/orders/{{solicitud_id}}",
               "host": [
-                "{{keycloak_url}}"
+                "{{base_url_gateway}}"
               ],
               "path": [
-                "realms",
-                "tpi-2025",
-                "protocol",
-                "openid-connect",
-                "token"
+                "orders",
+                "{{solicitud_id}}"
               ]
-            }
+            },
+            "description": "Devuelve el detalle y estado actual de la solicitud creada."
           }
         },
         {
-          "name": "Login - Transportista",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('jwt_token', jsonData.access_token);",
-                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
-                  "    console.log('✅ Token de TRANSPORTISTA guardado');",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "1. CLIENTE - Tracking resumido de solicitud",
           "request": {
-            "auth": {
-              "type": "noauth"
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/orders/{{solicitud_id}}/tracking",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "orders",
+                "{{solicitud_id}}",
+                "tracking"
+              ]
             },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
-              }
-            ],
-            "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
+            "description": "Permite al cliente revisar el estado del contenedor asociado y el resumen de ruta."
+          }
+        },
+        {
+          "name": "1. CLIENTE - Seguimiento detallado de contenedor",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/seguimiento/contenedores/{{contenedor_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "seguimiento",
+                "contenedores",
+                "{{contenedor_id}}"
+              ],
+              "query": [
                 {
-                  "key": "grant_type",
-                  "value": "password",
-                  "type": "text"
-                },
-                {
-                  "key": "client_id",
-                  "value": "tpi-client",
-                  "type": "text"
-                },
-                {
-                  "key": "username",
-                  "value": "transportista01",
-                  "type": "text"
-                },
-                {
-                  "key": "password",
-                  "value": "trans123",
-                  "type": "text"
+                  "key": "solicitudId",
+                  "value": "{{solicitud_id}}",
+                  "description": "Solicitud a la que pertenece el contenedor"
                 }
               ]
             },
-            "url": {
-              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": [
-                "{{keycloak_url}}"
-              ],
-              "path": [
-                "realms",
-                "tpi-2025",
-                "protocol",
-                "openid-connect",
-                "token"
-              ]
-            }
+            "description": "Consulta extendida de Logistics para ver tramo actual, posiciones y próximos pasos del contenedor."
           }
         }
       ]
     },
     {
-      "name": "📦 Orders Service",
-      "description": "Gestión de solicitudes y contenedores",
+      "name": "Operador - Solicitudes",
+      "description": "Endpoints del micro Orders usados por el OPERADOR para validar costos y estados.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token_operador}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
-          "name": "Crear Solicitud (CLIENTE)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('solicitud_id', jsonData.id);",
-                  "    pm.environment.set('contenedor_id', jsonData.contenedor.id);",
-                  "    console.log('✅ Solicitud creada: ' + jsonData.id);",
-                  "    console.log('✅ Contenedor creado: ' + jsonData.contenedor.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "2. OPERADOR - Obtener detalle de solicitud",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/orders/{{solicitud_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "orders",
+                "{{solicitud_id}}"
+              ]
+            },
+            "description": "Revisión previa de la solicitud antes de planificar logística."
+          }
+        },
+        {
+          "name": "2. OPERADOR - Calcular estimación de costos y tiempos",
           "request": {
             "method": "POST",
             "header": [
@@ -263,46 +399,29 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corporation\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1234\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires, Argentina\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"Córdoba, Argentina\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}"
-            },
-            "url": "{{orders_base_url}}"
-          }
-        },
-        {
-          "name": "Obtener Solicitud por ID",
-          "request": {
-            "method": "GET",
-            "url": "{{orders_base_url}}/{{solicitud_id}}"
-          }
-        },
-        {
-          "name": "Tracking de Contenedor (Público)",
-          "request": {
-            "method": "GET",
-            "url": "{{orders_base_url}}/{{solicitud_id}}/tracking",
-            "description": "Endpoint público para seguimiento del contenedor"
-          }
-        },
-        {
-          "name": "Calcular Estimación (OPERADOR)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+              "raw": "{\n  \"combustiblePrecioLitro\": 750,\n  \"tiempoCargaHoras\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"precioCombustible\": 750.50,\n  \"estadiaEstimada\": 500.0\n}"
             },
-            "url": "{{orders_base_url}}/{{solicitud_id}}/estimacion",
-            "description": "Calcula costo y tiempo usando distance-client y métricas de flota"
+            "url": {
+              "raw": "{{base_url_gateway}}/orders/{{solicitud_id}}/estimacion",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "orders",
+                "{{solicitud_id}}",
+                "estimacion"
+              ]
+            },
+            "description": "Invoca el cálculo integrado con distance-client y métricas de flota."
           }
         },
         {
-          "name": "Actualizar Costo Final (OPERADOR)",
+          "name": "2. OPERADOR - Actualizar costo final de solicitud",
           "request": {
             "method": "PUT",
             "header": [
@@ -313,624 +432,683 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"costoFinal\": 45000.00,\n  \"tiempoRealMinutos\": 720\n}"
+              "raw": "{\n  \"costoFinal\": 185000,\n  \"tiempoRealMinutos\": 810\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{orders_base_url}}/{{solicitud_id}}/costo"
+            "url": {
+              "raw": "{{base_url_gateway}}/orders/{{solicitud_id}}/costo",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "orders",
+                "{{solicitud_id}}",
+                "costo"
+              ]
+            },
+            "description": "Cierra la solicitud cuando Logistics informa valores finales."
           }
         },
         {
-          "name": "Contenedores Pendientes (OPERADOR)",
+          "name": "2. OPERADOR - Contenedores pendientes en Orders",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{orders_base_url}}/containers/pendientes",
-            "description": "Consulta los contenedores con tramos pendientes filtrando por estado o depósito."
-          }
-        }
-      ]
-    },
-    {
-      "name": "🚛 Fleet Service",
-      "description": "Gestión de camiones y tarifas",
-      "item": [
-        {
-          "name": "Camiones",
-          "item": [
-            {
-              "name": "Crear Camión (OPERADOR)",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201 || pm.response.code === 200) {",
-                      "    var jsonData = pm.response.json();",
-                      "    pm.environment.set('camion_id', jsonData.id);",
-                      "    console.log('✅ Camión creado: ' + jsonData.id);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
+            "url": {
+              "raw": "{{base_url_gateway}}/orders/containers/pendientes",
+              "host": [
+                "{{base_url_gateway}}"
               ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"dominio\": \"AA123BB\",\n  \"transportistaNombre\": \"Transportes del Sur S.A.\",\n  \"telefono\": \"+54-11-4567-8901\",\n  \"capPeso\": 25000.0,\n  \"capVolumen\": 60.0,\n  \"disponible\": true,\n  \"costoKmBase\": 950.0,\n  \"consumoLKm\": 0.32\n}"
-                },
-                "url": "{{fleet_base_url}}/trucks"
-              }
-            },
-            {
-              "name": "Listar Todos los Camiones",
-              "request": {
-                "method": "GET",
-                "url": "{{fleet_base_url}}/trucks"
-              }
-            },
-            {
-              "name": "Listar Camiones Disponibles",
-              "request": {
-                "method": "GET",
-                "url": "{{fleet_base_url}}/trucks?disponible=true"
-              }
-            },
-            {
-              "name": "Listar Camiones Ocupados",
-              "request": {
-                "method": "GET",
-                "url": "{{fleet_base_url}}/trucks?disponible=false"
-              }
-            },
-            {
-              "name": "Obtener Camión por ID",
-              "request": {
-                "method": "GET",
-                "url": "{{fleet_base_url}}/trucks/{{camion_id}}"
-              }
-            },
-            {
-              "name": "Actualizar Camión (OPERADOR)",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"disponible\": false,\n  \"costoKmBase\": 1000.0\n}"
-                },
-                "url": "{{fleet_base_url}}/trucks/{{camion_id}}"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Tarifas",
-          "item": [
-            {
-              "name": "Crear Tarifa (OPERADOR)",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201 || pm.response.code === 200) {",
-                      "    var jsonData = pm.response.json();",
-                      "    pm.environment.set('tarifa_id', jsonData.id);",
-                      "    console.log('✅ Tarifa creada: ' + jsonData.id);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
+              "path": [
+                "orders",
+                "containers",
+                "pendientes"
               ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"tipo\": \"CARGO_GESTION_POR_TRAMO\",\n  \"valor\": 5000.0,\n  \"descripcion\": \"Cargo fijo de gestión por cada tramo\"\n}"
-                },
-                "url": "{{fleet_base_url}}/tarifas"
-              }
-            },
-            {
-              "name": "Listar Tarifas",
-              "request": {
-                "method": "GET",
-                "url": "{{fleet_base_url}}/tarifas"
-              }
-            },
-            {
-              "name": "Obtener Tarifa por Tipo",
-              "request": {
-                "method": "GET",
-                "url": "{{fleet_base_url}}/tarifas/tipo/CARGO_GESTION_POR_TRAMO"
-              }
-            },
-            {
-              "name": "Actualizar Tarifa (OPERADOR)",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"valor\": 5500.0,\n  \"descripcion\": \"Cargo de gestión actualizado\"\n}"
-                },
-                "url": "{{fleet_base_url}}/tarifas/{{tarifa_id}}"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Métricas",
-          "item": [
-            {
-              "name": "Obtener Promedios de Flota",
-              "request": {
-                "method": "GET",
-                "url": "{{fleet_base_url}}/metrics/promedios",
-                "description": "Retorna consumo promedio y costo por km promedio de camiones disponibles"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "🗺️ Logistics Service",
-      "description": "Gestión de rutas, tramos y depósitos",
-      "item": [
-        {
-          "name": "Depósitos",
-          "item": [
-            {
-              "name": "Crear Depósito (OPERADOR)",
-              "event": [
+              "query": [
                 {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201 || pm.response.code === 200) {",
-                      "    var jsonData = pm.response.json();",
-                      "    pm.environment.set('deposito_id', jsonData.id);",
-                      "    console.log('✅ Depósito creado: ' + jsonData.id);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"nombre\": \"Depósito Central Rosario\",\n  \"direccion\": \"Av. Belgrano 1250, Rosario, Santa Fe\",\n  \"lat\": -32.9468,\n  \"lng\": -60.6393,\n  \"costoEstadiaDia\": 800.0\n}"
-                },
-                "url": "{{logistics_base_url}}/depositos"
-              }
-            },
-            {
-              "name": "Listar Depósitos",
-              "request": {
-                "method": "GET",
-                "url": "{{logistics_base_url}}/depositos"
-              }
-            },
-            {
-              "name": "Obtener Depósito por ID",
-              "request": {
-                "method": "GET",
-                "url": "{{logistics_base_url}}/depositos/{{deposito_id}}"
-              }
-            },
-            {
-              "name": "Actualizar Depósito (OPERADOR)",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"nombre\": \"Depósito Central Rosario - Actualizado\",\n  \"costoEstadiaDia\": 850.0\n}"
-                },
-                "url": "{{logistics_base_url}}/depositos/{{deposito_id}}"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Rutas",
-          "item": [
-            {
-              "name": "Crear Ruta (OPERADOR)",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201 || pm.response.code === 200) {",
-                      "    var jsonData = pm.response.json();",
-                      "    pm.environment.set('ruta_id', jsonData.id);",
-                      "    if (jsonData.tramos && jsonData.tramos.length > 0) {",
-                      "        pm.environment.set('tramo_id', jsonData.tramos[0].id);",
-                      "        console.log('✅ Primer tramo: ' + jsonData.tramos[0].id);",
-                      "    }",
-                      "    console.log('✅ Ruta creada: ' + jsonData.id);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
-                },
-                "url": "{{logistics_base_url}}/routes",
-                "description": "Crea ruta con tramos calculados usando distance-client"
-              }
-            },
-            {
-              "name": "Obtener Ruta por ID",
-              "request": {
-                "method": "GET",
-                "url": "{{logistics_base_url}}/routes/{{ruta_id}}"
-              }
-            },
-            {
-              "name": "Asignar Ruta a Solicitud (OPERADOR)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
-                },
-                "url": "{{logistics_base_url}}/routes/{{ruta_id}}/asignaciones"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Tramos",
-          "item": [
-            {
-              "name": "Asignar Camión a Tramo (OPERADOR)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
-                },
-                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/asignaciones",
-                "description": "Valida capacidad del camión antes de asignar"
-              }
-            },
-            {
-              "name": "Iniciar Tramo (TRANSPORTISTA)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/inicios"
-              }
-            },
-            {
-              "name": "Finalizar Tramo (TRANSPORTISTA)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35,\n  \"diasEstadia\": 1\n}"
-                },
-                "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/finalizaciones",
-                "description": "Recalcula distancia real con distance-client"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "🔄 Flujo End-to-End Completo",
-      "description": "Flujo completo desde solicitud hasta entrega",
-      "item": [
-        {
-          "name": "1️⃣ Login Operador",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('jwt_token', jsonData.access_token);",
-                  "    console.log('✅ Autenticado como OPERADOR');",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
-              }
-            ],
-            "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "grant_type",
-                  "value": "password"
+                  "key": "estado",
+                  "value": "",
+                  "description": "Filtrar por estado logístico"
                 },
                 {
-                  "key": "client_id",
-                  "value": "tpi-client"
-                },
-                {
-                  "key": "username",
-                  "value": "operador01"
-                },
-                {
-                  "key": "password",
-                  "value": "operador123"
+                  "key": "depositoId",
+                  "value": "{{deposito_id}}",
+                  "description": "Filtrar por depósito"
                 }
               ]
             },
+            "description": "Vista de Orders para identificar contenedores que aún requieren planificación logística."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Operador - Logística",
+      "description": "Planificación de rutas, seguimiento operativo y asignación de camiones realizada por el OPERADOR.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token_operador}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "3. OPERADOR - Generar rutas tentativas",
+          "request": {
+            "method": "GET",
             "url": {
-              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "raw": "{{base_url_gateway}}/logistics/routes/solicitudes/{{solicitud_id}}/rutas-tentativas",
               "host": [
-                "{{keycloak_url}}"
+                "{{base_url_gateway}}"
               ],
               "path": [
-                "realms",
-                "tpi-2025",
-                "protocol",
-                "openid-connect",
-                "token"
+                "logistics",
+                "routes",
+                "solicitudes",
+                "{{solicitud_id}}",
+                "rutas-tentativas"
               ]
-            }
+            },
+            "description": "Calcula todas las alternativas posibles para la solicitud indicada. Guarda `ruta_tentativa_id`."
           }
         },
         {
-          "name": "2️⃣ Crear Depósito",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "    pm.environment.set('deposito_id', pm.response.json().id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "3. OPERADOR - Confirmar ruta tentativa",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Depósito Rosario\",\n  \"direccion\": \"Av. Belgrano 1250\",\n  \"lat\": -32.9468,\n  \"lng\": -60.6393,\n  \"costoEstadiaDia\": 800.0\n}"
-            },
-            "url": "{{logistics_base_url}}/depositos"
-          }
-        },
-        {
-          "name": "3️⃣ Crear Camión",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "    pm.environment.set('camion_id', pm.response.json().id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"dominio\": \"ABC123\",\n  \"transportistaNombre\": \"Transportes SA\",\n  \"telefono\": \"+54-11-1234-5678\",\n  \"capPeso\": 30000.0,\n  \"capVolumen\": 80.0,\n  \"disponible\": true,\n  \"costoKmBase\": 950.0,\n  \"consumoLKm\": 0.32\n}"
-            },
-            "url": "{{fleet_base_url}}/trucks"
-          }
-        },
-        {
-          "name": "4️⃣ Crear Tarifa Gestión",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tipo\": \"CARGO_GESTION_POR_TRAMO\",\n  \"valor\": 5000.0,\n  \"descripcion\": \"Cargo fijo por tramo\"\n}"
-            },
             "url": {
-              "raw": "{{gateway_base_url}}/api/tarifas",
+              "raw": "{{base_url_gateway}}/logistics/routes/solicitudes/{{solicitud_id}}/rutas-tentativas/{{ruta_tentativa_id}}/confirmar",
               "host": [
-                "{{orders_base_url}}"
+                "{{base_url_gateway}}"
               ],
               "path": [
-                "api",
+                "logistics",
+                "routes",
+                "solicitudes",
+                "{{solicitud_id}}",
+                "rutas-tentativas",
+                "{{ruta_tentativa_id}}",
+                "confirmar"
+              ]
+            },
+            "description": "Persiste la ruta seleccionada y sincroniza con Orders. Guarda `ruta_id` resultante."
+          }
+        },
+        {
+          "name": "3. OPERADOR - Asignar ruta confirmada a la solicitud",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"solicitudId\": \"{{solicitud_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/routes/{{ruta_id}}/asignaciones",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "routes",
+                "{{ruta_id}}",
+                "asignaciones"
+              ]
+            },
+            "description": "Cuando se trabaja con rutas manuales, vincula la ruta con la solicitud correspondiente."
+          }
+        },
+        {
+          "name": "3. OPERADOR - Obtener ruta confirmada por solicitud",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/routes/solicitudes/{{solicitud_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "routes",
+                "solicitudes",
+                "{{solicitud_id}}"
+              ]
+            },
+            "description": "Devuelve el resumen de la ruta ya confirmada."
+          }
+        },
+        {
+          "name": "3. OPERADOR - Listar tramos de una ruta",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/routes/{{ruta_id}}/tramos",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "routes",
+                "{{ruta_id}}",
+                "tramos"
+              ]
+            },
+            "description": "Detalle completo de tramos planificados para coordinar asignaciones."
+          }
+        },
+        {
+          "name": "4. OPERADOR - Listar tramos operativos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/tramos",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "tramos"
+              ],
+              "query": [
+                {
+                  "key": "camionId",
+                  "value": "{{camion_id}}",
+                  "description": "Filtrar tramos por camión asignado"
+                }
+              ]
+            },
+            "description": "Permite ver tramos por estado y camión antes de asignar nuevas cargas."
+          }
+        },
+        {
+          "name": "4. OPERADOR - Asignar camión a tramo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"camionId\": \"{{camion_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/tramos/{{tramo_id}}/asignaciones",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "asignaciones"
+              ]
+            },
+            "description": "Asocia un camión disponible al tramo seleccionado."
+          }
+        },
+        {
+          "name": "4. OPERADOR - Contenedores en depósito",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/tramos/deposito/{{deposito_id}}/contenedores",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "tramos",
+                "deposito",
+                "{{deposito_id}}",
+                "contenedores"
+              ]
+            },
+            "description": "Identifica qué contenedores se encuentran esperando en el depósito indicado."
+          }
+        },
+        {
+          "name": "4. OPERADOR - Seguimiento de contenedores pendientes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/seguimiento/pendientes",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "seguimiento",
+                "pendientes"
+              ],
+              "query": [
+                {
+                  "key": "solicitudId",
+                  "value": "{{solicitud_id}}",
+                  "description": "Filtrar por solicitud"
+                },
+                {
+                  "key": "depositoId",
+                  "value": "{{deposito_id}}",
+                  "description": "Filtrar por depósito"
+                },
+                {
+                  "key": "estadoTramo",
+                  "value": "EN_TRANSITO",
+                  "description": "Filtrar por estado de tramo"
+                }
+              ]
+            },
+            "description": "Vista operativa para monitorear progreso global de todos los contenedores."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transportista",
+      "description": "Acciones de los choferes/transportistas sobre los tramos asignados.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token_transportista}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "5. TRANSPORTISTA - Listar tramos del camión",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/tramos/camion/{{camion_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "tramos",
+                "camion",
+                "{{camion_id}}"
+              ]
+            },
+            "description": "Permite ver todos los tramos asignados a su camión actual."
+          }
+        },
+        {
+          "name": "5. TRANSPORTISTA - Detalle de tramo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/tramos/{{tramo_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "tramos",
+                "{{tramo_id}}"
+              ]
+            },
+            "description": "Para confirmar origen/destino y horarios antes de iniciar."
+          }
+        },
+        {
+          "name": "5. TRANSPORTISTA - Iniciar tramo",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/tramos/{{tramo_id}}/inicios",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "inicios"
+              ]
+            },
+            "description": "Marca el comienzo efectivo del tramo."
+          }
+        },
+        {
+          "name": "5. TRANSPORTISTA - Finalizar tramo",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/tramos/{{tramo_id}}/finalizaciones",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "finalizaciones"
+              ]
+            },
+            "description": "Cierra el tramo y dispara la actualización de estado/costos."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flota",
+      "description": "Consultas de camiones y métricas desde el microservicio Fleet. Usar token de OPERADOR.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token_operador}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "6. FLOTA - Listar camiones disponibles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/fleet/trucks",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "fleet",
+                "trucks"
+              ],
+              "query": [
+                {
+                  "key": "disponible",
+                  "value": "true",
+                  "description": "Filtra solo camiones libres"
+                }
+              ]
+            },
+            "description": "Consulta base para elegir camiones antes de asignarlos a tramos."
+          }
+        },
+        {
+          "name": "6. FLOTA - Detalle de camión",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/fleet/trucks/{{camion_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "fleet",
+                "trucks",
+                "{{camion_id}}"
+              ]
+            },
+            "description": "Incluye capacidades y costos necesarios para validar la asignación."
+          }
+        },
+        {
+          "name": "6. FLOTA - Métricas promedio de flota",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/fleet/metrics/promedios",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "fleet",
+                "metrics",
+                "promedios"
+              ]
+            },
+            "description": "Usado para alimentar cálculos de estimación de costo y consumo."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Recursos de configuración (camiones, depósitos, tarifas) reservados al rol ADMIN.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token_admin}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "7. ADMIN - Crear camión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dominio\": \"AA123BB\",\n  \"transportistaNombre\": \"Transportes del Sur S.A.\",\n  \"telefono\": \"+54-11-4567-8901\",\n  \"capPeso\": 25000,\n  \"capVolumen\": 60,\n  \"disponible\": true,\n  \"costoKmBase\": 950,\n  \"consumoLKm\": 0.32\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_gateway}}/fleet/trucks",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "fleet",
+                "trucks"
+              ]
+            },
+            "description": "Da de alta un nuevo camión en la flota."
+          }
+        },
+        {
+          "name": "7. ADMIN - Actualizar camión",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dominio\": \"AA123BB\",\n  \"transportistaNombre\": \"Transportes del Sur S.A.\",\n  \"telefono\": \"+54-11-4567-8901\",\n  \"capPeso\": 25000,\n  \"capVolumen\": 60,\n  \"disponible\": true,\n  \"costoKmBase\": 970,\n  \"consumoLKm\": 0.33\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_gateway}}/fleet/trucks/{{camion_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "fleet",
+                "trucks",
+                "{{camion_id}}"
+              ]
+            },
+            "description": "Modifica datos generales del camión seleccionado."
+          }
+        },
+        {
+          "name": "7. ADMIN - Listar depósitos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/depositos",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "depositos"
+              ]
+            },
+            "description": "Consulta rápida de depósitos registrados."
+          }
+        },
+        {
+          "name": "7. ADMIN - Crear depósito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Depósito Cuyo\",\n  \"direccion\": \"Av. Acceso Este 2400, Mendoza\",\n  \"lat\": -32.8908,\n  \"lng\": -68.8272,\n  \"costoEstadiaDia\": 15000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/depositos",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "depositos"
+              ]
+            },
+            "description": "Registra un nuevo depósito intermedio."
+          }
+        },
+        {
+          "name": "7. ADMIN - Actualizar depósito",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Depósito Centro\",\n  \"direccion\": \"Ruta 9 km 50\",\n  \"lat\": -31.4,\n  \"lng\": -64.1,\n  \"costoEstadiaDia\": 18000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_gateway}}/logistics/depositos/{{deposito_id}}",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "logistics",
+                "depositos",
+                "{{deposito_id}}"
+              ]
+            },
+            "description": "Permite modificar datos de un depósito existente."
+          }
+        },
+        {
+          "name": "7. ADMIN - Listar tarifas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url_gateway}}/fleet/tarifas",
+              "host": [
+                "{{base_url_gateway}}"
+              ],
+              "path": [
+                "fleet",
                 "tarifas"
               ]
-            }
+            },
+            "description": "Devuelve la configuración vigente de tarifas."
           }
         },
         {
-          "name": "5️⃣ Login Cliente",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    pm.environment.set('jwt_token', pm.response.json().access_token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "7. ADMIN - Crear tarifa",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
+                "value": "application/json"
               }
             ],
             "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "grant_type",
-                  "value": "password"
-                },
-                {
-                  "key": "client_id",
-                  "value": "tpi-client"
-                },
-                {
-                  "key": "username",
-                  "value": "cliente01"
-                },
-                {
-                  "key": "password",
-                  "value": "cliente123"
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Tarifa estándar\",\n  \"costoKm\": 950,\n  \"costoHora\": 12000,\n  \"moneda\": \"ARS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
             "url": {
-              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "raw": "{{base_url_gateway}}/fleet/tarifas",
               "host": [
-                "{{keycloak_url}}"
+                "{{base_url_gateway}}"
               ],
               "path": [
-                "realms",
-                "tpi-2025",
-                "protocol",
-                "openid-connect",
-                "token"
+                "fleet",
+                "tarifas"
               ]
-            }
+            },
+            "description": "Carga una nueva tarifa disponible para estimaciones."
           }
         },
         {
-          "name": "6️⃣ Crear Solicitud",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "    var data = pm.response.json();",
-                  "    pm.environment.set('solicitud_id', data.id);",
-                  "    pm.environment.set('contenedor_id', data.contenedor.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "7. ADMIN - Actualizar tarifa",
           "request": {
-            "method": "POST",
+            "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
@@ -939,262 +1117,25 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corporation\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1234\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires, Argentina\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"Córdoba, Argentina\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}"
-            },
-            "url": "{{orders_base_url}}"
-          }
-        },
-        {
-          "name": "7️⃣ Login Operador",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    pm.environment.set('jwt_token', pm.response.json().access_token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
-              }
-            ],
-            "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "grant_type",
-                  "value": "password"
-                },
-                {
-                  "key": "client_id",
-                  "value": "tpi-client"
-                },
-                {
-                  "key": "username",
-                  "value": "operador01"
-                },
-                {
-                  "key": "password",
-                  "value": "operador123"
+              "raw": "{\n  \"nombre\": \"Tarifa estándar\",\n  \"costoKm\": 980,\n  \"costoHora\": 12500,\n  \"moneda\": \"ARS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
             "url": {
-              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "raw": "{{base_url_gateway}}/fleet/tarifas/{{tarifa_id}}",
               "host": [
-                "{{keycloak_url}}"
+                "{{base_url_gateway}}"
               ],
               "path": [
-                "realms",
-                "tpi-2025",
-                "protocol",
-                "openid-connect",
-                "token"
-              ]
-            }
-          }
-        },
-        {
-          "name": "8️⃣ Calcular Estimación",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"precioCombustible\": 750.0,\n  \"estadiaEstimada\": 500.0\n}"
-            },
-            "url": "{{orders_base_url}}/{{solicitud_id}}/estimacion"
-          }
-        },
-        {
-          "name": "9️⃣ Crear Ruta",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "    var data = pm.response.json();",
-                  "    pm.environment.set('ruta_id', data.id);",
-                  "    if (data.tramos && data.tramos.length > 0) {",
-                  "        pm.environment.set('tramo_id', data.tramos[0].id);",
-                  "    }",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
-            },
-            "url": "{{logistics_base_url}}/routes"
-          }
-        },
-        {
-          "name": "🔟 Asignar Ruta a Solicitud",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
-            },
-            "url": "{{logistics_base_url}}/routes/{{ruta_id}}/asignaciones"
-          }
-        },
-        {
-          "name": "1️⃣1️⃣ Asignar Camión a Tramo",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
-            },
-            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/asignaciones"
-          }
-        },
-        {
-          "name": "1️⃣2️⃣ Login Transportista",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    pm.environment.set('jwt_token', pm.response.json().access_token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
-              }
-            ],
-            "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "grant_type",
-                  "value": "password"
-                },
-                {
-                  "key": "client_id",
-                  "value": "tpi-client"
-                },
-                {
-                  "key": "username",
-                  "value": "transportista01"
-                },
-                {
-                  "key": "password",
-                  "value": "trans123"
-                }
+                "fleet",
+                "tarifas",
+                "{{tarifa_id}}"
               ]
             },
-            "url": {
-              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
-              "host": [
-                "{{keycloak_url}}"
-              ],
-              "path": [
-                "realms",
-                "tpi-2025",
-                "protocol",
-                "openid-connect",
-                "token"
-              ]
-            }
-          }
-        },
-        {
-          "name": "1️⃣3️⃣ Iniciar Tramo",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/inicios"
-          }
-        },
-        {
-          "name": "1️⃣4️⃣ Finalizar Tramo",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35,\n  \"diasEstadia\": 1\n}"
-            },
-            "url": "{{logistics_base_url}}/tramos/{{tramo_id}}/finalizaciones"
-          }
-        },
-        {
-          "name": "1️⃣5️⃣ Ver Tracking",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "url": "{{orders_base_url}}/{{solicitud_id}}/tracking"
+            "description": "Edita los valores de una tarifa existente."
           }
         }
       ]
