@@ -50,6 +50,14 @@ public class TramoController {
         return ResponseEntity.ok(tramoService.listarTramos(camionId));
     }
 
+        @GetMapping("/camion/{camionId}")
+        @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
+        @Operation(summary = "Listar tramos por camión",
+                        description = "Obtiene los tramos asignados a un camión específico. Requiere rol OPERADOR o TRANSPORTISTA.")
+        public ResponseEntity<java.util.List<TramoResponse>> listarPorCamion(@PathVariable Long camionId) {
+                return ResponseEntity.ok(tramoService.listarTramos(camionId));
+        }
+
     @GetMapping("/{tramoId}")
     @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
     @Operation(summary = "Detalle de tramo",
