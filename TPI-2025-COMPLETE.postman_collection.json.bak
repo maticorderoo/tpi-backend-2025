@@ -1,0 +1,1633 @@
+{
+  "info": {
+    "name": "TPI Backend 2025 - Complete",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección completa con todos los endpoints del TPI Backend 2025",
+    "_postman_id": "tpi-backend-2025-complete",
+    "version": "2.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "description": "Autenticación con Keycloak",
+      "item": [
+        {
+          "name": "Login - Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('jwt_token', jsonData.access_token);",
+                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
+                  "    console.log('✅ Token de CLIENTE guardado');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "tpi-client",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "cliente01",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "cliente123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login - Operador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('jwt_token', jsonData.access_token);",
+                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
+                  "    console.log('✅ Token de OPERADOR guardado');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "tpi-client",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "operador01",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "operador123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login - Transportista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('jwt_token', jsonData.access_token);",
+                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
+                  "    console.log('✅ Token de TRANSPORTISTA guardado');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "tpi-client",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "transportista01",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "trans123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Orders Service",
+      "description": "Gestión de solicitudes y contenedores",
+      "item": [
+        {
+          "name": "Crear Solicitud (CLIENTE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('solicitud_id', jsonData.id);",
+                  "    pm.environment.set('contenedor_id', jsonData.contenedor.id);",
+                  "    console.log('✅ Solicitud creada: ' + jsonData.id);",
+                  "    console.log('✅ Contenedor creado: ' + jsonData.contenedor.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corporation\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1234\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": \"Buenos Aires, Argentina\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"Córdoba, Argentina\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888,\n  \"estadiaEstimada\": 500.0\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Solicitud por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tracking de Contenedor (Público)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/tracking",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "tracking"
+              ]
+            },
+            "description": "Endpoint público para seguimiento del contenedor"
+          }
+        },
+        {
+          "name": "Calcular Estimación (OPERADOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precioCombustible\": 750.50,\n  \"estadiaEstimada\": 500.0\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/estimacion",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "estimacion"
+              ]
+            },
+            "description": "Calcula costo y tiempo usando distance-client y métricas de flota"
+          }
+        },
+        {
+          "name": "Actualizar Costo Final (OPERADOR)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"costoFinal\": 45000.00,\n  \"tiempoRealMinutos\": 720\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/costo",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "costo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Contenedores Pendientes (OPERADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{orders_base_url}}/containers/pendientes",
+            "description": "Consulta los contenedores con tramos pendientes filtrando por estado o depósito."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚛 Fleet Service",
+      "description": "Gestión de camiones y tarifas",
+      "item": [
+        {
+          "name": "Camiones",
+          "item": [
+            {
+              "name": "Crear Camión (OPERADOR)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.environment.set('camion_id', jsonData.id);",
+                      "    console.log('✅ Camión creado: ' + jsonData.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"dominio\": \"AA123BB\",\n  \"transportistaNombre\": \"Transportes del Sur S.A.\",\n  \"telefono\": \"+54-11-4567-8901\",\n  \"capPeso\": 25000.0,\n  \"capVolumen\": 60.0,\n  \"disponible\": true,\n  \"costoKmBase\": 950.0,\n  \"consumoLKm\": 0.32\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/trucks",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Listar Todos los Camiones",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/trucks",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Listar Camiones Disponibles",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/trucks?disponible=true",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ],
+                  "query": [
+                    {
+                      "key": "disponible",
+                      "value": "true"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Listar Camiones Ocupados",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/trucks?disponible=false",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks"
+                  ],
+                  "query": [
+                    {
+                      "key": "disponible",
+                      "value": "false"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Obtener Camión por ID",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/trucks/{{camion_id}}",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks",
+                    "{{camion_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Actualizar Camión (OPERADOR)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"disponible\": false,\n  \"costoKmBase\": 1000.0\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/trucks/{{camion_id}}",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "trucks",
+                    "{{camion_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tarifas",
+          "item": [
+            {
+              "name": "Crear Tarifa (OPERADOR)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.environment.set('tarifa_id', jsonData.id);",
+                      "    console.log('✅ Tarifa creada: ' + jsonData.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tipo\": \"CARGO_GESTION_POR_TRAMO\",\n  \"valor\": 5000.0,\n  \"descripcion\": \"Cargo fijo de gestión por cada tramo\"\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/tarifas",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Listar Tarifas",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/tarifas",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Obtener Tarifa por Tipo",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/tarifas/tipo/CARGO_GESTION_POR_TRAMO",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas",
+                    "tipo",
+                    "CARGO_GESTION_POR_TRAMO"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Actualizar Tarifa (OPERADOR)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"valor\": 5500.0,\n  \"descripcion\": \"Cargo de gestión actualizado\"\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/tarifas/{{tarifa_id}}",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tarifas",
+                    "{{tarifa_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Métricas",
+          "item": [
+            {
+              "name": "Obtener Promedios de Flota",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/fleet/metrics/promedios",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "fleet",
+                    "metrics",
+                    "promedios"
+                  ]
+                },
+                "description": "Retorna consumo promedio y costo por km promedio de camiones disponibles"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🗺️ Logistics Service",
+      "description": "Gestión de rutas, tramos y depósitos",
+      "item": [
+        {
+          "name": "Depósitos",
+          "item": [
+            {
+              "name": "Crear Depósito (OPERADOR)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.environment.set('deposito_id', jsonData.id);",
+                      "    console.log('✅ Depósito creado: ' + jsonData.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Depósito Central Rosario\",\n  \"direccion\": \"Av. Belgrano 1250, Rosario, Santa Fe\",\n  \"lat\": -32.9468,\n  \"lng\": -60.6393,\n  \"costoEstadiaDia\": 800.0\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/depositos",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Listar Depósitos",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/depositos",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Obtener Depósito por ID",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/depositos/{{deposito_id}}",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos",
+                    "{{deposito_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Actualizar Depósito (OPERADOR)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Depósito Central Rosario - Actualizado\",\n  \"costoEstadiaDia\": 850.0\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/depositos/{{deposito_id}}",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "depositos",
+                    "{{deposito_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rutas",
+          "item": [
+            {
+              "name": "Crear Ruta (OPERADOR)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201 || pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.environment.set('ruta_id', jsonData.id);",
+                      "    if (jsonData.tramos && jsonData.tramos.length > 0) {",
+                      "        pm.environment.set('tramo_id', jsonData.tramos[0].id);",
+                      "        console.log('✅ Primer tramo: ' + jsonData.tramos[0].id);",
+                      "    }",
+                      "    console.log('✅ Ruta creada: ' + jsonData.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/routes",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "routes"
+                  ]
+                },
+                "description": "Crea ruta con tramos calculados usando distance-client"
+              }
+            },
+            {
+              "name": "Obtener Ruta por ID",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "routes",
+                    "{{ruta_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Asignar Ruta a Solicitud (OPERADOR)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}/asignaciones",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "routes",
+                    "{{ruta_id}}",
+                    "asignaciones"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tramos",
+          "item": [
+            {
+              "name": "Asignar Camión a Tramo (OPERADOR)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1200.5,\n  \"volumenCarga\": 28.4\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignaciones",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "{{tramo_id}}",
+                    "asignaciones"
+                  ]
+                },
+                "description": "Valida capacidad del camión antes de asignar"
+              }
+            },
+            {
+              "name": "Iniciar Tramo (TRANSPORTISTA)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/inicios",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "{{tramo_id}}",
+                    "inicios"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Finalizar Tramo (TRANSPORTISTA)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizaciones",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "{{tramo_id}}",
+                    "finalizaciones"
+                  ]
+                },
+                "description": "Recalcula distancia real con distance-client"
+              }
+            },
+            {
+              "name": "Listar Tramos de un Camión",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/camion/{{camion_id}}",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "camion",
+                    "{{camion_id}}"
+                  ]
+                },
+                "description": "Para TRANSPORTISTA ver sus tramos asignados"
+              }
+            },
+            {
+              "name": "Contenedores en Depósito",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{gateway_base_url}}/api/logistics/tramos/deposito/{{deposito_id}}/contenedores",
+                  "host": [
+                    "{{gateway_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logistics",
+                    "tramos",
+                    "deposito",
+                    "{{deposito_id}}",
+                    "contenedores"
+                  ]
+                },
+                "description": "Lista contenedores esperando en el depósito"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔄 Flujo End-to-End Completo",
+      "description": "Flujo completo desde solicitud hasta entrega",
+      "item": [
+        {
+          "name": "1️⃣ Login Operador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('jwt_token', jsonData.access_token);",
+                  "    console.log('✅ Autenticado como OPERADOR');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "tpi-client"
+                },
+                {
+                  "key": "username",
+                  "value": "operador01"
+                },
+                {
+                  "key": "password",
+                  "value": "operador123"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2️⃣ Crear Depósito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    pm.environment.set('deposito_id', pm.response.json().id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Depósito Rosario\",\n  \"direccion\": \"Av. Belgrano 1250\",\n  \"lat\": -32.9468,\n  \"lng\": -60.6393,\n  \"costoEstadiaDia\": 800.0\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/logistics/depositos",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "depositos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3️⃣ Crear Camión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    pm.environment.set('camion_id', pm.response.json().id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dominio\": \"ABC123\",\n  \"transportistaNombre\": \"Transportes SA\",\n  \"telefono\": \"+54-11-1234-5678\",\n  \"capPeso\": 30000.0,\n  \"capVolumen\": 80.0,\n  \"disponible\": true,\n  \"costoKmBase\": 950.0,\n  \"consumoLKm\": 0.32\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/trucks",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "trucks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4️⃣ Crear Tarifa Gestión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"CARGO_GESTION_POR_TRAMO\",\n  \"valor\": 5000.0,\n  \"descripcion\": \"Cargo fijo por tramo\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/tarifas",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarifas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5️⃣ Login Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.environment.set('jwt_token', pm.response.json().access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "tpi-client"
+                },
+                {
+                  "key": "username",
+                  "value": "cliente01"
+                },
+                {
+                  "key": "password",
+                  "value": "cliente123"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6️⃣ Crear Solicitud",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('solicitud_id', data.id);",
+                  "    pm.environment.set('contenedor_id', data.contenedor.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"acme@example.com\",\n    \"telefono\": \"+54-11-1111-2222\"\n  },\n  \"contenedor\": {\n    \"peso\": 1500.0,\n    \"volumen\": 30.0\n  },\n  \"origen\": \"Buenos Aires\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"Córdoba\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888,\n  \"estadiaEstimada\": 500.0\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          }
+        },
+        {
+          "name": "7️⃣ Login Operador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.environment.set('jwt_token', pm.response.json().access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "tpi-client"
+                },
+                {
+                  "key": "username",
+                  "value": "operador01"
+                },
+                {
+                  "key": "password",
+                  "value": "operador123"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8️⃣ Calcular Estimación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precioCombustible\": 750.0,\n  \"estadiaEstimada\": 500.0\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/estimacion",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "estimacion"
+              ]
+            }
+          }
+        },
+        {
+          "name": "9️⃣ Crear Ruta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('ruta_id', data.id);",
+                  "    if (data.tramos && data.tramos.length > 0) {",
+                  "        pm.environment.set('tramo_id', data.tramos[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -34.6037,\n    \"lng\": -58.3816,\n    \"descripcion\": \"Buenos Aires\"\n  },\n  \"destino\": {\n    \"tipo\": \"SOLICITUD\",\n    \"lat\": -31.4201,\n    \"lng\": -64.1888,\n    \"descripcion\": \"Córdoba\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": {{deposito_id}},\n      \"diasEstadia\": 2\n    }\n  ],\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750.0,\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/logistics/routes",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "routes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "🔟 Asignar Ruta a Solicitud",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"solicitudId\": {{solicitud_id}}\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/logistics/routes/{{ruta_id}}/asignaciones",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "routes",
+                "{{ruta_id}}",
+                "asignaciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1️⃣1️⃣ Asignar Camión a Tramo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"camionId\": {{camion_id}},\n  \"pesoCarga\": 1500.0,\n  \"volumenCarga\": 30.0\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/asignaciones",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "asignaciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1️⃣2️⃣ Login Transportista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.environment.set('jwt_token', pm.response.json().access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "tpi-client"
+                },
+                {
+                  "key": "username",
+                  "value": "transportista01"
+                },
+                {
+                  "key": "password",
+                  "value": "trans123"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/tpi-2025/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "tpi-2025",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1️⃣3️⃣ Iniciar Tramo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/inicios",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "inicios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1️⃣4️⃣ Finalizar Tramo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kmReal\": 320.5,\n  \"precioCombustible\": 750.0,\n  \"costoKmBase\": 950.0,\n  \"consumoLitrosKm\": 0.35\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base_url}}/api/logistics/tramos/{{tramo_id}}/finalizaciones",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics",
+                "tramos",
+                "{{tramo_id}}",
+                "finalizaciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1️⃣5️⃣ Ver Tracking",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{gateway_base_url}}/api/orders/{{solicitud_id}}/tracking",
+              "host": [
+                "{{gateway_base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{solicitud_id}}",
+                "tracking"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
