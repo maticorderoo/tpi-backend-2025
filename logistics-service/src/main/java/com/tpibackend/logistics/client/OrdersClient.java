@@ -1,6 +1,7 @@
 package com.tpibackend.logistics.client;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -53,13 +54,17 @@ public class OrdersClient {
         }
     }
 
-    public void actualizarCosto(Long solicitudId, BigDecimal costoFinal) {
+    public void actualizarCosto(Long solicitudId, BigDecimal costoFinal, Long tiempoRealMinutos) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set(INTERNAL_SECRET_HEADER, sharedSecret);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(
-                    Map.of("costoFinal", costoFinal), headers);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("costoFinal", costoFinal);
+            if (tiempoRealMinutos != null) {
+                payload.put("tiempoRealMinutos", tiempoRealMinutos);
+            }
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
             restTemplate.put(baseUrl + "/" + solicitudId + "/costo", entity);
         } catch (RestClientException ex) {
             log.warn("No se pudo actualizar el costo final de la solicitud {}: {}", solicitudId, ex.getMessage());

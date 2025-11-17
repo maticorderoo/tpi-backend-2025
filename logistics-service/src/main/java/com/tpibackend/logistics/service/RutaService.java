@@ -45,15 +45,18 @@ public class RutaService {
     private final DepositoRepository depositoRepository;
     private final DistanceClient distanceClient;
     private final OrdersSyncGateway ordersSyncGateway;
+    private final TarifaService tarifaService;
 
     public RutaService(RutaRepository rutaRepository,
             DepositoRepository depositoRepository,
             DistanceClient distanceClient,
-            OrdersSyncGateway ordersSyncGateway) {
+            OrdersSyncGateway ordersSyncGateway,
+            TarifaService tarifaService) {
         this.rutaRepository = rutaRepository;
         this.depositoRepository = depositoRepository;
         this.distanceClient = distanceClient;
         this.ordersSyncGateway = ordersSyncGateway;
+        this.tarifaService = tarifaService;
     }
 
     public RutaResponse crearRuta(CrearRutaRequest request) {
@@ -109,10 +112,9 @@ public class RutaService {
             long tiempo = distanceData != null ? Math.round(distanceData.durationMinutes()) : 0L;
             tramo.setTiempoEstimadoMinutos(tiempo);
 
-            BigDecimal costoBase = request.costoKmBase().multiply(BigDecimal.valueOf(distancia));
-            BigDecimal costoCombustible = request.consumoLitrosKm()
-                    .multiply(BigDecimal.valueOf(distancia))
-                    .multiply(request.precioCombustible());
+            BigDecimal costoBase = tarifaService.calcularCostoBasePorDistancia(distancia);
+            BigDecimal costoCombustible = tarifaService.calcularCostoCombustible(distancia);
+            BigDecimal costoTiempo = tarifaService.calcularCostoTiempo(tiempo);
 
             int diasEstadia = 0;
             BigDecimal costoEstadiaDia = BigDecimal.ZERO;
@@ -126,7 +128,7 @@ public class RutaService {
             tramo.setCostoEstadiaDia(costoEstadiaDia);
             tramo.setCostoEstadia(costoEstadia);
 
-            BigDecimal costoAprox = costoBase.add(costoCombustible).add(costoEstadia);
+            BigDecimal costoAprox = costoBase.add(costoCombustible).add(costoTiempo).add(costoEstadia);
             tramo.setCostoAprox(costoAprox);
 
             tramos.add(tramo);

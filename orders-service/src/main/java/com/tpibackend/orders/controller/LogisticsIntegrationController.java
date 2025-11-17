@@ -93,6 +93,14 @@ public class LogisticsIntegrationController {
         Punto destino = new Punto(dto.getDestino(), dto.getDestinoLat(), dto.getDestinoLng());
         BigDecimal peso = dto.getContenedor() != null ? dto.getContenedor().getPeso() : null;
         BigDecimal volumen = dto.getContenedor() != null ? dto.getContenedor().getVolumen() : null;
-        return new SolicitudLogisticsView(dto.getId(), origen, destino, peso, volumen);
+        String estadoSolicitud = dto.getEstado() != null ? dto.getEstado().name() : null;
+        SolicitudLogisticsView.Contenedor contenedor = null;
+        if (dto.getContenedor() != null) {
+            contenedor = new SolicitudLogisticsView.Contenedor(
+                    dto.getContenedor().getId(),
+                    dto.getContenedor().getCodigo(),
+                    dto.getContenedor().getEstado() != null ? dto.getContenedor().getEstado().name() : null);
+        }
+        return new SolicitudLogisticsView(dto.getId(), estadoSolicitud, origen, destino, peso, volumen, contenedor);
     }
 }

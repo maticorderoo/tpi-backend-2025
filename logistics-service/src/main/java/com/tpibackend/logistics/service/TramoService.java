@@ -3,7 +3,10 @@ package com.tpibackend.logistics.service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +20,6 @@ import com.tpibackend.logistics.client.FleetClient.TruckInfo;
 import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
-import com.tpibackend.logistics.dto.request.FinTramoRequest;
-import com.tpibackend.logistics.dto.request.InicioTramoRequest;
 import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.exception.NotFoundException;
@@ -46,6 +47,7 @@ public class TramoService {
     private final DistanceClient distanceClient;
     private final RutaRepository rutaRepository;
     private final OrdersClient ordersClient;
+    private final TarifaService tarifaService;
 
     public TramoService(TramoRepository tramoRepository,
             DepositoRepository depositoRepository,
@@ -53,7 +55,8 @@ public class TramoService {
             OrdersSyncGateway ordersSyncGateway,
             DistanceClient distanceClient,
             RutaRepository rutaRepository,
-            OrdersClient ordersClient) {
+            OrdersClient ordersClient,
+            TarifaService tarifaService) {
         this.tramoRepository = tramoRepository;
         this.depositoRepository = depositoRepository;
         this.fleetClient = fleetClient;
@@ -61,6 +64,7 @@ public class TramoService {
         this.distanceClient = distanceClient;
         this.rutaRepository = rutaRepository;
         this.ordersClient = ordersClient;
+        this.tarifaService = tarifaService;
     }
 
     public TramoResponse asignarCamion(Long tramoId, AsignarCamionRequest request) {
@@ -68,21 +72,23 @@ public class TramoService {
         if (tramo.getEstado() == TramoEstado.FINALIZADO) {
             throw new BusinessException("El tramo ya fue finalizado");
         }
+
+        Ruta ruta = tramo.getRuta();
+        BigDecimal pesoCarga = resolverPesoCarga(ruta);
+        BigDecimal volumenCarga = resolverVolumenCarga(ruta);
+        if (pesoCarga == null || volumenCarga == null) {
+            throw new BusinessException("No se pudo determinar el peso/volumen del contenedor asociado al tramo");
+        }
+
         TruckInfo camion = fleetClient.obtenerCamion(request.camionId());
-        if (!camion.disponible()) {
+        if (camion.disponible() != null && !camion.disponible()) {
             throw new BusinessException("El camión " + request.camionId() + " no está disponible");
         }
 
-        Ruta ruta = tramo.getRuta();
-        BigDecimal pesoCarga = resolverPesoCarga(ruta, request);
-        BigDecimal volumenCarga = resolverVolumenCarga(ruta, request);
-
-        if (camion.capacidadPeso() != null && pesoCarga != null
-                && camion.capacidadPeso().compareTo(pesoCarga) < 0) {
+        if (camion.capacidadPeso() != null && camion.capacidadPeso().compareTo(pesoCarga) < 0) {
             throw new BusinessException("El camión no soporta el peso requerido");
         }
-        if (camion.capacidadVolumen() != null && volumenCarga != null
-                && camion.capacidadVolumen().compareTo(volumenCarga) < 0) {
+        if (camion.capacidadVolumen() != null && camion.capacidadVolumen().compareTo(volumenCarga) < 0) {
             throw new BusinessException("El camión no soporta el volumen requerido");
         }
 
@@ -97,7 +103,7 @@ public class TramoService {
         return LogisticsMapper.toTramoResponse(tramo);
     }
 
-    public TramoResponse iniciarTramo(Long tramoId, InicioTramoRequest request) {
+    public TramoResponse iniciarTramo(Long tramoId) {
         Tramo tramo = obtenerTramo(tramoId);
         if (tramo.getCamionId() == null) {
             throw new BusinessException("El tramo no tiene camión asignado");
@@ -106,9 +112,7 @@ public class TramoService {
             throw new BusinessException("El tramo no puede iniciarse en estado " + tramo.getEstado());
         }
 
-        OffsetDateTime inicio = request != null && request.fechaHoraInicio() != null
-                ? request.fechaHoraInicio()
-                : OffsetDateTime.now();
+        OffsetDateTime inicio = OffsetDateTime.now();
         tramo.setEstado(TramoEstado.INICIADO);
         tramo.setFechaHoraInicio(inicio);
         tramoRepository.save(tramo);
@@ -117,7 +121,7 @@ public class TramoService {
         fleetClient.actualizarDisponibilidad(tramo.getCamionId(), false, "En tránsito - Tramo " + tramoId);
 
         Ruta ruta = tramo.getRuta();
-        if (ruta.getSolicitudId() != null) {
+        if (ruta.getSolicitudId() != null && esPrimerTramoEnRuta(tramo)) {
             // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
             ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "EN_TRANSITO");
         }
@@ -126,7 +130,7 @@ public class TramoService {
         return LogisticsMapper.toTramoResponse(tramo);
     }
 
-    public TramoResponse finalizarTramo(Long tramoId, FinTramoRequest request) {
+    public TramoResponse finalizarTramo(Long tramoId) {
         Tramo tramo = obtenerTramo(tramoId);
         if (tramo.getEstado() != TramoEstado.INICIADO) {
             throw new BusinessException("El tramo no puede finalizarse en estado " + tramo.getEstado());
@@ -135,50 +139,70 @@ public class TramoService {
             throw new BusinessException("El tramo no tiene fecha de inicio registrada");
         }
 
-        tramo.setFechaHoraFin(request.fechaHoraFin() != null ? request.fechaHoraFin() : OffsetDateTime.now());
-        double distanciaReal = resolverDistanciaReal(tramo, request);
+        tramo.setFechaHoraFin(OffsetDateTime.now());
+        double distanciaReal = resolverDistanciaReal(tramo);
         tramo.setDistanciaKmReal(distanciaReal);
-        tramo.setDiasEstadia(request.diasEstadia());
         long minutosReales = Duration.between(tramo.getFechaHoraInicio(), tramo.getFechaHoraFin()).toMinutes();
-        tramo.setTiempoRealMinutos(minutosReales < 0 ? 0 : minutosReales);
+        tramo.setTiempoRealMinutos(Math.max(0, minutosReales));
 
-        BigDecimal costoEstadiaDia = tramo.getCostoEstadiaDia();
-        if (tramo.getDestinoTipo() == LocationType.DEPOSITO && tramo.getDestinoId() != null) {
-            Deposito deposito = depositoRepository.findById(tramo.getDestinoId()).orElse(null);
-            if (deposito != null) {
-                costoEstadiaDia = deposito.getCostoEstadiaDia();
-                tramo.setCostoEstadiaDia(costoEstadiaDia);
-            }
-        }
-
-        BigDecimal distancia = BigDecimal.valueOf(distanciaReal);
-        BigDecimal costoEstadia = costoEstadiaDia.multiply(BigDecimal.valueOf(request.diasEstadia()));
+        int diasEstadia = calcularDiasEstadiaReal(tramo);
+        tramo.setDiasEstadia(diasEstadia);
+        BigDecimal costoEstadiaDia = obtenerCostoEstadiaDia(tramo);
+        tramo.setCostoEstadiaDia(costoEstadiaDia);
+        BigDecimal costoEstadia = tarifaService.calcularCostoEstadia(diasEstadia, costoEstadiaDia);
         tramo.setCostoEstadia(costoEstadia);
 
-        BigDecimal costoReal = request.costoKmBase().multiply(distancia)
-                .add(request.consumoLitrosKm().multiply(distancia).multiply(request.precioCombustible()))
-                .add(costoEstadia);
+        BigDecimal costoBase = tarifaService.calcularCostoBasePorDistancia(distanciaReal);
+        BigDecimal costoCombustible = tarifaService.calcularCostoCombustible(distanciaReal);
+        BigDecimal costoTiempo = tarifaService.calcularCostoTiempo(tramo.getTiempoRealMinutos());
+        BigDecimal costoReal = costoBase.add(costoCombustible).add(costoTiempo).add(costoEstadia);
         tramo.setCostoReal(costoReal);
         tramo.setEstado(TramoEstado.FINALIZADO);
         tramoRepository.save(tramo);
 
-        // Marcar camión como disponible nuevamente
-        fleetClient.actualizarDisponibilidad(tramo.getCamionId(), true, null);
+        actualizarDisponibilidadSegunPendientes(tramo);
 
         Ruta ruta = tramo.getRuta();
+        List<Tramo> tramosRuta = ruta.getTramos().stream()
+                .sorted(Comparator.comparing(Tramo::getId))
+                .toList();
         ruta.setCostoTotalReal(ruta.calcularCostoTotalReal());
-        ruta.setTiempoRealMinutos(ruta.calcularTiempoReal());
+        long tiempoRealTotal = calcularVentanaLogistica(tramosRuta);
+        ruta.setTiempoRealMinutos(tiempoRealTotal);
+        rutaRepository.save(ruta);
 
         log.info("Tramo {} finalizado con costo {}", tramoId, costoReal);
 
         if (ruta.getSolicitudId() != null &&
-                ruta.getTramos().stream().allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO)) {
+                tramosRuta.stream().allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO)) {
             // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
             ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "ENTREGADA");
-            ordersSyncGateway.notificarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal());
+            ordersSyncGateway.notificarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal(), tiempoRealTotal);
         }
 
         return LogisticsMapper.toTramoResponse(tramo);
+    }
+
+    private long calcularVentanaLogistica(List<Tramo> tramosRuta) {
+        Optional<OffsetDateTime> primerInicio = tramosRuta.stream()
+                .map(Tramo::getFechaHoraInicio)
+                .filter(Objects::nonNull)
+                .min(OffsetDateTime::compareTo);
+        Optional<OffsetDateTime> ultimoFin = tramosRuta.stream()
+                .map(Tramo::getFechaHoraFin)
+                .filter(Objects::nonNull)
+                .max(OffsetDateTime::compareTo);
+
+        if (primerInicio.isPresent() && ultimoFin.isPresent()) {
+            long minutos = Duration.between(primerInicio.get(), ultimoFin.get()).toMinutes();
+            return Math.max(0, minutos);
+        }
+
+        return tramosRuta.stream()
+                .map(Tramo::getTiempoRealMinutos)
+                .filter(Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .sum();
     }
 
     private Tramo obtenerTramo(Long tramoId) {
@@ -186,9 +210,8 @@ public class TramoService {
                 .orElseThrow(() -> new NotFoundException("Tramo " + tramoId + " no encontrado"));
     }
 
-    private double resolverDistanciaReal(Tramo tramo, FinTramoRequest request) {
-        double fallback = request.kmReal() != null ? request.kmReal()
-                : tramo.getDistanciaKmEstimada() != null ? tramo.getDistanciaKmEstimada() : 0d;
+    private double resolverDistanciaReal(Tramo tramo) {
+        double fallback = tramo.getDistanciaKmEstimada() != null ? tramo.getDistanciaKmEstimada() : 0d;
 
         if (tramo.getOrigenLat() == null || tramo.getOrigenLng() == null
                 || tramo.getDestinoLat() == null || tramo.getDestinoLng() == null) {
@@ -206,7 +229,6 @@ public class TramoService {
                 return fallback;
             }
             log.info("Distancia real para tramo {} calculada en {} km", tramo.getId(), distancia);
-            tramo.setTiempoRealMinutos(Math.round(data.durationMinutes()));
             return distancia;
         } catch (Exception ex) {
             log.warn("No se pudo calcular distancia real con distance-client para tramo {}. Usando fallback {} km",
@@ -242,20 +264,14 @@ public class TramoService {
                 .toList();
     }
 
-    private BigDecimal resolverPesoCarga(Ruta ruta, AsignarCamionRequest request) {
-        if (request.pesoCarga() != null) {
-            return request.pesoCarga();
-        }
+    private BigDecimal resolverPesoCarga(Ruta ruta) {
         if (ruta.getPesoTotal() != null && ruta.getPesoTotal().compareTo(BigDecimal.ZERO) > 0) {
             return ruta.getPesoTotal();
         }
         return obtenerDatosSolicitud(ruta).map(SolicitudLogisticaResponse::pesoContenedor).orElse(null);
     }
 
-    private BigDecimal resolverVolumenCarga(Ruta ruta, AsignarCamionRequest request) {
-        if (request.volumenCarga() != null) {
-            return request.volumenCarga();
-        }
+    private BigDecimal resolverVolumenCarga(Ruta ruta) {
         if (ruta.getVolumenTotal() != null && ruta.getVolumenTotal().compareTo(BigDecimal.ZERO) > 0) {
             return ruta.getVolumenTotal();
         }
@@ -275,6 +291,68 @@ public class TramoService {
 
     public TramoResponse obtenerDetalle(Long tramoId) {
         return LogisticsMapper.toTramoResponse(obtenerTramo(tramoId));
+    }
+
+    private boolean esPrimerTramoEnRuta(Tramo tramo) {
+        Ruta ruta = tramo.getRuta();
+        if (ruta == null || ruta.getId() == null) {
+            return false;
+        }
+        List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(ruta.getId());
+        return !tramosRuta.isEmpty() && tramosRuta.get(0).getId().equals(tramo.getId());
+    }
+
+    private int calcularDiasEstadiaReal(Tramo tramo) {
+        if (tramo.getDestinoTipo() != LocationType.DEPOSITO || tramo.getDestinoId() == null
+                || tramo.getFechaHoraFin() == null) {
+            return 0;
+        }
+        Ruta ruta = tramo.getRuta();
+        if (ruta == null || ruta.getId() == null) {
+            return 0;
+        }
+        List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(ruta.getId());
+        for (int i = 0; i < tramosRuta.size(); i++) {
+            Tramo actual = tramosRuta.get(i);
+            if (actual.getId().equals(tramo.getId()) && i + 1 < tramosRuta.size()) {
+                Tramo siguiente = tramosRuta.get(i + 1);
+                if (siguiente.getFechaHoraInicio() == null) {
+                    return 0;
+                }
+                Duration espera = Duration.between(tramo.getFechaHoraFin(), siguiente.getFechaHoraInicio());
+                if (espera.isNegative() || espera.isZero()) {
+                    return 0;
+                }
+                long minutos = espera.toMinutes();
+                double dias = minutos / (60d * 24d);
+                return (int) Math.ceil(dias);
+            }
+        }
+        return 0;
+    }
+
+    private BigDecimal obtenerCostoEstadiaDia(Tramo tramo) {
+        if (tramo.getDestinoTipo() == LocationType.DEPOSITO && tramo.getDestinoId() != null) {
+            return depositoRepository.findById(tramo.getDestinoId())
+                    .map(Deposito::getCostoEstadiaDia)
+                    .orElse(tramo.getCostoEstadiaDia() != null ? tramo.getCostoEstadiaDia() : BigDecimal.ZERO);
+        }
+        return tramo.getCostoEstadiaDia() != null ? tramo.getCostoEstadiaDia() : BigDecimal.ZERO;
+    }
+
+    private void actualizarDisponibilidadSegunPendientes(Tramo tramoFinalizado) {
+        Long camionId = tramoFinalizado.getCamionId();
+        if (camionId == null) {
+            return;
+        }
+        boolean tienePendientes = tramoRepository.findByCamionIdOrderByRutaIdAsc(camionId).stream()
+                .filter(t -> !t.getId().equals(tramoFinalizado.getId()))
+                .anyMatch(t -> t.getEstado() == TramoEstado.ASIGNADO || t.getEstado() == TramoEstado.INICIADO);
+        if (tienePendientes) {
+            fleetClient.actualizarDisponibilidad(camionId, false, "Asignado a otros tramos");
+        } else {
+            fleetClient.actualizarDisponibilidad(camionId, true, null);
+        }
     }
 
     public java.util.List<TramoResponse> obtenerContenedoresEnDeposito(Long depositoId) {

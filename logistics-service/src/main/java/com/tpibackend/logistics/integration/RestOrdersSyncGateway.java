@@ -30,10 +30,11 @@ public class RestOrdersSyncGateway implements OrdersSyncGateway {
     }
 
     @Override
-    public void notificarCosto(Long solicitudId, BigDecimal costoFinal) {
-        log.debug("Notificando costo {} a Orders para solicitud {}", costoFinal, solicitudId);
+    public void notificarCosto(Long solicitudId, BigDecimal costoFinal, Long tiempoRealMinutos) {
+        log.debug("Notificando costo {} y tiempo real {} a Orders para solicitud {}", costoFinal, tiempoRealMinutos,
+                solicitudId);
         // TODO: reemplazar por publicación de eventos/logística cuando se disponga de broker.
-        ordersClient.actualizarCosto(solicitudId, costoFinal);
+        ordersClient.actualizarCosto(solicitudId, costoFinal, tiempoRealMinutos);
     }
 
     @Override

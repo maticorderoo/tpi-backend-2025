@@ -6,7 +6,7 @@ public interface OrdersSyncGateway {
 
     void notificarEstado(Long solicitudId, String estado);
 
-    void notificarCosto(Long solicitudId, BigDecimal costoFinal);
+    void notificarCosto(Long solicitudId, BigDecimal costoFinal, Long tiempoRealMinutos);
 
     void notificarPlanificacion(Long solicitudId, BigDecimal costoEstimado,
             Long tiempoEstimadoMinutos, Long rutaLogisticaId);

@@ -16,6 +16,8 @@ import com.tpibackend.logistics.model.enums.LocationType;
 import com.tpibackend.logistics.model.enums.TramoEstado;
 import com.tpibackend.logistics.model.enums.TramoTipo;
 import com.tpibackend.logistics.service.RutaService;
+import com.tpibackend.logistics.service.RutaTentativaService;
+import com.tpibackend.logistics.service.TramoService;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -26,13 +28,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 @WebMvcTest(RutaController.class)
 @Import({SecurityConfig.class, SecurityExceptionHandler.class})
 @ActiveProfiles("test")
+@TestPropertySource(properties = "server.servlet.context-path=/api")
 class RutaControllerSecurityTest {
 
     @Autowired
@@ -44,9 +49,15 @@ class RutaControllerSecurityTest {
     @MockBean
     private RutaService rutaService;
 
+    @MockBean
+    private RutaTentativaService rutaTentativaService;
+
+    @MockBean
+    private TramoService tramoService;
+
     @Test
     void crearRutaSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(post("/api/logistics/routes")
+        mockMvc.perform(post("/logistics/routes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearRutaJson()))
             .andExpect(status().isUnauthorized());
@@ -54,7 +65,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void crearRutaConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(post("/api/logistics/routes")
+        mockMvc.perform(post("/logistics/routes")
                 .with(jwtWithRoles("CLIENTE"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearRutaJson()))
@@ -65,7 +76,7 @@ class RutaControllerSecurityTest {
     void crearRutaConRolOperadorDevuelve201() throws Exception {
         when(rutaService.crearRuta(any())).thenReturn(rutaResponse());
 
-        mockMvc.perform(post("/api/logistics/routes")
+        mockMvc.perform(post("/logistics/routes")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(crearRutaJson()))
@@ -74,7 +85,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void asignarRutaSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(post("/api/logistics/routes/1/asignaciones")
+        mockMvc.perform(post("/logistics/routes/1/asignaciones")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"solicitudId\":1}"))
             .andExpect(status().isUnauthorized());
@@ -82,7 +93,7 @@ class RutaControllerSecurityTest {
 
     @Test
     void asignarRutaConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(post("/api/logistics/routes/1/asignaciones")
+        mockMvc.perform(post("/logistics/routes/1/asignaciones")
                 .with(jwtWithRoles("TRANSPORTISTA"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"solicitudId\":1}"))
@@ -93,7 +104,7 @@ class RutaControllerSecurityTest {
     void asignarRutaConOperadorDevuelve200() throws Exception {
         when(rutaService.asignarRuta(any(), any())).thenReturn(rutaResponse());
 
-        mockMvc.perform(post("/api/logistics/routes/1/asignaciones")
+        mockMvc.perform(post("/logistics/routes/1/asignaciones")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"solicitudId\":1}"))
@@ -102,13 +113,13 @@ class RutaControllerSecurityTest {
 
     @Test
     void obtenerRutaSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/logistics/routes/solicitudes/1"))
+        mockMvc.perform(get("/logistics/routes/solicitudes/1"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     void obtenerRutaConRolNoPermitidoDevuelve403() throws Exception {
-        mockMvc.perform(get("/api/logistics/routes/solicitudes/1").with(jwtWithRoles("TRANSPORTISTA")))
+        mockMvc.perform(get("/logistics/routes/solicitudes/1").with(jwtWithRoles("TRANSPORTISTA")))
             .andExpect(status().isForbidden());
     }
 
@@ -118,18 +129,15 @@ class RutaControllerSecurityTest {
             java.util.Optional.of(rutaResponse())
         );
 
-        mockMvc.perform(get("/api/logistics/routes/solicitudes/1").with(jwtWithRoles("OPERADOR")))
+        mockMvc.perform(get("/logistics/routes/solicitudes/1").with(jwtWithRoles("OPERADOR")))
             .andExpect(status().isOk());
     }
 
     private String crearRutaJson() throws Exception {
         Map<String, Object> payload = Map.of(
-            "origen", Map.of("tipo", "CLIENTE", "descripcion", "Origen"),
-            "destino", Map.of("tipo", "CLIENTE", "descripcion", "Destino"),
+            "origen", Map.of("tipo", "SOLICITUD", "descripcion", "Origen"),
+            "destino", Map.of("tipo", "SOLICITUD", "descripcion", "Destino"),
             "depositosIntermedios", List.of(),
-            "costoKmBase", 1000,
-            "consumoLitrosKm", 0.3,
-            "precioCombustible", 700,
             "pesoCarga", 1000,
             "volumenCarga", 20
         );
@@ -137,7 +145,14 @@ class RutaControllerSecurityTest {
     }
 
     private RequestPostProcessor jwtWithRoles(String... roles) {
-        return jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))));
+        java.util.List<String> roleList = java.util.Arrays.stream(roles).toList();
+        java.util.List<SimpleGrantedAuthority> authorities = roleList.stream()
+                .map(role -> "ROLE_" + role.toUpperCase())
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+        return jwt()
+                .jwt(jwt -> jwt.claim("realm_access", Map.of("roles", roleList)))
+                .authorities(authorities.toArray(SimpleGrantedAuthority[]::new));
     }
 
     private RutaResponse rutaResponse() {

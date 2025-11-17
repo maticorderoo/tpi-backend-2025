@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceResult;
 import com.tpibackend.logistics.client.OrdersClient;
-import com.tpibackend.logistics.config.EstimacionProperties;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse.Punto;
 import com.tpibackend.logistics.dto.response.LocationSummary;
@@ -47,7 +46,7 @@ public class RutaTentativaService {
     private final OrdersClient ordersClient;
     private final DepositoRepository depositoRepository;
     private final DistanceClient distanceClient;
-    private final EstimacionProperties estimacionProperties;
+    private final TarifaService tarifaService;
     private final RutaTentativaRepository rutaTentativaRepository;
     private final RutaRepository rutaRepository;
     private final OrdersSyncGateway ordersSyncGateway;
@@ -55,14 +54,14 @@ public class RutaTentativaService {
     public RutaTentativaService(OrdersClient ordersClient,
             DepositoRepository depositoRepository,
             DistanceClient distanceClient,
-            EstimacionProperties estimacionProperties,
+            TarifaService tarifaService,
             RutaTentativaRepository rutaTentativaRepository,
             RutaRepository rutaRepository,
             OrdersSyncGateway ordersSyncGateway) {
         this.ordersClient = ordersClient;
         this.depositoRepository = depositoRepository;
         this.distanceClient = distanceClient;
-        this.estimacionProperties = estimacionProperties;
+        this.tarifaService = tarifaService;
         this.rutaTentativaRepository = rutaTentativaRepository;
         this.rutaRepository = rutaRepository;
         this.ordersSyncGateway = ordersSyncGateway;
@@ -174,24 +173,22 @@ public class RutaTentativaService {
 
     private CostoTentativo calcularCosto(double distanciaKm, long tiempoMinutos, LocationNode destino) {
         BigDecimal distancia = BigDecimal.valueOf(distanciaKm);
-        BigDecimal costoBase = estimacionProperties.getCostoKmBase().multiply(distancia);
-        BigDecimal costoCombustible = estimacionProperties.getConsumoLitrosKm()
-                .multiply(distancia)
-                .multiply(estimacionProperties.getPrecioCombustible());
+        BigDecimal costoBase = tarifaService.calcularCostoBasePorDistancia(distanciaKm);
+        BigDecimal costoCombustible = tarifaService.calcularCostoCombustible(distanciaKm);
 
         BigDecimal horas = BigDecimal.valueOf(tiempoMinutos)
                 .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
-        BigDecimal costoTiempo = estimacionProperties.getCostoTiempoHora().multiply(horas);
+        BigDecimal costoTiempo = tarifaService.costoTiempoHora().multiply(horas);
 
         BigDecimal total = costoBase.add(costoCombustible).add(costoTiempo);
 
         int diasEstadia = 0;
         BigDecimal costoEstadiaDia = BigDecimal.ZERO;
         BigDecimal costoEstadia = BigDecimal.ZERO;
-        if (destino.deposito() != null && estimacionProperties.getDiasEstadiaDeposito() > 0) {
-            diasEstadia = estimacionProperties.getDiasEstadiaDeposito();
+        if (destino.deposito() != null && tarifaService.diasEstadiaDeposito() > 0) {
+            diasEstadia = tarifaService.diasEstadiaDeposito();
             costoEstadiaDia = destino.deposito().getCostoEstadiaDia();
-            costoEstadia = costoEstadiaDia.multiply(BigDecimal.valueOf(diasEstadia));
+            costoEstadia = tarifaService.calcularCostoEstadia(diasEstadia, costoEstadiaDia);
             total = total.add(costoEstadia);
         }
         return new CostoTentativo(total, diasEstadia, costoEstadiaDia, costoEstadia);

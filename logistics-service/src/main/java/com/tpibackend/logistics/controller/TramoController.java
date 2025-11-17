@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
-import com.tpibackend.logistics.dto.request.FinTramoRequest;
-import com.tpibackend.logistics.dto.request.InicioTramoRequest;
 import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.service.TramoService;
 
@@ -67,7 +65,7 @@ public class TramoController {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = AsignarCamionRequest.class),
                     examples = @ExampleObject(name = "asignarCamion",
-                            value = "{\n  \"camionId\": 12,\n  \"pesoCarga\": 1200,\n  \"volumenCarga\": 28\n}"))),
+                            value = "{\n  \"camionId\": 12\n}"))),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Camión asignado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -93,10 +91,6 @@ public class TramoController {
     @PreAuthorize("hasRole('TRANSPORTISTA')")
     @Operation(summary = "Marcar inicio del tramo",
             description = "Marca el inicio efectivo del tramo asignado. Requiere rol TRANSPORTISTA.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = InicioTramoRequest.class),
-                    examples = @ExampleObject(name = "inicioTramo",
-                            value = "{\n  \"fechaHoraInicio\": \"2024-06-15T08:30:00Z\"\n}"))),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Tramo iniciado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -112,20 +106,15 @@ public class TramoController {
                     @ApiResponse(responseCode = "400", description = "Tramo sin camión asignado"),
                     @ApiResponse(responseCode = "409", description = "Estado inválido")
             })
-    public ResponseEntity<TramoResponse> iniciarTramo(@PathVariable Long tramoId,
-            @Valid @RequestBody(required = false) InicioTramoRequest request) {
+    public ResponseEntity<TramoResponse> iniciarTramo(@PathVariable Long tramoId) {
         log.debug("Marcando inicio del tramo {}", tramoId);
-        return ResponseEntity.ok(tramoService.iniciarTramo(tramoId, request));
+        return ResponseEntity.ok(tramoService.iniciarTramo(tramoId));
     }
 
     @PostMapping("/{tramoId}/finalizaciones")
     @PreAuthorize("hasRole('TRANSPORTISTA')")
     @Operation(summary = "Marcar fin del tramo",
-            description = "Registra la finalización del tramo en curso. Requiere rol TRANSPORTISTA.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = FinTramoRequest.class),
-                    examples = @ExampleObject(name = "finTramo",
-                            value = "{\n  \"fechaHoraFin\": \"2024-06-15T17:45:00Z\",\n  \"kmReal\": 318.2,\n  \"consumoLitrosKm\": 0.35,\n  \"precioCombustible\": 750,\n  \"costoKmBase\": 950,\n  \"diasEstadia\": 1\n}"))),
+            description = "Registra la finalización del tramo en curso tomando la telemetría interna. Requiere rol TRANSPORTISTA.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Tramo finalizado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -141,10 +130,9 @@ public class TramoController {
                     @ApiResponse(responseCode = "400", description = "Tramo no iniciado"),
                     @ApiResponse(responseCode = "409", description = "Estado inválido")
             })
-    public ResponseEntity<TramoResponse> finalizarTramo(@PathVariable Long tramoId,
-            @Valid @RequestBody FinTramoRequest request) {
+    public ResponseEntity<TramoResponse> finalizarTramo(@PathVariable Long tramoId) {
         log.debug("Marcando fin del tramo {}", tramoId);
-        return ResponseEntity.ok(tramoService.finalizarTramo(tramoId, request));
+        return ResponseEntity.ok(tramoService.finalizarTramo(tramoId));
     }
 
     @GetMapping("/camion/{camionId}")

@@ -65,7 +65,7 @@ public class RutaController {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = CrearRutaRequest.class),
                     examples = @ExampleObject(name = "crearRuta",
-                            value = "{\n  \"origen\": {\n    \"tipo\": \"CLIENTE\",\n    \"descripcion\": \"Planta Pilar\"\n  },\n  \"destino\": {\n    \"tipo\": \"CLIENTE\",\n    \"descripcion\": \"Puerto de Rosario\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": 3,\n      \"diasEstadia\": 1\n    }\n  ],\n  \"costoKmBase\": 950,\n  \"consumoLitrosKm\": 0.32,\n  \"precioCombustible\": 750,\n  \"pesoCarga\": 1200,\n  \"volumenCarga\": 28\n}"))),
+                            value = "{\n  \"origen\": {\n    \"tipo\": \"CLIENTE\",\n    \"descripcion\": \"Planta Pilar\"\n  },\n  \"destino\": {\n    \"tipo\": \"CLIENTE\",\n    \"descripcion\": \"Puerto de Rosario\"\n  },\n  \"depositosIntermedios\": [\n    {\n      \"depositoId\": 3,\n      \"diasEstadia\": 1\n    }\n  ],\n  \"pesoCarga\": 1200,\n  \"volumenCarga\": 28\n}"))),
             responses = {
                     @ApiResponse(responseCode = "201", description = "Ruta sugerida",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
