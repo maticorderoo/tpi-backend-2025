@@ -9,15 +9,13 @@ import lombok.Data;
 public class ClienteRequestDto {
 
     private Long id;
-
-    @NotBlank(message = "El nombre del cliente es obligatorio")
+    // El resto de campos pueden ser opcionales en el request cuando se envía solo el CUIT
+    // (se validará en el service si es necesario crear un nuevo cliente)
     private String nombre;
 
-    @NotBlank(message = "El email del cliente es obligatorio")
     @Email(message = "El email del cliente debe ser válido")
     private String email;
 
-    @NotBlank(message = "El teléfono del cliente es obligatorio")
     @Size(max = 30, message = "El teléfono no puede superar los 30 caracteres")
     private String telefono;
 

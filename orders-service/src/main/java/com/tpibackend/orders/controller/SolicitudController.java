@@ -44,11 +44,25 @@ public class SolicitudController {
     @Operation(
             summary = "Crear una nueva solicitud",
             description = "Registra una solicitud nueva creando el cliente y el contenedor en caso de que no existan. Requiere rol CLIENTE.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = SolicitudCreateRequest.class),
-                    examples = @ExampleObject(name = "crearSolicitud",
-                            summary = "Solicitud de traslado b\u00e1sica",
-                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\",\n    \"cuit\": \"30-12345678-9\"\n  },\n  \"contenedor\": {\n    \"codigo\": \"CONT-XYZ-1234\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"C\u00f3rdoba\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}"))),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = SolicitudCreateRequest.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "crearSolicitudFull",
+                                            summary = "Solicitud de traslado con cliente completo",
+                                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\",\n    \"cuit\": \"30-12345678-9\"\n  },\n  \"contenedor\": {\n    \"codigo\": \"CONT-XYZ-1234\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"C\u00f3rdoba\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "crearSolicitudSoloCuit",
+                                            summary = "Solicitud usando cliente existente (solo cuit)",
+                                            value = "{\n  \"cliente\": {\n    \"cuit\": \"30-12345678-9\"\n  },\n  \"contenedor\": {\n    \"codigo\": \"CONT-XYZ-1234\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"C\u00f3rdoba\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}"
+                                    )
+                            }
+                    )
+            )
+            ,
             responses = {
                     @ApiResponse(responseCode = "201", description = "Solicitud creada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

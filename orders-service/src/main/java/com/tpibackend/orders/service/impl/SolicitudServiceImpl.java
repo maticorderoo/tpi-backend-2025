@@ -169,22 +169,41 @@ public class SolicitudServiceImpl implements SolicitudService {
             return clienteRepository.findById(clienteRequest.getId())
                 .orElseThrow(() -> new OrdersNotFoundException("Cliente no encontrado"));
         }
-        validarNuevoCliente(request);
+        // Regla de negocio requerida:
+        // - Si viene cliente.cuit y existe en BD -> reusar
+        // - Si viene cliente.cuit y NO existe -> validar datos obligatorios y crear nuevo cliente
+        // - Nunca pisar datos de un cliente existente desde este endpoint
 
-        String cuit = clienteRequest.getCuit().trim();
-        String email = clienteRequest.getEmail().trim();
-
-        Optional<Cliente> clienteExistente = clienteRepository.findByCuit(cuit);
-        if (clienteExistente.isEmpty()) {
-            clienteExistente = clienteRepository.findByEmail(email);
+        String cuit = clienteRequest.getCuit();
+        if (!StringUtils.hasText(cuit)) {
+            // No se provee CUIT: se considera creación de cliente nuevo (la validación pedirá CUIT)
+            validarNuevoCliente(request); // lanzará OrdersValidationException si faltan datos
+            cuit = clienteRequest.getCuit().trim();
+            Cliente cliente = new Cliente();
+            cliente.setNombre(clienteRequest.getNombre());
+            cliente.setEmail(clienteRequest.getEmail());
+            cliente.setTelefono(clienteRequest.getTelefono());
+            cliente.setCuit(cuit);
+            return clienteRepository.save(cliente);
         }
+
+        cuit = cuit.trim();
+        Optional<Cliente> clienteExistente = clienteRepository.findByCuit(cuit);
         if (clienteExistente.isPresent()) {
+            // Reusar cliente existente. No hacemos update desde este endpoint.
             return clienteExistente.get();
+        }
+
+        // No existe cliente con ese CUIT: debemos validar y crear uno nuevo
+        if (!StringUtils.hasText(clienteRequest.getNombre())
+                || !StringUtils.hasText(clienteRequest.getEmail())
+                || !StringUtils.hasText(clienteRequest.getTelefono())) {
+            throw new OrdersValidationException("No existe cliente con ese CUIT y faltan datos obligatorios para crearlo");
         }
 
         Cliente cliente = new Cliente();
         cliente.setNombre(clienteRequest.getNombre());
-        cliente.setEmail(email);
+        cliente.setEmail(clienteRequest.getEmail().trim());
         cliente.setTelefono(clienteRequest.getTelefono());
         cliente.setCuit(cuit);
         return clienteRepository.save(cliente);
