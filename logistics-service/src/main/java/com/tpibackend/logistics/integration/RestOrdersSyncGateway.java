@@ -35,4 +35,11 @@ public class RestOrdersSyncGateway implements OrdersSyncGateway {
         // TODO: reemplazar por publicación de eventos/logística cuando se disponga de broker.
         ordersClient.actualizarCosto(solicitudId, costoFinal);
     }
+
+    @Override
+    public void notificarPlanificacion(Long solicitudId, BigDecimal costoEstimado,
+            Long tiempoEstimadoMinutos, Long rutaLogisticaId) {
+        log.debug("Notificando planificación {} a Orders para solicitud {}", rutaLogisticaId, solicitudId);
+        ordersClient.actualizarPlanificacion(solicitudId, costoEstimado, tiempoEstimadoMinutos, rutaLogisticaId);
+    }
 }

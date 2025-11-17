@@ -161,4 +161,14 @@ public class RutaController {
         List<RutaTentativaResponse> rutas = rutaTentativaService.generarTentativas(solicitudId);
         return ResponseEntity.ok(rutas);
     }
+
+    @PostMapping("/solicitudes/{solicitudId}/rutas-tentativas/{rutaTentativaId}/confirmar")
+    @PreAuthorize("hasRole('OPERADOR')")
+    @Operation(summary = "Confirmar ruta tentativa",
+            description = "Persiste la ruta tentativa elegida como ruta definitiva de la solicitud y actualiza Orders.")
+    public ResponseEntity<RutaResponse> confirmarRutaTentativa(@PathVariable Long solicitudId,
+            @PathVariable Long rutaTentativaId) {
+        RutaResponse response = rutaTentativaService.confirmarTentativa(solicitudId, rutaTentativaId);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -3,12 +3,13 @@ package com.tpibackend.logistics.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tpibackend.distance.DistanceClient;
 import com.tpibackend.distance.model.DistanceResult;
@@ -17,15 +18,28 @@ import com.tpibackend.logistics.config.EstimacionProperties;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse.Punto;
 import com.tpibackend.logistics.dto.response.LocationSummary;
+import com.tpibackend.logistics.dto.response.RutaResponse;
 import com.tpibackend.logistics.dto.response.RutaTentativaResponse;
 import com.tpibackend.logistics.dto.response.TramoTentativoResponse;
 import com.tpibackend.logistics.exception.NotFoundException;
+import com.tpibackend.logistics.exception.BusinessException;
+import com.tpibackend.logistics.integration.OrdersSyncGateway;
 import com.tpibackend.logistics.model.Deposito;
+import com.tpibackend.logistics.model.Ruta;
+import com.tpibackend.logistics.model.RutaTentativa;
+import com.tpibackend.logistics.model.Tramo;
+import com.tpibackend.logistics.model.TramoTentativo;
 import com.tpibackend.logistics.model.enums.LocationType;
+import com.tpibackend.logistics.model.enums.RutaTentativaEstado;
+import com.tpibackend.logistics.model.enums.TramoEstado;
 import com.tpibackend.logistics.model.enums.TramoTipo;
 import com.tpibackend.logistics.repository.DepositoRepository;
+import com.tpibackend.logistics.repository.RutaRepository;
+import com.tpibackend.logistics.repository.RutaTentativaRepository;
+import com.tpibackend.logistics.mapper.LogisticsMapper;
 
 @Service
+@Transactional
 public class RutaTentativaService {
 
     private static final Logger log = LoggerFactory.getLogger(RutaTentativaService.class);
@@ -34,15 +48,24 @@ public class RutaTentativaService {
     private final DepositoRepository depositoRepository;
     private final DistanceClient distanceClient;
     private final EstimacionProperties estimacionProperties;
+    private final RutaTentativaRepository rutaTentativaRepository;
+    private final RutaRepository rutaRepository;
+    private final OrdersSyncGateway ordersSyncGateway;
 
     public RutaTentativaService(OrdersClient ordersClient,
             DepositoRepository depositoRepository,
             DistanceClient distanceClient,
-            EstimacionProperties estimacionProperties) {
+            EstimacionProperties estimacionProperties,
+            RutaTentativaRepository rutaTentativaRepository,
+            RutaRepository rutaRepository,
+            OrdersSyncGateway ordersSyncGateway) {
         this.ordersClient = ordersClient;
         this.depositoRepository = depositoRepository;
         this.distanceClient = distanceClient;
         this.estimacionProperties = estimacionProperties;
+        this.rutaTentativaRepository = rutaTentativaRepository;
+        this.rutaRepository = rutaRepository;
+        this.ordersSyncGateway = ordersSyncGateway;
     }
 
     public List<RutaTentativaResponse> generarTentativas(Long solicitudId) {
@@ -52,33 +75,49 @@ public class RutaTentativaService {
         LocationNode origen = LocationNode.fromSolicitud(LocationType.ORIGEN_SOLICITUD, solicitud.id(), solicitud.origen());
         LocationNode destino = LocationNode.fromSolicitud(LocationType.DESTINO_SOLICITUD, solicitud.id(), solicitud.destino());
 
-        List<Deposito> depositos = depositoRepository.findAll();
-        List<RutaTentativaResponse> rutas = new ArrayList<>();
+        List<LocationNode> depositos = depositoRepository.findAll().stream()
+                .map(LocationNode::fromDeposito)
+                .toList();
 
-        rutas.add(construirRuta(solicitudId, List.of(origen, destino)));
+        rutaTentativaRepository.deleteBySolicitudId(solicitudId);
 
-        for (Deposito deposito : depositos) {
-            rutas.add(construirRuta(solicitudId, List.of(origen, LocationNode.fromDeposito(deposito), destino)));
+        List<RutaTentativa> rutas = new ArrayList<>();
+        rutas.add(construirRutaTentativa(solicitudId, List.of(origen, destino)));
+
+        for (LocationNode deposito : depositos) {
+            rutas.add(construirRutaTentativa(solicitudId, List.of(origen, deposito, destino)));
         }
 
         for (int i = 0; i < depositos.size(); i++) {
             for (int j = i + 1; j < depositos.size(); j++) {
-                LocationNode primero = LocationNode.fromDeposito(depositos.get(i));
-                LocationNode segundo = LocationNode.fromDeposito(depositos.get(j));
-                rutas.add(construirRuta(solicitudId, List.of(origen, primero, segundo, destino)));
-                rutas.add(construirRuta(solicitudId, List.of(origen, segundo, primero, destino)));
+                LocationNode primero = depositos.get(i);
+                LocationNode segundo = depositos.get(j);
+                rutas.add(construirRutaTentativa(solicitudId, List.of(origen, primero, segundo, destino)));
+                rutas.add(construirRutaTentativa(solicitudId, List.of(origen, segundo, primero, destino)));
             }
         }
 
-        return rutas;
+        rutaTentativaRepository.saveAll(rutas);
+
+        return rutaTentativaRepository.findBySolicitudIdOrderByCreatedAtAsc(solicitudId).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    private RutaTentativaResponse construirRuta(Long solicitudId, List<LocationNode> nodos) {
+    private RutaTentativa construirRutaTentativa(Long solicitudId, List<LocationNode> nodos) {
+        RutaTentativa ruta = new RutaTentativa();
+        ruta.setSolicitudId(solicitudId);
+
         if (nodos.size() < 2) {
-            return new RutaTentativaResponse(solicitudId, 0, 0, 0d, BigDecimal.ZERO, 0L, Collections.emptyList());
+            ruta.setCantTramos(0);
+            ruta.setCantDepositos(0);
+            ruta.setCostoTotalAprox(BigDecimal.ZERO);
+            ruta.setDistanciaTotalKm(0d);
+            ruta.setTiempoEstimadoMinutos(0L);
+            return ruta;
         }
 
-        List<TramoTentativoResponse> tramos = new ArrayList<>();
+        List<TramoTentativo> tramos = new ArrayList<>();
         BigDecimal costoTotal = BigDecimal.ZERO;
         double distanciaTotal = 0d;
         long tiempoTotal = 0L;
@@ -95,34 +134,45 @@ public class RutaTentativaService {
 
             double distancia = resultado != null ? resultado.distanceKm() : 0d;
             long tiempo = resultado != null ? Math.round(resultado.durationMinutes()) : 0L;
-            BigDecimal costo = calcularCosto(distancia, tiempo, destino);
+            CostoTentativo costo = calcularCosto(distancia, tiempo, destino);
 
-            TramoTentativoResponse tramo = new TramoTentativoResponse(
-                    origen.toSummary(),
-                    destino.toSummary(),
-                    determinarTipo(origen.tipo(), destino.tipo()),
-                    distancia,
-                    tiempo,
-                    costo);
+            TramoTentativo tramo = new TramoTentativo();
+            tramo.setOrden(i + 1);
+            tramo.setOrigenTipo(origen.tipo());
+            tramo.setOrigenId(origen.referenciaId());
+            tramo.setOrigenDescripcion(origen.descripcion());
+            tramo.setOrigenLat(origen.lat());
+            tramo.setOrigenLng(origen.lng());
+            tramo.setDestinoTipo(destino.tipo());
+            tramo.setDestinoId(destino.referenciaId());
+            tramo.setDestinoDescripcion(destino.descripcion());
+            tramo.setDestinoLat(destino.lat());
+            tramo.setDestinoLng(destino.lng());
+            tramo.setTipo(determinarTipo(origen.tipo(), destino.tipo()));
+            tramo.setDistanciaKm(distancia);
+            tramo.setTiempoEstimadoMinutos(tiempo);
+            tramo.setCostoAproximado(costo.total());
+            tramo.setDiasEstadia(costo.diasEstadia());
+            tramo.setCostoEstadiaDia(costo.costoEstadiaDia());
+            tramo.setCostoEstadia(costo.costoEstadia());
             tramos.add(tramo);
-            costoTotal = costoTotal.add(costo);
+            costoTotal = costoTotal.add(costo.total());
             distanciaTotal += distancia;
             tiempoTotal += tiempo;
         }
 
         int depositosUtilizados = (int) nodos.stream().filter(node -> node.tipo() == LocationType.DEPOSITO).count();
 
-        return new RutaTentativaResponse(
-                solicitudId,
-                tramos.size(),
-                depositosUtilizados,
-                distanciaTotal,
-                costoTotal,
-                tiempoTotal,
-                tramos);
+        ruta.setCantTramos(tramos.size());
+        ruta.setCantDepositos(depositosUtilizados);
+        ruta.setDistanciaTotalKm(distanciaTotal);
+        ruta.setCostoTotalAprox(costoTotal);
+        ruta.setTiempoEstimadoMinutos(tiempoTotal);
+        tramos.forEach(ruta::addTramo);
+        return ruta;
     }
 
-    private BigDecimal calcularCosto(double distanciaKm, long tiempoMinutos, LocationNode destino) {
+    private CostoTentativo calcularCosto(double distanciaKm, long tiempoMinutos, LocationNode destino) {
         BigDecimal distancia = BigDecimal.valueOf(distanciaKm);
         BigDecimal costoBase = estimacionProperties.getCostoKmBase().multiply(distancia);
         BigDecimal costoCombustible = estimacionProperties.getConsumoLitrosKm()
@@ -135,12 +185,16 @@ public class RutaTentativaService {
 
         BigDecimal total = costoBase.add(costoCombustible).add(costoTiempo);
 
+        int diasEstadia = 0;
+        BigDecimal costoEstadiaDia = BigDecimal.ZERO;
+        BigDecimal costoEstadia = BigDecimal.ZERO;
         if (destino.deposito() != null && estimacionProperties.getDiasEstadiaDeposito() > 0) {
-            BigDecimal estadia = destino.deposito().getCostoEstadiaDia()
-                    .multiply(BigDecimal.valueOf(estimacionProperties.getDiasEstadiaDeposito()));
-            total = total.add(estadia);
+            diasEstadia = estimacionProperties.getDiasEstadiaDeposito();
+            costoEstadiaDia = destino.deposito().getCostoEstadiaDia();
+            costoEstadia = costoEstadiaDia.multiply(BigDecimal.valueOf(diasEstadia));
+            total = total.add(costoEstadia);
         }
-        return total;
+        return new CostoTentativo(total, diasEstadia, costoEstadiaDia, costoEstadia);
     }
 
     private TramoTipo determinarTipo(LocationType origenTipo, LocationType destinoTipo) {
@@ -154,6 +208,105 @@ public class RutaTentativaService {
             return TramoTipo.ORIGEN_A_DEPOSITO;
         }
         return TramoTipo.ORIGEN_A_DESTINO;
+    }
+
+    public RutaResponse confirmarTentativa(Long solicitudId, Long rutaTentativaId) {
+        RutaTentativa tentativa = rutaTentativaRepository.findByIdAndSolicitudId(rutaTentativaId, solicitudId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Ruta tentativa " + rutaTentativaId + " no pertenece a la solicitud " + solicitudId));
+
+        if (tentativa.getEstado() == RutaTentativaEstado.CONFIRMADA && tentativa.getRutaDefinitivaId() != null) {
+            Ruta existente = rutaRepository.findById(tentativa.getRutaDefinitivaId())
+                    .orElseThrow(() -> new NotFoundException(
+                            "Ruta definitiva " + tentativa.getRutaDefinitivaId() + " no encontrada"));
+            return LogisticsMapper.toRutaResponse(existente);
+        }
+
+        rutaRepository.findBySolicitudId(solicitudId).ifPresent(ruta -> {
+            throw new BusinessException("La solicitud ya cuenta con una ruta confirmada");
+        });
+
+        SolicitudLogisticaResponse solicitud = ordersClient.obtenerSolicitud(solicitudId)
+                .orElseThrow(() -> new NotFoundException("Solicitud " + solicitudId + " no encontrada"));
+
+        Ruta ruta = new Ruta();
+        ruta.setSolicitudId(solicitudId);
+        ruta.setCantTramos(tentativa.getCantTramos());
+        ruta.setCantDepositos(tentativa.getCantDepositos());
+        ruta.setCostoTotalAprox(tentativa.getCostoTotalAprox());
+        ruta.setTiempoEstimadoMinutos(tentativa.getTiempoEstimadoMinutos());
+        ruta.setPesoTotal(defaultZero(solicitud.pesoContenedor()));
+        ruta.setVolumenTotal(defaultZero(solicitud.volumenContenedor()));
+
+        List<Tramo> tramos = tentativa.getTramos().stream()
+                .sorted(Comparator.comparing(TramoTentativo::getOrden))
+                .map(t -> mapearTramo(ruta, t))
+                .toList();
+        tramos.forEach(ruta::addTramo);
+
+        rutaRepository.save(ruta);
+
+        tentativa.setEstado(RutaTentativaEstado.CONFIRMADA);
+        tentativa.setRutaDefinitivaId(ruta.getId());
+        rutaTentativaRepository.save(tentativa);
+
+        ordersSyncGateway.notificarPlanificacion(solicitudId, ruta.getCostoTotalAprox(),
+                ruta.getTiempoEstimadoMinutos(), ruta.getId());
+        ordersSyncGateway.notificarEstado(solicitudId, "PROGRAMADA");
+
+        return LogisticsMapper.toRutaResponse(ruta);
+    }
+
+    private Tramo mapearTramo(Ruta ruta, TramoTentativo tentativo) {
+        Tramo tramo = new Tramo();
+        tramo.setRuta(ruta);
+        tramo.setOrigenTipo(tentativo.getOrigenTipo());
+        tramo.setOrigenId(tentativo.getOrigenId());
+        tramo.setOrigenLat(tentativo.getOrigenLat());
+        tramo.setOrigenLng(tentativo.getOrigenLng());
+        tramo.setDestinoTipo(tentativo.getDestinoTipo());
+        tramo.setDestinoId(tentativo.getDestinoId());
+        tramo.setDestinoLat(tentativo.getDestinoLat());
+        tramo.setDestinoLng(tentativo.getDestinoLng());
+        tramo.setTipo(tentativo.getTipo());
+        tramo.setEstado(TramoEstado.ESTIMADO);
+        tramo.setDistanciaKmEstimada(tentativo.getDistanciaKm());
+        tramo.setTiempoEstimadoMinutos(tentativo.getTiempoEstimadoMinutos());
+        tramo.setCostoAprox(tentativo.getCostoAproximado());
+        tramo.setDiasEstadia(tentativo.getDiasEstadia());
+        tramo.setCostoEstadiaDia(tentativo.getCostoEstadiaDia());
+        tramo.setCostoEstadia(tentativo.getCostoEstadia());
+        return tramo;
+    }
+
+    private RutaTentativaResponse toResponse(RutaTentativa ruta) {
+        List<TramoTentativoResponse> tramos = ruta.getTramos().stream()
+                .sorted(Comparator.comparing(TramoTentativo::getOrden))
+                .map(this::toResponse)
+                .toList();
+        return new RutaTentativaResponse(
+                ruta.getId(),
+                ruta.getSolicitudId(),
+                ruta.getEstado(),
+                ruta.getCantTramos(),
+                ruta.getCantDepositos(),
+                ruta.getDistanciaTotalKm(),
+                ruta.getCostoTotalAprox(),
+                ruta.getTiempoEstimadoMinutos(),
+                tramos);
+    }
+
+    private TramoTentativoResponse toResponse(TramoTentativo tramo) {
+        LocationSummary origen = new LocationSummary(tramo.getOrigenTipo(), tramo.getOrigenId(),
+                tramo.getOrigenDescripcion(), tramo.getOrigenLat(), tramo.getOrigenLng());
+        LocationSummary destino = new LocationSummary(tramo.getDestinoTipo(), tramo.getDestinoId(),
+                tramo.getDestinoDescripcion(), tramo.getDestinoLat(), tramo.getDestinoLng());
+        return new TramoTentativoResponse(tramo.getOrden(), origen, destino, tramo.getTipo(),
+                tramo.getDistanciaKm(), tramo.getTiempoEstimadoMinutos(), tramo.getCostoAproximado());
+    }
+
+    private BigDecimal defaultZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     private record LocationNode(LocationType tipo, Long referenciaId, double lat, double lng,
@@ -179,5 +332,9 @@ public class RutaTentativaService {
             return new LocationSummary(tipo, referenciaId, descripcion,
                     lat, lng);
         }
+    }
+
+    private record CostoTentativo(BigDecimal total, int diasEstadia,
+            BigDecimal costoEstadiaDia, BigDecimal costoEstadia) {
     }
 }

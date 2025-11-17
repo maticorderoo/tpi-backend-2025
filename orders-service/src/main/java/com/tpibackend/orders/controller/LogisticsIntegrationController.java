@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import com.tpibackend.orders.dto.request.ContenedorEstadoUpdateRequest;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
+import com.tpibackend.orders.dto.request.SolicitudPlanificacionUpdateRequest;
 import com.tpibackend.orders.dto.response.SolicitudLogisticsView;
 import com.tpibackend.orders.dto.response.SolicitudLogisticsView.Punto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
@@ -59,6 +60,16 @@ public class LogisticsIntegrationController {
             @RequestHeader(INTERNAL_SECRET_HEADER) String secret) {
         validarSecret(secret);
         solicitudService.actualizarCosto(solicitudId, request);
+        return ResponseEntity.accepted().build();
+    }
+
+    @PutMapping("/{solicitudId}/planificacion")
+    public ResponseEntity<Void> actualizarPlanificacionDesdeLogistics(
+            @PathVariable Long solicitudId,
+            @Valid @RequestBody SolicitudPlanificacionUpdateRequest request,
+            @RequestHeader(INTERNAL_SECRET_HEADER) String secret) {
+        validarSecret(secret);
+        solicitudService.actualizarPlanificacion(solicitudId, request);
         return ResponseEntity.accepted().build();
     }
 

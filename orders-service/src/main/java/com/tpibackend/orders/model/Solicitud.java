@@ -46,6 +46,9 @@ public class Solicitud {
 
     private Long tiempoEstimadoMinutos;
 
+    @Column(name = "ruta_logistica_id")
+    private Long rutaLogisticaId;
+
     private BigDecimal costoFinal;
 
     private Long tiempoRealMinutos;

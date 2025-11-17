@@ -13,6 +13,7 @@ public class SolicitudResponseDto {
     ContenedorEstado estado;
     BigDecimal costoEstimado;
     Long tiempoEstimadoMinutos;
+    Long rutaLogisticaId;
     BigDecimal costoFinal;
     Long tiempoRealMinutos;
     BigDecimal estadiaEstimada;

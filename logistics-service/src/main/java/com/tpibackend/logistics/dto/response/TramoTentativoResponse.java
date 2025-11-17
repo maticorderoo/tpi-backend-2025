@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import com.tpibackend.logistics.model.enums.TramoTipo;
 
 public record TramoTentativoResponse(
+        Integer orden,
         LocationSummary origen,
         LocationSummary destino,
         TramoTipo tipo,

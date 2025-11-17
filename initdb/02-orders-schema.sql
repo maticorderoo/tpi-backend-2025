@@ -32,6 +32,7 @@ CREATE TABLE solicitudes (
   estado                  varchar(30) NOT NULL,
   costo_estimado          numeric(19,2),
   tiempo_estimado_minutos bigint,
+  ruta_logistica_id       bigint,
   costo_final             numeric(19,2),
   tiempo_real_minutos     bigint,
   estadia_estimada        numeric(19,2),

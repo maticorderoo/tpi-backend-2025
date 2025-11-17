@@ -7,6 +7,7 @@ import com.tpibackend.orders.dto.request.EstimacionRequest;
 import com.tpibackend.orders.dto.request.SolicitudCreateRequest;
 import com.tpibackend.orders.dto.request.UbicacionRequestDto;
 import com.tpibackend.orders.dto.request.SolicitudCostoUpdateRequest;
+import com.tpibackend.orders.dto.request.SolicitudPlanificacionUpdateRequest;
 import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
 import com.tpibackend.orders.dto.response.RutaResumenDto;
@@ -184,6 +185,21 @@ public class SolicitudServiceImpl implements SolicitudService {
 
         Solicitud guardada = solicitudRepository.save(solicitud);
         log.info("Solicitud {} actualizada con costo final {}", solicitudId, request.costoFinal());
+        return mapToResponse(guardada);
+    }
+
+    @Override
+    @Transactional
+    public SolicitudResponseDto actualizarPlanificacion(Long solicitudId, SolicitudPlanificacionUpdateRequest request) {
+        Solicitud solicitud = solicitudRepository.findById(solicitudId)
+            .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
+
+        solicitud.setCostoEstimado(request.costoEstimado());
+        solicitud.setTiempoEstimadoMinutos(request.tiempoEstimadoMinutos());
+        solicitud.setRutaLogisticaId(request.rutaLogisticaId());
+
+        Solicitud guardada = solicitudRepository.save(solicitud);
+        log.info("Solicitud {} actualizada con planificación logística {}", solicitudId, request.rutaLogisticaId());
         return mapToResponse(guardada);
     }
 

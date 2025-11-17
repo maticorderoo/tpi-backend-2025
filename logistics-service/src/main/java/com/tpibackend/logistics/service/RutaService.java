@@ -155,6 +155,8 @@ public class RutaService {
         rutaRepository.save(ruta);
 
         log.info("Ruta {} asignada a la solicitud {}", ruta.getId(), request.solicitudId());
+        ordersSyncGateway.notificarPlanificacion(request.solicitudId(), ruta.getCostoTotalAprox(),
+                ruta.getTiempoEstimadoMinutos(), ruta.getId());
         // TODO: reemplazar notificación directa por eventos cuando se disponga de broker
         ordersSyncGateway.notificarEstado(request.solicitudId(), "PROGRAMADA");
 

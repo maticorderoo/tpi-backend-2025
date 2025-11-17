@@ -66,6 +66,20 @@ public class OrdersClient {
         }
     }
 
+    public void actualizarPlanificacion(Long solicitudId, BigDecimal costoEstimado,
+            Long tiempoEstimadoMinutos, Long rutaLogisticaId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set(INTERNAL_SECRET_HEADER, sharedSecret);
+            PlanificacionPayload payload = new PlanificacionPayload(costoEstimado, tiempoEstimadoMinutos, rutaLogisticaId);
+            HttpEntity<PlanificacionPayload> entity = new HttpEntity<>(payload, headers);
+            restTemplate.put(baseUrl + "/" + solicitudId + "/planificacion", entity);
+        } catch (RestClientException ex) {
+            log.warn("No se pudo actualizar la planificación de la solicitud {}: {}", solicitudId, ex.getMessage());
+        }
+    }
+
     public Optional<SolicitudLogisticaResponse> obtenerSolicitud(Long solicitudId) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -81,5 +95,9 @@ public class OrdersClient {
             log.warn("No se pudo obtener la solicitud {} desde Orders: {}", solicitudId, ex.getMessage());
             return Optional.empty();
         }
+    }
+
+    private record PlanificacionPayload(BigDecimal costoEstimado, Long tiempoEstimadoMinutos,
+            Long rutaLogisticaId) {
     }
 }
