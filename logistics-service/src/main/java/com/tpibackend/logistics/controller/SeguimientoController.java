@@ -39,7 +39,7 @@ public class SeguimientoController {
     }
 
     @GetMapping(value = "/pendientes", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(summary = "Contenedores pendientes de entrega",
             description = "Devuelve el estado operativo de todos los contenedores que aún no completaron su ruta.",
             responses = {
@@ -58,7 +58,7 @@ public class SeguimientoController {
     }
 
     @GetMapping(value = "/contenedores/{contenedorId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
+    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR','ADMIN')")
     @Operation(summary = "Seguimiento detallado del contenedor",
             description = "Expone la posición y el tramo actual para el contenedor indicado. Requiere especificar la solicitud que lo contiene.",
             responses = {

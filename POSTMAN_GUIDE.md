@@ -1,305 +1,95 @@
 # 📬 Guía de Uso de Postman - TPI Backend 2025
 
-## 📋 Archivos Incluidos
+## 📁 Archivos Incluidos
 
-- **TPI-2025-COMPLETE.postman_collection.json** - Colección completa con todos los endpoints
-- **TPI-2025.gateway-dev.postman_environment.json** - Environment para usar con API Gateway (puerto 8081)
-- **TPI-2025.local-dev.postman_environment.json** - Environment para usar servicios directamente (puertos 8082/8083/8084)
+| Archivo | Descripción |
+|---------|-------------|
+| **TPI-2025-secured.postman_collection.json** | Colección alineada al API Gateway (`/api/**`). Incluye carpetas por rol y requests típicos. |
+| **TPI-2025.gateway-dev.postman_environment.json** | Environment para Docker Compose (Gateway en `http://localhost:8081`, Keycloak `http://localhost:8085`). |
+| **TPI-2025.local-dev.postman_environment.json** | Environment para ejecución local (Gateway en `http://localhost:8080`). |
 
-## 🚀 Configuración Inicial
+Importá los 3 archivos desde **Postman → Import**.
 
-### 1. Importar en Postman
+## 🔐 Usuarios & Roles
 
-1. Abrir Postman
-2. Click en **Import**
-3. Seleccionar los 3 archivos JSON
-4. Verificar que se importaron correctamente
+Los usuarios provienen del realm `tpi-2025` de Keycloak y se mapean 1 a 1 con los roles funcionales.
 
-### 2. Seleccionar Environment
+| Usuario | Contraseña | Rol | Permisos principales |
+|---------|------------|-----|----------------------|
+| `cliente01` | `cliente123` | CLIENTE | Crear solicitudes propias y consultar su tracking. |
+| `operador01` | `operador123` | OPERADOR | Operar logística/flota: rutas, tramos, asignaciones, costos. |
+| `transportista01` | `trans123` | TRANSPORTISTA | Ver tramos asignados e iniciar/finalizar recorridos. |
+| `admin01` | `admin123` | ADMIN | Todo lo anterior + administración de depósitos, camiones y tarifas. |
 
-En la esquina superior derecha de Postman, seleccionar:
-- **TPI Backend 2025 - gateway-dev** (recomendado) - Todo va por el gateway en puerto 8081
-- **TPI Backend 2025 - local-dev** - Acceso directo a cada microservicio
+> ℹ️ El rol **ADMIN** tiene acceso a todos los endpoints autorizados para los demás roles.
 
-## 🔐 Autenticación
+## 🚀 Configuración de Environments
 
-### Usuarios Disponibles
+Ambos environments comparten las mismas variables, sólo cambia `gateway_base_url`.
 
-La colección incluye 3 tipos de usuarios:
+| Variable | Ejemplo (gateway-dev) | Descripción |
+|----------|----------------------|-------------|
+| `gateway_base_url` | `http://localhost:8081` | URL pública del API Gateway. |
+| `keycloak_base_url` | `http://localhost:8085` | URL base de Keycloak. |
+| `realm` | `tpi-2025` | Realm configurado. |
+| `client_id` | `tpi-client` | Client público usado por Postman. |
+| `*_username` / `*_password` | `cliente01` / `cliente123` | Credenciales por rol (cliente/operador/transportista/admin). |
+| `access_token_*` | *(vacío inicialmente)* | Aquí se guardan los tokens generados por cada login. |
+| `solicitud_id`, `contenedor_id`, `ruta_id`, `tramo_id`, `camion_id`, `deposito_id`, `tarifa_id` | *(vacío)* | Variables que se rellenan con IDs devueltos por la API para reutilizarlos en requests posteriores. |
 
-| Usuario | Contraseña | Rol | Permisos |
-|---------|------------|-----|----------|
-| cliente01 | cliente123 | CLIENTE | Crear solicitudes, ver tracking |
-| operador01 | operador123 | OPERADOR | Gestión completa del sistema |
-| transportista01 | trans123 | TRANSPORTISTA | Iniciar/finalizar tramos asignados |
+### Pasos para autenticarse
 
-### Cómo Autenticarse
+1. Seleccioná el environment deseado (`gateway-dev` o `local-dev`).
+2. En la carpeta **🔐 Authentication** ejecutá los logins necesarios para tu flujo.
+3. Cada request guarda automáticamente el token en su variable (`access_token_cliente`, etc.).
+4. Los requests de la colección leen el token correspondiente mediante el header `Authorization: Bearer ...`.
 
-1. Ir a la carpeta **🔐 Authentication**
-2. Ejecutar el request según el rol que necesites:
-   - **Login - Cliente**
-   - **Login - Operador**
-   - **Login - Transportista**
-3. El token JWT se guarda automáticamente en la variable `jwt_token`
-4. Todos los demás requests usan este token automáticamente
+Si necesitás un token manualmente, podés copiar el valor de la variable desde **Environment → Edit → Current values**.
 
 ## 📂 Estructura de la Colección
 
-### 🔐 Authentication
-- Login para cada rol
-- Los tokens se guardan automáticamente
+- **🔐 Authentication**: Logins para CLIENTE / OPERADOR / TRANSPORTISTA / ADMIN (grant type `password`).
+- **👤 Cliente**:
+  - Crear solicitud (setea `solicitud_id` y `contenedor_id`).
+  - Ver detalle de su solicitud.
+  - Tracking básico desde Orders.
+  - Tracking extendido desde Logistics.
+- **⚙️ Operador**:
+  - Calcular estimación y actualizar costo.
+  - Consultar contenedores pendientes.
+  - Listar / asignar tramos.
+  - Seguimiento global (todos los contenedores).
+- **🚚 Transportista**:
+  - Listar tramos asignados al camión actual.
+  - Marcar inicio y fin del tramo.
+- **🛡️ Admin**:
+  - Crear depósito.
+  - Crear camión.
+  - Crear tarifa.
 
-### 📦 Orders Service
-- **Crear Solicitud** - Crea cliente, contenedor y solicitud (CLIENTE)
-- **Obtener Solicitud** - Ver detalles completos
-- **Tracking** - Seguimiento público del contenedor
-- **Calcular Estimación** - Usa distance-client y métricas de flota (OPERADOR)
-- **Actualizar Costo Final** - Cuando se completa la entrega (OPERADOR)
-- **Contenedores Pendientes** - Lista contenedores y tramos sin finalizar desde Orders (OPERADOR)
+Cada request usa exclusivamente el Gateway (`{{gateway_base_url}}/api/...`) y valida el rol indicado por el enunciado.
 
-### 🚛 Fleet Service
+## ✅ Casos de Prueba Recomendados
 
-#### Camiones
-- **Crear Camión** - Alta de nuevo vehículo (OPERADOR)
-- **Listar Todos** - Todos los camiones
-- **Listar Disponibles** - Solo libres para asignar
-- **Listar Ocupados** - Solo en uso
-- **Obtener por ID** - Detalle de un camión
-- **Actualizar** - Modificar datos (OPERADOR)
+1. **Flujo cliente → operador → transportista**
+   1. Login Operador → Crear Depósito + Camión.
+   2. Login Cliente → Crear Solicitud (guardar IDs).
+   3. Login Operador → Calcular estimación, asignar camión al tramo, verificar seguimiento global.
+   4. Login Transportista → Listar tramos asignados, iniciar y finalizar tramo.
+   5. Login Operador/Admin → Actualizar costo final.
+   6. Login Cliente → Reconsultar tracking (Orders + Logistics) y validar estados.
 
-#### Tarifas
-- **Crear Tarifa** - Ej: CARGO_GESTION_POR_TRAMO (OPERADOR)
-- **Listar Tarifas** - Ver todas las configuradas
-- **Obtener por Tipo** - Buscar tarifa específica
-- **Actualizar Tarifa** - Modificar valor (OPERADOR)
+2. **Validación de seguridad**
+   - Intentar crear camión con token de CLIENTE → debe responder 403.
+   - Intentar acceder a `/api/logistics/seguimiento/pendientes` con token de TRANSPORTISTA → debe responder 403.
+   - Tracking (Orders o Logistics) sin token → 401 (el Gateway ahora protege todos los endpoints). 
 
-#### Métricas
-- **Obtener Promedios** - Consumo y costo promedio de la flota
+3. **Asignación de camión**
+   - Enviar un camión con capacidad insuficiente al endpoint `POST /api/logistics/tramos/{id}/asignaciones` → error 409 con mensaje explicativo.
 
-### 🗺️ Logistics Service
+## 🧭 Notas importantes
 
-#### Depósitos
-- **Crear Depósito** - Alta con coordenadas (OPERADOR)
-- **Listar Depósitos** - Todos los puntos intermedios
-- **Obtener por ID** - Detalle de un depósito
-- **Actualizar** - Modificar datos (OPERADOR)
-
-#### Rutas
-- **Crear Ruta** - Genera tramos usando distance-client (OPERADOR)
-- **Obtener Ruta** - Ver ruta completa con tramos
-- **Asignar a Solicitud** - Vincular ruta con pedido (OPERADOR)
-
-#### Tramos
-- **Asignar Camión** - Valida capacidad y disponibilidad (OPERADOR)
-- **Iniciar Tramo** - Marca inicio del viaje (TRANSPORTISTA)
-- **Finalizar Tramo** - Recalcula distancia real (TRANSPORTISTA)
-- **Listar por Camión** - Ver tramos asignados a un transportista
-- **Contenedores en Depósito** - Ver qué está esperando asignación
-
-### 🔄 Flujo End-to-End Completo
-
-Secuencia de 15 pasos que simula el flujo completo:
-
-1. **Login Operador** - Autenticarse como operador
-2. **Crear Depósito** - Rosario como punto intermedio
-3. **Crear Camión** - Dar de alta vehículo
-4. **Crear Tarifa Gestión** - Configurar cargo por tramo
-5. **Login Cliente** - Cambiar a rol cliente
-6. **Crear Solicitud** - Buenos Aires → Córdoba
-7. **Login Operador** - Volver a operador
-8. **Calcular Estimación** - Costo y tiempo usando APIs
-9. **Crear Ruta** - Con depósito intermedio
-10. **Asignar Ruta a Solicitud** - Vincular
-11. **Asignar Camión a Tramo** - Con validación
-12. **Login Transportista** - Cambiar a transportista
-13. **Iniciar Tramo** - Comenzar viaje
-14. **Finalizar Tramo** - Terminar con distancia real
-15. **Ver Tracking** - Verificar historial
-
-## 🎯 Variables de Environment
-
-Las siguientes variables se auto-gestionan durante el flujo:
-
-| Variable | Descripción | Origen |
-|----------|-------------|--------|
-| `jwt_token` | Token de autenticación JWT | Login requests |
-| `refresh_token` | Para renovar el token | Login requests |
-| `solicitud_id` | ID de la solicitud creada | Crear Solicitud |
-| `contenedor_id` | ID del contenedor | Crear Solicitud |
-| `ruta_id` | ID de la ruta | Crear Ruta |
-| `tramo_id` | ID del primer tramo | Crear Ruta |
-| `camion_id` | ID del camión | Crear Camión |
-| `deposito_id` | ID del depósito | Crear Depósito |
-| `tarifa_id` | ID de la tarifa | Crear Tarifa |
-
-## ✅ Casos de Prueba Importantes
-
-### 1. Validación de Capacidad
-```
-POST /api/logistics/tramos/{{tramo_id}}/asignaciones
-```
-- Enviar un camión con capacidad menor al contenedor
-- Debe retornar error 400 con mensaje de capacidad insuficiente
-
-### 2. Integración con Distance Client
-```
-POST /api/logistics/routes
-```
-- La ruta debe calcular automáticamente las distancias entre puntos usando Google Maps
-
-### 3. Cálculo de Costo con Fórmula Completa
-```
-POST /api/orders/{{solicitud_id}}/estimacion
-```
-- Verifica que el costo incluya: km × costoBase + combustible + estadía
-
-### 4. Estados del Contenedor
-```
-GET /api/orders/{{solicitud_id}}/tracking
-```
-- Debe mostrar el estado actual del contenedor y la información principal de la ruta
-- Estados: BORRADOR → PROGRAMADA → EN_RETIRO → EN_VIAJE → EN_DEPOSITO → ENTREGADO
-- Los cambios de estado se propagan automáticamente desde Logistics vía endpoints internos protegidos por `X-Internal-Secret`; no hay overrides manuales.
-
-### 5. Seguridad por Roles
-- Intentar crear camión con token de CLIENTE → debe dar 403 Forbidden
-- Tracking debe funcionar sin token (público)
-- Solo TRANSPORTISTA puede iniciar/finalizar tramos
-
-## 🐛 Troubleshooting
-
-### Error 401 Unauthorized
-- Verificar que ejecutaste el Login correspondiente
-- El token expira en 5 minutos, volver a hacer login
-
-### Error 403 Forbidden
-- Estás usando un rol incorrecto para ese endpoint
-- Ejemplo: CLIENTE no puede crear camiones
-
-### Error 404 Not Found
-- Verificar que las variables tienen valores (no están vacías)
-- Ejecutar los requests en orden para poblar las variables
-
-### Error 500 Internal Server Error
-- Verificar que los servicios estén corriendo:
-  ```bash
-  docker-compose ps
-  ```
-- Revisar logs:
-  ```bash
-  docker-compose logs -f [service-name]
-  ```
-
-## 📊 Testing Recomendado
-
-### Smoke Test Rápido (5 min)
-1. Login Operador
-2. Crear Camión
-3. Crear Depósito
-4. Login Cliente
-5. Crear Solicitud
-6. Ver Tracking
-
-### Test Completo (15 min)
-- Ejecutar toda la carpeta **🔄 Flujo End-to-End Completo**
-- Click derecho en la carpeta → Run folder
-- Verificar que todos los requests son exitosos
-
-### Test de Reglas de Negocio
-1. **Capacidad**: Asignar camión pequeño a contenedor grande (debe fallar)
-2. **Disponibilidad**: Asignar mismo camión a 2 tramos (segundo debe fallar)
-3. **Estados**: Intentar finalizar tramo sin iniciarlo (debe fallar)
-4. **Roles**: Intentar operaciones con roles incorrectos (debe dar 403)
-
-## 🌐 Endpoints Disponibles
-
-### Orders Service
-- `POST /api/orders` - Crear solicitud
-- `GET /api/orders/{id}` - Obtener solicitud
-- `GET /api/orders/{id}/tracking` - Tracking público
-- `POST /api/orders/{id}/estimacion` - Calcular costo/tiempo
-- `PUT /api/orders/{id}/costo` - Actualizar costo final
-- `POST /api/orders/{id}/estado` - Cambiar estado manual
-
-#### Body requerido para `POST /api/orders`
-
-El alta de solicitudes pide exclusivamente los datos definidos en el enunciado:
-
-- Información del cliente (`nombre`, `email`, `telefono`).
-- Datos del contenedor (`peso`, `volumen`, `codigo` opcional si ya existe).
-- Origen y destino como objetos con dirección + latitud/longitud obligatorias.
-
-Ejemplo válido:
-
-```json
-{
-  "cliente": {
-    "nombre": "ACME Corp",
-    "email": "contacto@acme.com",
-    "telefono": "+54 11 5555-1111"
-  },
-  "contenedor": {
-    "peso": 1200.5,
-    "volumen": 28.4
-  },
-  "origen": {
-    "direccion": "Buenos Aires, Puerto Madero",
-    "latitud": -34.6037,
-    "longitud": -58.3816
-  },
-  "destino": {
-    "direccion": "Córdoba, barrio Güemes",
-    "latitud": -31.4201,
-    "longitud": -64.1888
-  }
-}
-```
-
-> `estadiaEstimada` y otros cálculos económicos quedan en manos de Logistics; el cliente no debe enviarlos.
-
-### Fleet Service
-- `POST /api/trucks` - Crear camión
-- `GET /api/trucks` - Listar camiones
-- `GET /api/trucks?disponible=true` - Solo disponibles
-- `GET /api/trucks/{id}` - Obtener camión
-- `PUT /api/trucks/{id}` - Actualizar camión
-- `POST /api/tarifas` - Crear tarifa
-- `GET /api/tarifas` - Listar tarifas
-- `GET /api/tarifas/tipo/{tipo}` - Buscar por tipo
-- `PUT /api/tarifas/{id}` - Actualizar tarifa
-- `GET /api/fleet/metrics/promedios` - Métricas de flota
-
-### Logistics Service
-- `POST /api/logistics/depositos` - Crear depósito
-- `GET /api/logistics/depositos` - Listar depósitos
-- `GET /api/logistics/depositos/{id}` - Obtener depósito
-- `PUT /api/logistics/depositos/{id}` - Actualizar depósito
-- `POST /api/logistics/routes` - Crear ruta
-- `GET /api/logistics/routes/{id}` - Obtener ruta
-- `POST /api/logistics/routes/{id}/asignaciones` - Asignar a solicitud
-- `POST /api/logistics/tramos/{id}/asignaciones` - Asignar camión
-- `POST /api/logistics/tramos/{id}/inicios` - Iniciar tramo
-- `POST /api/logistics/tramos/{id}/finalizaciones` - Finalizar tramo
-- `GET /api/logistics/tramos?camionId=` - Tramos filtrados por camión
-- `GET /api/logistics/tramos/deposito/{id}/contenedores` - Contenedores en depósito
-
-## 📝 Notas Importantes
-
-1. **Orden de Ejecución**: Algunos requests dependen de otros. Usar el flujo end-to-end para la secuencia correcta.
-
-2. **Variables Automáticas**: Los requests con script `Test` guardan automáticamente IDs en variables.
-
-3. **Coordenadas**: Los ejemplos usan coordenadas reales de Argentina:
-   - Buenos Aires: -34.6037, -58.3816
-   - Rosario: -32.9468, -60.6393
-   - Córdoba: -31.4201, -64.1888
-
-4. **Tokens**: Expiran en 5 minutos. Hacer login nuevamente si recibes 401.
-
-5. **Gateway vs Directo**: 
-   - Gateway (recomendado): Todo en puerto 8081
-   - Directo: Orders (8082), Logistics (8083), Fleet (8084)
-
----
-
-**¿Necesitas ayuda?** Revisa los logs de Docker o ejecuta el smoke test para verificar que todo funciona.
+- **Todos los endpoints se consumen vía Gateway**. No golpees directamente a los microservicios para no saltar la validación JWT.
+- El Gateway agrega automáticamente `X-User-Id`, `X-User-Username` y `X-User-Roles` para ayudar al backend a trazar auditorías.
+- Recordá refrescar los tokens cada ~60 minutos (lifetime del Access Token configurado en el realm).
+- Las variables de IDs se actualizan sólo si la respuesta tiene JSON con los campos esperados; verificá los test scripts si necesitás personalizarlos.

@@ -7,8 +7,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
@@ -71,6 +76,7 @@ public class SeguimientoService {
         SolicitudLogisticaResponse solicitud = ruta.getSolicitudId() != null
                 ? ordersClient.obtenerSolicitud(ruta.getSolicitudId()).orElse(null)
                 : null;
+        validarAccesoCliente(solicitud);
 
         Long contenedorDesdeOrders = solicitud != null && solicitud.contenedor() != null
                 ? solicitud.contenedor().id()
@@ -215,5 +221,47 @@ public class SeguimientoService {
                 .filter(Objects::nonNull)
                 .max(OffsetDateTime::compareTo)
                 .orElse(null);
+    }
+
+    private void validarAccesoCliente(SolicitudLogisticaResponse solicitud) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return;
+        }
+        if (tieneRol(authentication, "OPERADOR") || tieneRol(authentication, "ADMIN")) {
+            return;
+        }
+        if (tieneRol(authentication, "CLIENTE")) {
+            String emailUsuario = obtenerEmailDesdeToken(authentication);
+            String clienteEmail = solicitud != null ? solicitud.clienteEmail() : null;
+            if (StringUtils.hasText(emailUsuario) && StringUtils.hasText(clienteEmail)
+                    && clienteEmail.equalsIgnoreCase(emailUsuario)) {
+                return;
+            }
+            throw new AccessDeniedException("El cliente autenticado no puede acceder al seguimiento solicitado");
+        }
+    }
+
+    private boolean tieneRol(Authentication authentication, String roleName) {
+        if (authentication == null || !StringUtils.hasText(roleName)) {
+            return false;
+        }
+        String expected = "ROLE_" + roleName.toUpperCase();
+        return authentication.getAuthorities().stream()
+                .anyMatch(granted -> expected.equals(granted.getAuthority()));
+    }
+
+    private String obtenerEmailDesdeToken(Authentication authentication) {
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            String email = jwtAuth.getToken().getClaimAsString("email");
+            if (StringUtils.hasText(email)) {
+                return email;
+            }
+            String preferred = jwtAuth.getToken().getClaimAsString("preferred_username");
+            if (StringUtils.hasText(preferred)) {
+                return preferred;
+            }
+        }
+        return null;
     }
 }

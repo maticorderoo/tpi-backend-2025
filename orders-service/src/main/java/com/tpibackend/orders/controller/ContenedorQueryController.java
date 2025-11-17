@@ -32,7 +32,7 @@ public class ContenedorQueryController {
     }
 
     @GetMapping("/pendientes")
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(summary = "Listar contenedores pendientes",
             description = "Devuelve los contenedores con tramos logísticos pendientes filtrando opcionalmente por estado o depósito.",
             responses = {

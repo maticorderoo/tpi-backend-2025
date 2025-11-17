@@ -52,6 +52,23 @@
       ],
       "realmRoles": ["OPERADOR"],
       "clientRoles": {}
+    },
+    {
+      "username": "admin01",
+      "enabled": true,
+      "email": "admin01@tpi.com",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "Sistema",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN"],
+      "clientRoles": {}
     }
   ],
   "clients": [
@@ -75,7 +92,8 @@
     "realm": [
       { "name": "CLIENTE" },
       { "name": "OPERADOR" },
-      { "name": "TRANSPORTISTA" }
+      { "name": "TRANSPORTISTA" },
+      { "name": "ADMIN" }
     ]
   }
 }

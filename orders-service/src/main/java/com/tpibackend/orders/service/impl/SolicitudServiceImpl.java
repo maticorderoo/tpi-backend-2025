@@ -32,9 +32,11 @@ import java.util.Optional;
 import org.springframework.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.stereotype.Service;
 
 @Service
 public class SolicitudServiceImpl implements SolicitudService {
@@ -75,6 +77,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Transactional
     public SolicitudResponseDto crearSolicitud(SolicitudCreateRequest request) {
         Cliente cliente = resolverCliente(request);
+        validarClienteAutenticado(cliente);
         Contenedor contenedor = resolverContenedorPorNegocio(request, cliente);
 
         solicitudRepository.findByContenedorId(contenedor.getId())
@@ -112,6 +115,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     public SolicitudResponseDto obtenerSolicitud(Long solicitudId) {
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
             .orElseThrow(() -> new OrdersNotFoundException("Solicitud no encontrada"));
+        verificarAccesoASolicitud(solicitud);
         return mapToResponse(solicitud);
     }
 
@@ -120,6 +124,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     public SeguimientoResponseDto obtenerSeguimientoPorContenedor(Long contenedorId) {
         Solicitud solicitud = solicitudRepository.findByContenedorId(contenedorId)
             .orElseThrow(() -> new OrdersNotFoundException("No existe solicitud asociada al contenedor"));
+        verificarAccesoASolicitud(solicitud);
         ContenedorEstado estadoContenedor = Optional.ofNullable(solicitud.getContenedor())
             .map(Contenedor::getEstado)
             .orElse(null);
@@ -331,8 +336,78 @@ public class SolicitudServiceImpl implements SolicitudService {
     private String obtenerUsuarioActual() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
+            if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+                String preferred = jwtAuth.getToken().getClaimAsString("preferred_username");
+                if (StringUtils.hasText(preferred)) {
+                    return preferred;
+                }
+                String email = jwtAuth.getToken().getClaimAsString("email");
+                if (StringUtils.hasText(email)) {
+                    return email;
+                }
+            }
             return authentication.getName();
         }
         return "system";
+    }
+
+    private void validarClienteAutenticado(Cliente cliente) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!requiereValidacionCliente(authentication, cliente)) {
+            return;
+        }
+        String emailUsuario = obtenerEmailDesdeToken(authentication);
+        if (emailUsuario == null || cliente.getEmail() == null
+                || !cliente.getEmail().equalsIgnoreCase(emailUsuario)) {
+            throw new AccessDeniedException("Los clientes solo pueden operar con su propio perfil");
+        }
+    }
+
+    private void verificarAccesoASolicitud(Solicitud solicitud) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || solicitud == null) {
+            return;
+        }
+        if (tieneRol(authentication, "OPERADOR") || tieneRol(authentication, "ADMIN")) {
+            return;
+        }
+        if (tieneRol(authentication, "CLIENTE")) {
+            Cliente cliente = solicitud.getCliente();
+            String emailUsuario = obtenerEmailDesdeToken(authentication);
+            if (cliente != null && emailUsuario != null
+                    && emailUsuario.equalsIgnoreCase(cliente.getEmail())) {
+                return;
+            }
+            throw new AccessDeniedException("El cliente autenticado no puede acceder a esta solicitud");
+        }
+    }
+
+    private boolean requiereValidacionCliente(Authentication authentication, Cliente cliente) {
+        return authentication != null && authentication.isAuthenticated()
+                && cliente != null && tieneRol(authentication, "CLIENTE")
+                && !tieneRol(authentication, "ADMIN");
+    }
+
+    private boolean tieneRol(Authentication authentication, String roleName) {
+        if (authentication == null || roleName == null) {
+            return false;
+        }
+        String expected = "ROLE_" + roleName.toUpperCase();
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> expected.equals(authority.getAuthority()));
+    }
+
+    private String obtenerEmailDesdeToken(Authentication authentication) {
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            String email = jwtAuth.getToken().getClaimAsString("email");
+            if (StringUtils.hasText(email)) {
+                return email;
+            }
+            String preferred = jwtAuth.getToken().getClaimAsString("preferred_username");
+            if (StringUtils.hasText(preferred)) {
+                return preferred;
+            }
+        }
+        return null;
     }
 }

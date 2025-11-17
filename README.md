@@ -56,11 +56,32 @@ El sistema incluye 3 usuarios de prueba ya configurados:
 
 | Usuario | Password | Rol | Permisos |
 |---------|----------|-----|----------|
-| `cliente01` | `1234` | CLIENTE | Crear solicitudes, ver seguimiento |
-| `transportista01` | `1234` | TRANSPORTISTA | Iniciar/finalizar tramos |
-| `operador01` | `1234` | OPERADOR | Gestión completa de rutas y flota |
+| `cliente01` | `cliente123` | CLIENTE | Crear solicitudes, ver seguimiento propio |
+| `transportista01` | `trans123` | TRANSPORTISTA | Iniciar/finalizar tramos asignados |
+| `operador01` | `operador123` | OPERADOR | Gestión de solicitudes, rutas, flota y costos |
+| `admin01` | `admin123` | ADMIN | Todo lo anterior + administración de depósitos, camiones y tarifas |
 
 **Ver guía completa**: [KEYCLOAK_USERS.md](KEYCLOAK_USERS.md)
+
+### 🔐 Matriz de permisos (API Gateway)
+
+| Grupo de endpoints | Cliente | Operador | Transportista | Admin | Detalle |
+|--------------------|:------:|:--------:|:-------------:|:-----:|---------|
+| `POST /api/orders/orders` | ✅ | ➖ | ➖ | ✅ | Crear solicitudes propias (el servicio valida que el email del cliente coincida con el token). |
+| `GET /api/orders/orders/**` | ✅ | ✅ | ➖ | ✅ | Cliente sólo accede a su solicitud; operador/admin ven todas. |
+| `POST /api/orders/orders/{id}/estimacion` y `PUT /costo` | ➖ | ✅ | ➖ | ✅ | Sólo logística / admin pueden recalcular costos. |
+| `GET /api/orders/orders/containers/**` | ➖ | ✅ | ➖ | ✅ | Contenedores pendientes para planificación. |
+| `GET /api/logistics/rutas/**`, `/depositos/**` | ➖ | ✅ | ➖ | ✅ | Administración logística. |
+| `GET /api/logistics/tramos/**` | ➖ | ✅ | ✅ | ✅ | Transporte puede ver tramos asignados; admin ve todo. |
+| `POST /api/logistics/tramos/{id}/asignaciones` | ➖ | ✅ | ➖ | ✅ | Asignación de camiones. |
+| `POST /api/logistics/tramos/{id}/inicios|finalizaciones` | ➖ | ➖ | ✅ | ✅ | Transporte marca inicio/fin, admin puede intervenir. |
+| `GET /api/logistics/seguimiento/pendientes` | ➖ | ✅ | ➖ | ✅ | Seguimiento operativo global. |
+| `GET /api/logistics/seguimiento/contenedores/**` | ✅ | ✅ | ➖ | ✅ | Tracking detallado (cliente sólo sus datos). |
+| `GET /api/fleet/trucks/**` | ➖ | ✅ | ➖ | ✅ | Acceso operativo para planificadores; los transportistas consultan tramos via Logistics. |
+| `POST/PUT /api/fleet/trucks/**` | ➖ | ✅ | ➖ | ✅ | Alta/modificación de camiones. |
+| `/api/fleet/tarifas/**` y `/api/fleet/metrics/**` | ➖ | ✅ | ➖ | ✅ | Configuración y métricas de la flota. |
+
+El Gateway también propaga `X-User-Id`, `X-User-Username` y `X-User-Roles` hacia los microservicios para simplificar la trazabilidad en cada request.
 
 ### 🗄️ Acceso a PostgreSQL
 
@@ -146,9 +167,9 @@ Las URLs de Swagger/OpenAPI son:
 
 En la raíz encontrarás:
 
-- `TPI-2025.postman_collection.json`: requests del flujo end-to-end.
-- `TPI-2025.local-dev.postman_environment.json`: variables para golpear servicios directamente.
-- `TPI-2025.gateway-dev.postman_environment.json`: variables para consumir a través del API Gateway.
+- `TPI-2025-secured.postman_collection.json`: requests organizados por rol consumiendo el Gateway.
+- `TPI-2025.local-dev.postman_environment.json`: variables para gateway local (`http://localhost:8080`).
+- `TPI-2025.gateway-dev.postman_environment.json`: variables para Docker/Compose (`http://localhost:8081`).
 
 El flujo recomendado:
 

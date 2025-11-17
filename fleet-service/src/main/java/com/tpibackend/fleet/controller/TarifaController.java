@@ -37,7 +37,7 @@ public class TarifaController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(summary = "Listado de tarifas", description = "Obtiene todas las tarifas configuradas. Requiere rol OPERADOR.")
     public List<TarifaResponse> listar() {
         return tarifaService.findAll();
@@ -45,14 +45,14 @@ public class TarifaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(summary = "Crear tarifa", description = "Registra una nueva tarifa. Requiere rol OPERADOR.")
     public TarifaResponse crear(@Valid @RequestBody TarifaRequest request) {
         return tarifaService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(summary = "Actualizar tarifa", description = "Modifica los valores de una tarifa existente. Requiere rol OPERADOR.")
     public TarifaResponse actualizar(@PathVariable Long id, @Valid @RequestBody TarifaRequest request) {
         return tarifaService.update(id, request);

@@ -7,13 +7,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tpibackend.fleet.config.SecurityConfig;
 import com.tpibackend.fleet.exception.SecurityExceptionHandler;
 import com.tpibackend.fleet.service.FleetMetricsService;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -31,23 +34,27 @@ class MetricsControllerSecurityTest {
 
     @Test
     void obtenerPromediosSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/metrics/promedios"))
+        mockMvc.perform(get("/fleet/metrics/promedios"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     void obtenerPromediosConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(get("/metrics/promedios").with(jwtWithRoles("TRANSPORTISTA")))
+        mockMvc.perform(get("/fleet/metrics/promedios").with(jwtWithRoles("TRANSPORTISTA")))
             .andExpect(status().isForbidden());
     }
 
     @Test
     void obtenerPromediosConRolPermitidoDevuelve200() throws Exception {
-        mockMvc.perform(get("/metrics/promedios").with(jwtWithRoles("OPERADOR")))
+        mockMvc.perform(get("/fleet/metrics/promedios").with(jwtWithRoles("OPERADOR")))
             .andExpect(status().isOk());
     }
 
     private RequestPostProcessor jwtWithRoles(String... roles) {
-        return jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))));
+        return jwt()
+            .jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))))
+            .authorities(Arrays.stream(roles)
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(Collectors.toList()));
     }
 }

@@ -9,7 +9,8 @@ public record SolicitudLogisticaResponse(
         Punto destino,
         BigDecimal pesoContenedor,
         BigDecimal volumenContenedor,
-        Contenedor contenedor
+        Contenedor contenedor,
+        String clienteEmail
 ) {
     public record Punto(String descripcion, Double latitud, Double longitud) {
     }

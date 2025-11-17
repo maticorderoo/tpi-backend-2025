@@ -36,7 +36,7 @@ public class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<Gra
                 .filter(Objects::nonNull)
                 .map(Object::toString)
                 .filter(StringUtils::hasText)
-                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role.toUpperCase())
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
     }

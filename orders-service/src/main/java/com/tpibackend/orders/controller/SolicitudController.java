@@ -41,7 +41,7 @@ public class SolicitudController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("hasAnyRole('CLIENTE','ADMIN')")
     @Operation(
             summary = "Crear una nueva solicitud",
             description = "Registra una solicitud nueva creando el cliente y el contenedor en caso de que no existan. Requiere rol CLIENTE.",
@@ -96,7 +96,7 @@ public class SolicitudController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
+    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR','ADMIN')")
     @Operation(summary = "Obtener detalle de la solicitud",
             description = "Recupera el detalle de una solicitud existente. Requiere rol CLIENTE u OPERADOR.",
             responses = {
@@ -120,7 +120,7 @@ public class SolicitudController {
     }
 
     @GetMapping("/{id}/tracking")
-    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
+    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR','ADMIN')")
     @Operation(summary = "Obtener seguimiento de una solicitud por contenedor",
             description = "Devuelve el estado del contenedor y la ruta asociada a una solicitud. Requiere rol CLIENTE u OPERADOR.",
             responses = {
@@ -144,7 +144,7 @@ public class SolicitudController {
     }
 
     @PostMapping("/{id}/estimacion")
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(
             summary = "Calcular estimación de costo y tiempo",
             description = "Calcula el costo y tiempo estimado utilizando distance-client y métricas de flota. Requiere rol OPERADOR.",
@@ -176,7 +176,7 @@ public class SolicitudController {
     }
 
     @PutMapping("/{id}/costo")
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(summary = "Actualizar costo final de una solicitud",
             description = "Actualiza el costo y tiempo real de la solicitud. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

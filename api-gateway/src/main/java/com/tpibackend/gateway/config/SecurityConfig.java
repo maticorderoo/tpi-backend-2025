@@ -22,6 +22,11 @@ import reactor.core.publisher.Mono;
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
+    private static final String ROLE_CLIENTE = "CLIENTE";
+    private static final String ROLE_OPERADOR = "OPERADOR";
+    private static final String ROLE_TRANSPORTISTA = "TRANSPORTISTA";
+    private static final String ROLE_ADMIN = "ADMIN";
+
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
                                                          Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter) {
@@ -30,7 +35,6 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
                         .pathMatchers("/actuator/health", "/actuator/info").permitAll()
-                        // Permitir acceso público a Swagger UI y API Docs de todos los servicios
                         .pathMatchers(
                                 "/api/*/swagger-ui/**",
                                 "/api/*/swagger-ui.html",
@@ -39,10 +43,28 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .pathMatchers("/api/orders/**").hasAnyRole("CLIENTE", "OPERADOR")
-                        .pathMatchers("/api/logistics/tramos/**").hasAnyRole("OPERADOR", "TRANSPORTISTA")
-                        .pathMatchers("/api/logistics/**").hasRole("OPERADOR")
-                        .pathMatchers("/api/fleet/**").hasRole("OPERADOR")
+                        .pathMatchers("/api/orders/orders/internal/**").denyAll()
+                        .pathMatchers(HttpMethod.POST, "/api/orders/orders").hasAnyRole(ROLE_CLIENTE, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/api/orders/orders/*/tracking").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/api/orders/orders/*").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/api/orders/orders/*/estimacion").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.PUT, "/api/orders/orders/*/costo").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers("/api/orders/orders/containers/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/api/logistics/seguimiento/pendientes").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers("/api/logistics/seguimiento/contenedores/**").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/api/logistics/tramos/*/asignaciones", "/api/logistics/tramos/*/asignar-camion")
+                            .hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/api/logistics/tramos/*/inicios", "/api/logistics/tramos/*/finalizaciones")
+                            .hasAnyRole(ROLE_TRANSPORTISTA, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/api/logistics/tramos/**")
+                            .hasAnyRole(ROLE_OPERADOR, ROLE_TRANSPORTISTA, ROLE_ADMIN)
+                        .pathMatchers("/api/logistics/rutas/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers("/api/logistics/depositos/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/api/fleet/trucks/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/api/fleet/trucks/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.PUT, "/api/fleet/trucks/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers("/api/fleet/tarifas/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers("/api/fleet/metrics/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

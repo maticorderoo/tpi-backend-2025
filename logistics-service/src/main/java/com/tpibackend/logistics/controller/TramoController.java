@@ -43,7 +43,7 @@ public class TramoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA')")
+    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
     @Operation(summary = "Listar tramos",
             description = "Obtiene los tramos operativos, permitiendo filtrar por camión asignado. Requiere rol OPERADOR o TRANSPORTISTA.")
     public ResponseEntity<java.util.List<TramoResponse>> listar(@RequestParam(required = false) Long camionId) {
@@ -51,7 +51,7 @@ public class TramoController {
     }
 
     @GetMapping("/{tramoId}")
-    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA')")
+    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
     @Operation(summary = "Detalle de tramo",
             description = "Devuelve el detalle del tramo con su estado actual. Requiere rol OPERADOR o TRANSPORTISTA.")
     public ResponseEntity<TramoResponse> obtenerDetalle(@PathVariable Long tramoId) {
@@ -59,7 +59,7 @@ public class TramoController {
     }
 
     @PostMapping({"/{tramoId}/asignaciones", "/{tramoId}/asignar-camion"})
-    @PreAuthorize("hasRole('OPERADOR')")
+    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
     @Operation(summary = "Asignar camión a tramo",
             description = "Asigna un camión disponible a un tramo. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -88,7 +88,7 @@ public class TramoController {
     }
 
     @PostMapping("/{tramoId}/inicios")
-    @PreAuthorize("hasRole('TRANSPORTISTA')")
+    @PreAuthorize("hasAnyRole('TRANSPORTISTA','ADMIN')")
     @Operation(summary = "Marcar inicio del tramo",
             description = "Marca el inicio efectivo del tramo asignado. Requiere rol TRANSPORTISTA.",
             responses = {
@@ -112,7 +112,7 @@ public class TramoController {
     }
 
     @PostMapping("/{tramoId}/finalizaciones")
-    @PreAuthorize("hasRole('TRANSPORTISTA')")
+    @PreAuthorize("hasAnyRole('TRANSPORTISTA','ADMIN')")
     @Operation(summary = "Marcar fin del tramo",
             description = "Registra la finalización del tramo en curso tomando la telemetría interna. Requiere rol TRANSPORTISTA.",
             responses = {
@@ -136,7 +136,7 @@ public class TramoController {
     }
 
     @GetMapping("/camion/{camionId}")
-    @PreAuthorize("hasAnyRole('TRANSPORTISTA','OPERADOR')")
+    @PreAuthorize("hasAnyRole('TRANSPORTISTA','OPERADOR','ADMIN')")
     @Operation(summary = "Listar tramos por camión",
             description = "Obtiene todos los tramos asignados a un camión específico. Requiere rol TRANSPORTISTA u OPERADOR.",
             responses = {
@@ -152,7 +152,7 @@ public class TramoController {
     }
 
     @GetMapping("/deposito/{depositoId}/contenedores")
-    @PreAuthorize("hasAnyRole('OPERADOR', 'TRANSPORTISTA')")
+    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
     @Operation(summary = "Listar contenedores actualmente en un depósito",
             description = "Retorna los tramos finalizados cuyo destino es el depósito indicado y el siguiente tramo aún no ha iniciado. Útil para ver qué contenedores están esperando asignación de camión.",
             security = @SecurityRequirement(name = "bearer-jwt"),

@@ -14,14 +14,17 @@ import com.tpibackend.fleet.model.dto.CamionRequest;
 import com.tpibackend.fleet.model.dto.CamionResponse;
 import com.tpibackend.fleet.service.CamionService;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -42,13 +45,13 @@ class CamionControllerSecurityTest {
 
     @Test
     void listarDisponiblesSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/trucks/available"))
+        mockMvc.perform(get("/fleet/trucks").param("disponible", "true"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     void listarDisponiblesConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(get("/api/trucks/available").with(jwtWithRoles("TRANSPORTISTA")))
+        mockMvc.perform(get("/fleet/trucks").param("disponible", "true").with(jwtWithRoles("TRANSPORTISTA")))
             .andExpect(status().isForbidden());
     }
 
@@ -58,13 +61,13 @@ class CamionControllerSecurityTest {
             List.of(new CamionResponse(1L, null, null, null, null, null, null, null, null))
         );
 
-        mockMvc.perform(get("/api/trucks/available").with(jwtWithRoles("OPERADOR")))
+        mockMvc.perform(get("/fleet/trucks").param("disponible", "true").with(jwtWithRoles("OPERADOR")))
             .andExpect(status().isOk());
     }
 
     @Test
     void crearCamionSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(post("/api/trucks")
+        mockMvc.perform(post("/fleet/trucks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(crearRequest())))
             .andExpect(status().isUnauthorized());
@@ -72,7 +75,7 @@ class CamionControllerSecurityTest {
 
     @Test
     void crearCamionConRolIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(post("/api/trucks")
+        mockMvc.perform(post("/fleet/trucks")
                 .with(jwtWithRoles("TRANSPORTISTA"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(crearRequest())))
@@ -85,7 +88,7 @@ class CamionControllerSecurityTest {
             new CamionResponse(1L, null, null, null, null, null, null, null, null)
         );
 
-        mockMvc.perform(post("/api/trucks")
+        mockMvc.perform(post("/fleet/trucks")
                 .with(jwtWithRoles("OPERADOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(crearRequest())))
@@ -106,6 +109,10 @@ class CamionControllerSecurityTest {
     }
 
     private RequestPostProcessor jwtWithRoles(String... roles) {
-        return jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))));
+        return jwt()
+            .jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of(roles))))
+            .authorities(Arrays.stream(roles)
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(Collectors.toList()));
     }
 }
