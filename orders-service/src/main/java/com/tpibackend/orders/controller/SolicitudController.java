@@ -49,7 +49,7 @@ public class SolicitudController {
                     schema = @Schema(implementation = SolicitudCreateRequest.class),
                     examples = @ExampleObject(name = "crearSolicitud",
                             summary = "Solicitud de traslado b\u00e1sica",
-                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\"\n  },\n  \"contenedor\": {\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"C\u00f3rdoba\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}"))),
+                            value = "{\n  \"cliente\": {\n    \"nombre\": \"ACME Corp\",\n    \"email\": \"contacto@acme.com\",\n    \"telefono\": \"+54 11 5555-1111\"\n  },\n  \"contenedor\": {\n    \"codigo\": \"CONT-XYZ-1234\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4\n  },\n  \"origen\": {\n    \"direccion\": \"Buenos Aires\",\n    \"latitud\": -34.6037,\n    \"longitud\": -58.3816\n  },\n  \"destino\": {\n    \"direccion\": \"C\u00f3rdoba\",\n    \"latitud\": -31.4201,\n    \"longitud\": -64.1888\n  }\n}"))),
             responses = {
                     @ApiResponse(responseCode = "201", description = "Solicitud creada",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -205,3 +205,4 @@ public class SolicitudController {
     }
 
 }
+
