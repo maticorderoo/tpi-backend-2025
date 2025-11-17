@@ -56,7 +56,28 @@ public class SolicitudController {
                                     schema = @Schema(implementation = SolicitudResponseDto.class),
                                     examples = @ExampleObject(name = "solicitudCreada",
                                             summary = "Solicitud creada correctamente",
-                                            value = "{\n  \"id\": 42,\n  \"estado\": \"BORRADOR\",\n  \"costoEstimado\": null,\n  \"tiempoEstimadoMinutos\": null,\n  \"costoFinal\": null,\n  \"tiempoRealMinutos\": null,\n  \"origen\": \"Buenos Aires\",\n  \"origenLat\": -34.6037,\n  \"origenLng\": -58.3816,\n  \"destino\": \"C\u00f3rdoba\",\n  \"destinoLat\": -31.4201,\n  \"destinoLng\": -64.1888,\n  \"fechaCreacion\": \"2025-11-16T14:30:00Z\",\n  \"cliente\": {\n    \"id\": 15,\n    \"nombre\": \"ACME Corp\"\n  },\n  \"contenedor\": {\n    \"id\": 9,\n    \"codigo\": \"CONT-0009\",\n    \"peso\": 1200.5,\n    \"volumen\": 28.4,\n    \"estado\": \"BORRADOR\"\n  },\n  \"rutaResumen\": null\n}"))),
+                                            value = "{\n" +
+"  \"cliente\": {\n" +
+"    \"nombre\": \"ACME Corp\",\n" +
+"    \"email\": \"contacto@acme.com\",\n" +
+"    \"telefono\": \"+54 11 5555-1111\"\n" +
+"  },\n" +
+"  \"contenedor\": {\n" +
+"    \"codigo\": \"CONT-XYZ-1234\",\n" +
+"    \"peso\": 1200.5,\n" +
+"    \"volumen\": 28.4\n" +
+"  },\n" +
+"  \"origen\": {\n" +
+"    \"direccion\": \"Buenos Aires\",\n" +
+"    \"latitud\": -34.6037,\n" +
+"    \"longitud\": -58.3816\n" +
+"  },\n" +
+"  \"destino\": {\n" +
+"    \"direccion\": \"Córdoba\",\n" +
+"    \"latitud\": -31.4201,\n" +
+"    \"longitud\": -64.1888\n" +
+"  }\n" +
+"}"))),
                     @ApiResponse(responseCode = "400", description = "Datos inv\u00e1lidos"),
                     @ApiResponse(responseCode = "401", description = "No autenticado",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

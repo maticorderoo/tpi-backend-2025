@@ -20,4 +20,8 @@ public class ClienteRequestDto {
     @NotBlank(message = "El teléfono del cliente es obligatorio")
     @Size(max = 30, message = "El teléfono no puede superar los 30 caracteres")
     private String telefono;
+
+    @NotBlank(message = "El CUIT del cliente es obligatorio")
+    @Size(max = 20, message = "El CUIT no puede superar los 20 caracteres")
+    private String cuit;
 }

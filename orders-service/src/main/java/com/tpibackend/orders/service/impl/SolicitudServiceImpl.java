@@ -93,6 +93,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         solicitud.setDestino(destino.getDireccion());
         solicitud.setDestinoLat(destino.getLatitud());
         solicitud.setDestinoLng(destino.getLongitud());
+        solicitud.setObservaciones(request.getObservaciones());
         solicitud.setFechaCreacion(OffsetDateTime.now());
 
         // Inicializar estados automáticamente
@@ -187,23 +188,29 @@ public class SolicitudServiceImpl implements SolicitudService {
     }
 
     private Cliente resolverCliente(SolicitudCreateRequest request) {
-        if (request.getCliente().getId() != null) {
-            return clienteRepository.findById(request.getCliente().getId())
+        var clienteRequest = request.getCliente();
+        if (clienteRequest.getId() != null) {
+            return clienteRepository.findById(clienteRequest.getId())
                 .orElseThrow(() -> new OrdersNotFoundException("Cliente no encontrado"));
         }
         validarNuevoCliente(request);
-        
-        // Buscar cliente existente por email
-        Optional<Cliente> clienteExistente = clienteRepository.findByEmail(request.getCliente().getEmail());
+
+        String cuit = clienteRequest.getCuit().trim();
+        String email = clienteRequest.getEmail().trim();
+
+        Optional<Cliente> clienteExistente = clienteRepository.findByCuit(cuit);
+        if (clienteExistente.isEmpty()) {
+            clienteExistente = clienteRepository.findByEmail(email);
+        }
         if (clienteExistente.isPresent()) {
             return clienteExistente.get();
         }
-        
-        // Crear nuevo cliente si no existe
+
         Cliente cliente = new Cliente();
-        cliente.setNombre(request.getCliente().getNombre());
-        cliente.setEmail(request.getCliente().getEmail());
-        cliente.setTelefono(request.getCliente().getTelefono());
+        cliente.setNombre(clienteRequest.getNombre());
+        cliente.setEmail(email);
+        cliente.setTelefono(clienteRequest.getTelefono());
+        cliente.setCuit(cuit);
         return clienteRepository.save(cliente);
     }
 
@@ -232,6 +239,9 @@ public class SolicitudServiceImpl implements SolicitudService {
         if (!StringUtils.hasText(request.getCliente().getEmail())) {
             throw new OrdersValidationException("El email del cliente es obligatorio");
         }
+        if (!StringUtils.hasText(request.getCliente().getCuit())) {
+            throw new OrdersValidationException("El CUIT del cliente es obligatorio");
+        }
     }
 
     private SolicitudResponseDto mapToResponse(Solicitud solicitud) {
@@ -247,6 +257,9 @@ public class SolicitudServiceImpl implements SolicitudService {
     }
 
     private void validarNuevoContenedor(SolicitudCreateRequest request) {
+        if (!StringUtils.hasText(request.getContenedor().getCodigo())) {
+            throw new OrdersValidationException("El código del contenedor es obligatorio");
+        }
         if (request.getContenedor().getPeso() == null || request.getContenedor().getPeso().compareTo(BigDecimal.ZERO) <= 0) {
             throw new OrdersValidationException("El peso del contenedor debe ser mayor a 0");
         }
@@ -254,6 +267,14 @@ public class SolicitudServiceImpl implements SolicitudService {
             throw new OrdersValidationException("El volumen del contenedor debe ser mayor a 0");
         }
         // El estado se gestiona automáticamente, no es necesario validarlo
+    }
+
+    private void validarCodigoContenedorDisponible(String codigo) {
+        contenedorRepository.findFirstByCodigoAndEstadoNotIn(codigo, CONTENEDOR_ESTADOS_CERRADOS)
+            .ifPresent(existing -> {
+                throw new OrdersValidationException(
+                    "El código de contenedor ya está siendo utilizado por otro contenedor activo");
+            });
     }
 
     private boolean isAnyBlank(String... values) {
@@ -275,18 +296,12 @@ public class SolicitudServiceImpl implements SolicitudService {
             return resolverContenedor(request, cliente);
         }
 
-        if (StringUtils.hasText(contenedorRequest.getCodigo())) {
-            Optional<Contenedor> existente = contenedorRepository
-                .findByCodigoAndClienteId(contenedorRequest.getCodigo(), cliente.getId());
-            if (existente.isPresent()) {
-                return existente.get();
-            }
-        }
-
         validarNuevoContenedor(request);
+        String codigo = contenedorRequest.getCodigo().trim();
+        validarCodigoContenedorDisponible(codigo);
         Contenedor contenedor = new Contenedor();
         contenedor.setCliente(cliente);
-        contenedor.setCodigo(generarCodigoContenedor(contenedorRequest, cliente));
+        contenedor.setCodigo(codigo);
         // No seteamos el estado aqui, lo hara EstadoService
         contenedor.setPeso(contenedorRequest.getPeso());
         contenedor.setVolumen(contenedorRequest.getVolumen());
@@ -295,13 +310,6 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private BigDecimal nvl(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
-    }
-
-    private String generarCodigoContenedor(com.tpibackend.orders.dto.request.ContenedorRequestDto contenedorRequest, Cliente cliente) {
-        if (StringUtils.hasText(contenedorRequest.getCodigo())) {
-            return contenedorRequest.getCodigo().trim();
-        }
-        return String.format("CONT-%d-%d", cliente.getId(), System.currentTimeMillis());
     }
 
     private String obtenerUsuarioActual() {

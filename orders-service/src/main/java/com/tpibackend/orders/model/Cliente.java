@@ -33,6 +33,9 @@ public class Cliente {
     @Column(length = 30)
     private String telefono;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String cuit;
+
     @OneToMany(mappedBy = "cliente")
     private List<Contenedor> contenedores = new ArrayList<>();
 

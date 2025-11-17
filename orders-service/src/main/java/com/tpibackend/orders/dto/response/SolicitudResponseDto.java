@@ -16,6 +16,7 @@ public class SolicitudResponseDto {
     BigDecimal costoFinal;
     Long tiempoRealMinutos;
     BigDecimal estadiaEstimada;
+    String observaciones;
     String origen;
     Double origenLat;
     Double origenLng;

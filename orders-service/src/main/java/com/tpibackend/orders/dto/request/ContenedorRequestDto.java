@@ -3,14 +3,18 @@ package com.tpibackend.orders.dto.request;
 import java.math.BigDecimal;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 public class ContenedorRequestDto {
 
     private Long id;
 
+    @Schema(description = "Código del contenedor", example = "CONT-XYZ-1234", required = true)
+    @NotBlank(message = "El código del contenedor es obligatorio")
     private String codigo;
 
     @NotNull(message = "El peso del contenedor es obligatorio")

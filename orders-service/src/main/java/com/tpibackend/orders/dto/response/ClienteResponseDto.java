@@ -10,4 +10,5 @@ public class ClienteResponseDto {
     String nombre;
     String email;
     String telefono;
+    String cuit;
 }

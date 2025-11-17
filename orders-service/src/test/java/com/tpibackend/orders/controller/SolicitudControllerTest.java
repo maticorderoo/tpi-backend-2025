@@ -58,9 +58,11 @@ class SolicitudControllerTest {
         cliente.setNombre("ACME Corp");
         cliente.setEmail("contacto@acme.com");
         cliente.setTelefono("+54 11 5555-1111");
+        cliente.setCuit("30-12345678-9");
         request.setCliente(cliente);
 
         com.tpibackend.orders.dto.request.ContenedorRequestDto contenedor = new com.tpibackend.orders.dto.request.ContenedorRequestDto();
+        contenedor.setCodigo("CONT-AR-0001");
         contenedor.setPeso(new BigDecimal("1200.5"));
         contenedor.setVolumen(new BigDecimal("28.4"));
         request.setContenedor(contenedor);

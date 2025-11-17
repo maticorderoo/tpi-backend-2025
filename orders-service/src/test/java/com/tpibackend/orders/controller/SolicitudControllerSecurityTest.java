@@ -120,8 +120,10 @@ class SolicitudControllerSecurityTest {
         cliente.setNombre("Cliente Prueba");
         cliente.setEmail("cliente@correo.com");
         cliente.setTelefono("+54 11 5555-2222");
+        cliente.setCuit("30-00000000-0");
         request.setCliente(cliente);
         ContenedorRequestDto contenedor = new ContenedorRequestDto();
+        contenedor.setCodigo("CONT-SEC-0001");
         contenedor.setPeso(BigDecimal.TEN);
         contenedor.setVolumen(BigDecimal.ONE);
         // El estado se gestiona automáticamente, no se debe setear

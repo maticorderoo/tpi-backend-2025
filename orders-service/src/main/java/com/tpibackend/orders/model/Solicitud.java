@@ -52,6 +52,9 @@ public class Solicitud {
 
     private BigDecimal estadiaEstimada;
 
+    @Column(length = 500)
+    private String observaciones;
+
     @Column(length = 255, nullable = false)
     private String origen;
 

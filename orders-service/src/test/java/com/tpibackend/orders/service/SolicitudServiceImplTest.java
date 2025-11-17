@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.when;
 
 import com.tpibackend.orders.client.FleetMetricsClient;
@@ -78,9 +79,11 @@ class SolicitudServiceImplTest {
         clienteDto.setNombre("Juan Perez");
         clienteDto.setEmail("juan@test.com");
         clienteDto.setTelefono("12345");
+        clienteDto.setCuit("30-12345678-9");
         request.setCliente(clienteDto);
 
         ContenedorRequestDto contenedorDto = new ContenedorRequestDto();
+        contenedorDto.setCodigo("CONT-0001");
         // El estado no se setea, se gestiona automáticamente
         contenedorDto.setPeso(new BigDecimal("2000"));
         contenedorDto.setVolumen(new BigDecimal("30"));
@@ -101,6 +104,7 @@ class SolicitudServiceImplTest {
         clientePersistido.setId(1L);
         clientePersistido.setNombre("Juan Perez");
         clientePersistido.setEmail("juan@test.com");
+        clientePersistido.setCuit("30-12345678-9");
 
         Contenedor contenedorPersistido = new Contenedor();
         contenedorPersistido.setId(2L);
@@ -108,8 +112,13 @@ class SolicitudServiceImplTest {
         contenedorPersistido.setEstado(ContenedorEstado.BORRADOR);
         contenedorPersistido.setPeso(new BigDecimal("2000"));
         contenedorPersistido.setVolumen(new BigDecimal("30"));
+        contenedorPersistido.setCodigo("CONT-0001");
 
+        when(clienteRepository.findByCuit("30-12345678-9")).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail("juan@test.com")).thenReturn(Optional.empty());
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clientePersistido);
+        when(contenedorRepository.findFirstByCodigoAndEstadoNotIn(eq("CONT-0001"), anyCollection()))
+            .thenReturn(Optional.empty());
         when(contenedorRepository.save(any(Contenedor.class))).thenReturn(contenedorPersistido);
         when(solicitudRepository.findByContenedorId(eq(2L))).thenReturn(Optional.empty());
         when(solicitudRepository.save(any(Solicitud.class))).thenAnswer(invocation -> {
