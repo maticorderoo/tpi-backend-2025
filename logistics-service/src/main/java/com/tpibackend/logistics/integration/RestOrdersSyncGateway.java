@@ -39,6 +39,15 @@ public class RestOrdersSyncGateway implements OrdersSyncGateway {
     }
 
     @Override
+    public void notificarFinalizacion(Long solicitudId, String estadoSolicitud, String estadoContenedor,
+            BigDecimal costoFinal, Long tiempoRealMinutos) {
+        log.debug("Notificando finalización para solicitud {} con estados {}-{} y costo {}", solicitudId,
+                estadoSolicitud, estadoContenedor, costoFinal);
+        ordersClient.actualizarFinalizacion(solicitudId, estadoSolicitud, estadoContenedor, costoFinal,
+                tiempoRealMinutos);
+    }
+
+    @Override
     public void notificarPlanificacion(Long solicitudId, BigDecimal costoEstimado,
             Long tiempoEstimadoMinutos, Long rutaLogisticaId) {
         log.debug("Notificando planificación {} a Orders para solicitud {}", rutaLogisticaId, solicitudId);

@@ -92,6 +92,12 @@ public class OrdersClient {
         }
     }
 
+    public void actualizarFinalizacion(Long solicitudId, String estadoSolicitud, String estadoContenedor,
+            BigDecimal costoFinal, Long tiempoRealMinutos) {
+        actualizarEstado(solicitudId, estadoSolicitud, estadoContenedor);
+        actualizarCosto(solicitudId, costoFinal, tiempoRealMinutos);
+    }
+
     public Optional<SolicitudLogisticaResponse> obtenerSolicitud(Long solicitudId) {
         try {
             HttpHeaders headers = new HttpHeaders();

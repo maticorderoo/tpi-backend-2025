@@ -3,7 +3,6 @@ package com.tpibackend.logistics.service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -168,10 +167,12 @@ public class TramoService {
         actualizarDisponibilidadSegunPendientes(tramo);
 
         Ruta ruta = tramo.getRuta();
-        List<Tramo> tramosRuta = ruta.getTramos().stream()
-                .sorted(Comparator.comparing(Tramo::getId))
-                .toList();
-        ruta.setCostoTotalReal(ruta.calcularCostoTotalReal());
+        List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(ruta.getId());
+        BigDecimal costoTotalReal = tramosRuta.stream()
+                .map(Tramo::getCostoReal)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        ruta.setCostoTotalReal(costoTotalReal);
         long tiempoRealTotal = calcularVentanaLogistica(tramosRuta);
         ruta.setTiempoRealMinutos(tiempoRealTotal);
         rutaRepository.save(ruta);
@@ -182,9 +183,8 @@ public class TramoService {
             boolean rutaFinalizada = tramosRuta.stream()
                     .allMatch(t -> t.getEstado() == TramoEstado.FINALIZADO);
             if (rutaFinalizada) {
-                // TODO: reemplazar por evento; Logistics no debería realizar update directo en Orders
-                ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "ENTREGADA", "ENTREGADO");
-                ordersSyncGateway.notificarCosto(ruta.getSolicitudId(), ruta.getCostoTotalReal(), tiempoRealTotal);
+                ordersSyncGateway.notificarFinalizacion(ruta.getSolicitudId(), "ENTREGADA", "ENTREGADO",
+                        ruta.getCostoTotalReal(), ruta.getTiempoRealMinutos());
             } else if (destinoEsDeposito(tramo)) {
                 ordersSyncGateway.notificarEstado(ruta.getSolicitudId(), "EN_TRANSITO", "EN_DEPOSITO");
             }
