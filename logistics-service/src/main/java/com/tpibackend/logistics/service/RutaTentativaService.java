@@ -78,6 +78,7 @@ public class RutaTentativaService {
                 .map(LocationNode::fromDeposito)
                 .toList();
 
+        // borrar las tentativas previas para la solicitud
         rutaTentativaRepository.deleteBySolicitudId(solicitudId);
 
         List<RutaTentativa> rutas = new ArrayList<>();
@@ -96,8 +97,18 @@ public class RutaTentativaService {
             }
         }
 
-        rutaTentativaRepository.saveAll(rutas);
+        // aplicar orden y límite ANTES de persistir: primero por costoTotalAprox asc, luego por tiempoEstimadoMinutos asc
+        List<RutaTentativa> aPersistir = rutas.stream()
+                .sorted(Comparator.comparing(RutaTentativa::getCostoTotalAprox)
+                        .thenComparing(RutaTentativa::getTiempoEstimadoMinutos))
+                .limit(5)
+                .toList();
 
+        if (!aPersistir.isEmpty()) {
+            rutaTentativaRepository.saveAll(aPersistir);
+        }
+
+        // devolver las tentativas guardadas (como máximo 5) en la respuesta
         return rutaTentativaRepository.findBySolicitudIdOrderByCreatedAtAsc(solicitudId).stream()
                 .map(this::toResponse)
                 .toList();
