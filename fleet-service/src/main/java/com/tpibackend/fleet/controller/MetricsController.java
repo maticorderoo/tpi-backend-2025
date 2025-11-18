@@ -30,7 +30,7 @@ public class MetricsController {
     }
 
     @GetMapping("/promedios")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Promedios de consumo y costo", description = "Calcula los promedios de consumo y costo por km para camiones disponibles. Requiere rol OPERADOR.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Promedios calculados",

@@ -72,6 +72,13 @@ public class RutaTentativaService {
         SolicitudLogisticaResponse solicitud = ordersClient.obtenerSolicitud(solicitudId)
                 .orElseThrow(() -> new NotFoundException("Solicitud " + solicitudId + " no encontrada"));
 
+        List<RutaTentativa> existentes = rutaTentativaRepository.findBySolicitudIdOrderByCreatedAtAsc(solicitudId);
+        if (!existentes.isEmpty()) {
+            return existentes.stream()
+                    .map(this::toResponse)
+                    .toList();
+        }
+
         LocationNode origen = LocationNode.fromSolicitud(LocationType.ORIGEN_SOLICITUD, solicitud.id(),
                 solicitud.origen());
         LocationNode destino = LocationNode.fromSolicitud(LocationType.DESTINO_SOLICITUD, solicitud.id(),
@@ -80,9 +87,6 @@ public class RutaTentativaService {
         List<LocationNode> depositos = depositoRepository.findAll().stream()
                 .map(LocationNode::fromDeposito)
                 .toList();
-
-        // borrar las tentativas previas para la solicitud
-        rutaTentativaRepository.deleteBySolicitudId(solicitudId);
 
         TarifaActiva tarifa = obtenerTarifaActivaParaTentativas();
 

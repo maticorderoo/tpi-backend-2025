@@ -58,7 +58,7 @@ public class RutaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(
             summary = "Sugerir ruta",
             description = "Genera la ruta con tramos estimados entre un origen, depósitos intermedios y destino. Requiere rol OPERADOR.",
@@ -91,7 +91,7 @@ public class RutaController {
     }
 
     @PostMapping("/estimaciones/distancia")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Calcular distancia logística",
             description = "Centraliza el uso de distance-client en Logistics. Requiere rol OPERADOR.")
     public ResponseEntity<EstimacionDistanciaResponse> estimarDistancia(
@@ -100,7 +100,7 @@ public class RutaController {
     }
 
     @PostMapping("/{rutaId}/asignaciones")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Asignar ruta a solicitud",
             description = "Vincula una ruta planificada a una solicitud. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -130,7 +130,7 @@ public class RutaController {
     }
 
     @GetMapping("/{rutaId}/tramos")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Listar tramos de una ruta confirmada",
             description = "Permite al operador ver el detalle de los tramos planificados para coordinar camiones.",
             responses = {
@@ -144,7 +144,7 @@ public class RutaController {
     }
 
     @GetMapping("/solicitudes/{solicitudId}")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Obtener ruta por solicitud",
             description = "Consulta la ruta asociada a una solicitud. Requiere rol OPERADOR.",
             responses = {
@@ -168,7 +168,7 @@ public class RutaController {
     }
 
     @GetMapping("/solicitudes/{solicitudId}/rutas-tentativas")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Generar rutas tentativas",
             description = "Devuelve todas las rutas tentativas calculadas con depósitos intermedios disponibles.",
             responses = {
@@ -183,7 +183,7 @@ public class RutaController {
     }
 
     @PostMapping("/solicitudes/{solicitudId}/rutas-tentativas/{rutaTentativaId}/confirmar")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Confirmar ruta tentativa",
             description = "Persiste la ruta tentativa elegida como ruta definitiva de la solicitud y actualiza Orders.")
     public ResponseEntity<RutaResponse> confirmarRutaTentativa(@PathVariable Long solicitudId,

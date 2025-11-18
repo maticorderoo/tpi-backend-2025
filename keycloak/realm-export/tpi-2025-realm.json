@@ -16,6 +16,9 @@
           "temporary": false
         }
       ],
+      "attributes": {
+        "clienteId": ["30-12345678-9"]
+      },
       "realmRoles": ["CLIENTE"],
       "clientRoles": {}
     },
@@ -67,7 +70,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["ADMIN"],
+      "realmRoles": ["OPERADOR"],
       "clientRoles": {}
     }
   ],
@@ -85,15 +88,30 @@
       "protocol": "openid-connect",
       "attributes": {
         "access.token.lifespan": "3600"
-      }
+      },
+      "protocolMappers": [
+        {
+          "name": "cliente-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "clienteId",
+            "claim.name": "clienteId",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "jsonType.label": "String"
+          }
+        }
+      ]
     }
   ],
   "roles": {
     "realm": [
       { "name": "CLIENTE" },
       { "name": "OPERADOR" },
-      { "name": "TRANSPORTISTA" },
-      { "name": "ADMIN" }
+      { "name": "TRANSPORTISTA" }
     ]
   }
 }

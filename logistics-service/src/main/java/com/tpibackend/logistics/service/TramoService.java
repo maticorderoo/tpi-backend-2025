@@ -21,6 +21,8 @@ import com.tpibackend.logistics.client.FleetClient.TarifaActiva;
 import com.tpibackend.logistics.client.OrdersClient;
 import com.tpibackend.logistics.dto.integration.SolicitudLogisticaResponse;
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
+import com.tpibackend.logistics.dto.request.RegistrarFinTramoRequest;
+import com.tpibackend.logistics.dto.request.RegistrarInicioTramoRequest;
 import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.exception.BusinessException;
 import com.tpibackend.logistics.exception.NotFoundException;
@@ -115,7 +117,7 @@ public class TramoService {
         return LogisticsMapper.toTramoResponse(tramo);
     }
 
-    public TramoResponse iniciarTramo(Long tramoId) {
+    public TramoResponse iniciarTramo(Long tramoId, RegistrarInicioTramoRequest request) {
         Tramo tramo = obtenerTramo(tramoId);
         if (tramo.getCamionId() == null) {
             throw new BusinessException("El tramo no tiene camión asignado");
@@ -129,9 +131,14 @@ public class TramoService {
                     "El camión " + tramo.getCamionId() + " ya se encuentra realizando otro tramo en curso");
         }
 
-        validarOrdenDeInicio(tramo);
+        OffsetDateTime inicio = request != null && request.fechaHoraInicio() != null
+                ? request.fechaHoraInicio()
+                : OffsetDateTime.now();
+        validarOrdenDeInicio(tramo, inicio);
+        if (tramo.getFechaHoraFin() != null && inicio.isAfter(tramo.getFechaHoraFin())) {
+            throw new BusinessException("fechaHoraInicio no puede ser posterior a la fecha de finalización registrada");
+        }
 
-        OffsetDateTime inicio = OffsetDateTime.now();
         tramo.setEstado(TramoEstado.INICIADO);
         tramo.setFechaHoraInicio(inicio);
         tramoRepository.save(tramo);
@@ -149,9 +156,10 @@ public class TramoService {
         return LogisticsMapper.toTramoResponse(tramo);
     }
 
-    private void validarOrdenDeInicio(Tramo tramo) {
+    private void validarOrdenDeInicio(Tramo tramo, OffsetDateTime fechaHoraInicio) {
         List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(tramo.getRuta().getId());
         boolean tramoEncontrado = false;
+        OffsetDateTime ultimaFinalizacionPrev = null;
 
         for (Tramo tramoRuta : tramosRuta) {
             if (tramoRuta.getId().equals(tramo.getId())) {
@@ -163,14 +171,48 @@ public class TramoService {
                 throw new BusinessException(
                         "No se puede iniciar este tramo porque existen tramos anteriores de la misma ruta que aún no están finalizados");
             }
+            if (tramoRuta.getFechaHoraFin() != null && (ultimaFinalizacionPrev == null
+                    || tramoRuta.getFechaHoraFin().isAfter(ultimaFinalizacionPrev))) {
+                ultimaFinalizacionPrev = tramoRuta.getFechaHoraFin();
+            }
         }
 
         if (!tramoEncontrado) {
             throw new BusinessException("El tramo no pertenece a la ruta configurada");
         }
+
+        if (fechaHoraInicio != null && ultimaFinalizacionPrev != null
+                && fechaHoraInicio.isBefore(ultimaFinalizacionPrev)) {
+            throw new BusinessException("No se puede iniciar este tramo antes de la finalización del tramo anterior");
+        }
     }
 
-    public TramoResponse finalizarTramo(Long tramoId) {
+    private void validarOrdenDeFinalizacion(Tramo tramo, OffsetDateTime fechaHoraFin) {
+        List<Tramo> tramosRuta = tramoRepository.findByRutaIdOrderByIdAsc(tramo.getRuta().getId());
+        boolean tramoEncontrado = false;
+        OffsetDateTime ultimaFinalizacionPrev = null;
+
+        for (Tramo tramoRuta : tramosRuta) {
+            if (tramoRuta.getId().equals(tramo.getId())) {
+                tramoEncontrado = true;
+                break;
+            }
+            if (tramoRuta.getFechaHoraFin() != null && (ultimaFinalizacionPrev == null
+                    || tramoRuta.getFechaHoraFin().isAfter(ultimaFinalizacionPrev))) {
+                ultimaFinalizacionPrev = tramoRuta.getFechaHoraFin();
+            }
+        }
+
+        if (!tramoEncontrado) {
+            throw new BusinessException("El tramo no pertenece a la ruta configurada");
+        }
+
+        if (ultimaFinalizacionPrev != null && fechaHoraFin.isBefore(ultimaFinalizacionPrev)) {
+            throw new BusinessException("No se puede finalizar este tramo antes de la finalización del tramo anterior");
+        }
+    }
+
+    public TramoResponse finalizarTramo(Long tramoId, RegistrarFinTramoRequest request) {
         Tramo tramo = obtenerTramo(tramoId);
         if (tramo.getEstado() != TramoEstado.INICIADO) {
             throw new BusinessException("El tramo no puede finalizarse en estado " + tramo.getEstado());
@@ -178,8 +220,14 @@ public class TramoService {
         if (tramo.getFechaHoraInicio() == null) {
             throw new BusinessException("El tramo no tiene fecha de inicio registrada");
         }
-
-        tramo.setFechaHoraFin(OffsetDateTime.now());
+        OffsetDateTime fin = request != null && request.fechaHoraFin() != null
+                ? request.fechaHoraFin()
+                : OffsetDateTime.now();
+        if (!fin.isAfter(tramo.getFechaHoraInicio())) {
+            throw new BusinessException("fechaHoraFin debe ser posterior a fechaHoraInicio del tramo");
+        }
+        validarOrdenDeFinalizacion(tramo, fin);
+        tramo.setFechaHoraFin(fin);
         double distanciaReal = resolverDistanciaReal(tramo);
         tramo.setDistanciaKmReal(distanciaReal);
         long minutosReales = Duration.between(tramo.getFechaHoraInicio(), tramo.getFechaHoraFin()).toMinutes();

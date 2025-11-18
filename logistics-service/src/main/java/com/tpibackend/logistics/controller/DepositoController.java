@@ -42,7 +42,7 @@ public class DepositoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Listar depósitos",
             description = "Obtiene todos los depósitos registrados. Requiere rol OPERADOR.",
             responses = {
@@ -57,7 +57,7 @@ public class DepositoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Obtener depósito por ID",
             description = "Recupera el detalle de un depósito. Requiere rol OPERADOR.",
             responses = {
@@ -72,7 +72,7 @@ public class DepositoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Crear depósito",
             description = "Registra un nuevo depósito. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -90,7 +90,7 @@ public class DepositoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar depósito",
             description = "Modifica los datos de un depósito existente. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

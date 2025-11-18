@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +103,25 @@ public class SolicitudServiceImpl implements SolicitudService {
         contenedor.setSolicitudActiva(guardada);
         log.info("Solicitud {} creada para el contenedor {}", guardada.getId(), contenedor.getId());
         return mapToResponse(guardada);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SolicitudResponseDto> listarSolicitudes() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        List<Solicitud> solicitudes;
+        if (tieneRol(authentication, "CLIENTE")) {
+            String clienteId = obtenerClienteIdDesdeToken(authentication);
+            if (!StringUtils.hasText(clienteId)) {
+                throw new AccessDeniedException("El token no contiene identificador de cliente");
+            }
+            solicitudes = solicitudRepository.findAllByClienteCuit(clienteId);
+        } else {
+            solicitudes = solicitudRepository.findAll();
+        }
+        return solicitudes.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -326,9 +347,9 @@ public class SolicitudServiceImpl implements SolicitudService {
         if (!requiereValidacionCliente(authentication, cliente)) {
             return;
         }
-        String emailUsuario = obtenerEmailDesdeToken(authentication);
-        if (emailUsuario == null || cliente.getEmail() == null
-                || !cliente.getEmail().equalsIgnoreCase(emailUsuario)) {
+        String clienteId = obtenerClienteIdDesdeToken(authentication);
+        if (!StringUtils.hasText(clienteId) || cliente.getCuit() == null
+                || !cliente.getCuit().equalsIgnoreCase(clienteId)) {
             throw new AccessDeniedException("Los clientes solo pueden operar con su propio perfil");
         }
     }
@@ -338,14 +359,15 @@ public class SolicitudServiceImpl implements SolicitudService {
         if (authentication == null || !authentication.isAuthenticated() || solicitud == null) {
             return;
         }
-        if (tieneRol(authentication, "OPERADOR") || tieneRol(authentication, "ADMIN")) {
+        if (tieneRol(authentication, "OPERADOR")) {
             return;
         }
         if (tieneRol(authentication, "CLIENTE")) {
             Cliente cliente = solicitud.getCliente();
-            String emailUsuario = obtenerEmailDesdeToken(authentication);
-            if (cliente != null && emailUsuario != null
-                    && emailUsuario.equalsIgnoreCase(cliente.getEmail())) {
+            String clienteId = obtenerClienteIdDesdeToken(authentication);
+            if (cliente != null && StringUtils.hasText(clienteId)
+                    && cliente.getCuit() != null
+                    && cliente.getCuit().equalsIgnoreCase(clienteId)) {
                 return;
             }
             throw new AccessDeniedException("El cliente autenticado no puede acceder a esta solicitud");
@@ -354,8 +376,7 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private boolean requiereValidacionCliente(Authentication authentication, Cliente cliente) {
         return authentication != null && authentication.isAuthenticated()
-                && cliente != null && tieneRol(authentication, "CLIENTE")
-                && !tieneRol(authentication, "ADMIN");
+                && cliente != null && tieneRol(authentication, "CLIENTE");
     }
 
     private boolean tieneRol(Authentication authentication, String roleName) {
@@ -367,15 +388,11 @@ public class SolicitudServiceImpl implements SolicitudService {
                 .anyMatch(authority -> expected.equals(authority.getAuthority()));
     }
 
-    private String obtenerEmailDesdeToken(Authentication authentication) {
+    private String obtenerClienteIdDesdeToken(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            String email = jwtAuth.getToken().getClaimAsString("email");
-            if (StringUtils.hasText(email)) {
-                return email;
-            }
-            String preferred = jwtAuth.getToken().getClaimAsString("preferred_username");
-            if (StringUtils.hasText(preferred)) {
-                return preferred;
+            String clienteId = jwtAuth.getToken().getClaimAsString("clienteId");
+            if (StringUtils.hasText(clienteId)) {
+                return clienteId;
             }
         }
         return null;

@@ -25,7 +25,6 @@ public class SecurityConfig {
     private static final String ROLE_CLIENTE = "CLIENTE";
     private static final String ROLE_OPERADOR = "OPERADOR";
     private static final String ROLE_TRANSPORTISTA = "TRANSPORTISTA";
-    private static final String ROLE_ADMIN = "ADMIN";
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
@@ -44,26 +43,26 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .pathMatchers("/api/orders/orders/internal/**").denyAll()
-                        .pathMatchers(HttpMethod.POST, "/api/orders/orders").hasAnyRole(ROLE_CLIENTE, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.GET, "/api/orders/orders/*/tracking").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.GET, "/api/orders/orders/*").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.PUT, "/api/orders/orders/*/costo").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers("/api/orders/orders/containers/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.GET, "/api/logistics/seguimiento/pendientes").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers("/api/logistics/seguimiento/contenedores/**").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR, ROLE_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/api/orders/orders").hasRole(ROLE_CLIENTE)
+                        .pathMatchers(HttpMethod.GET, "/api/orders/orders/*/tracking").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR)
+                        .pathMatchers(HttpMethod.GET, "/api/orders/orders/*").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR)
+                        .pathMatchers(HttpMethod.PUT, "/api/orders/orders/*/costo").hasRole(ROLE_OPERADOR)
+                        .pathMatchers("/api/orders/orders/containers/**").hasRole(ROLE_OPERADOR)
+                        .pathMatchers(HttpMethod.GET, "/api/logistics/seguimiento/pendientes").hasRole(ROLE_OPERADOR)
+                        .pathMatchers("/api/logistics/seguimiento/contenedores/**").hasAnyRole(ROLE_CLIENTE, ROLE_OPERADOR)
                         .pathMatchers(HttpMethod.POST, "/api/logistics/tramos/*/asignaciones", "/api/logistics/tramos/*/asignar-camion")
-                            .hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                            .hasRole(ROLE_OPERADOR)
                         .pathMatchers(HttpMethod.POST, "/api/logistics/tramos/*/inicios", "/api/logistics/tramos/*/finalizaciones")
-                            .hasAnyRole(ROLE_TRANSPORTISTA, ROLE_ADMIN)
+                            .hasAnyRole(ROLE_TRANSPORTISTA, ROLE_OPERADOR)
                         .pathMatchers(HttpMethod.GET, "/api/logistics/tramos/**")
-                            .hasAnyRole(ROLE_OPERADOR, ROLE_TRANSPORTISTA, ROLE_ADMIN)
-                        .pathMatchers("/api/logistics/rutas/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers("/api/logistics/depositos/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.GET, "/api/fleet/trucks/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.POST, "/api/fleet/trucks/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers(HttpMethod.PUT, "/api/fleet/trucks/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers("/api/fleet/tarifas/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
-                        .pathMatchers("/api/fleet/metrics/**").hasAnyRole(ROLE_OPERADOR, ROLE_ADMIN)
+                            .hasAnyRole(ROLE_OPERADOR, ROLE_TRANSPORTISTA)
+                        .pathMatchers("/api/logistics/rutas/**").hasRole(ROLE_OPERADOR)
+                        .pathMatchers("/api/logistics/depositos/**").hasRole(ROLE_OPERADOR)
+                        .pathMatchers(HttpMethod.GET, "/api/fleet/trucks/**").hasRole(ROLE_OPERADOR)
+                        .pathMatchers(HttpMethod.POST, "/api/fleet/trucks/**").hasRole(ROLE_OPERADOR)
+                        .pathMatchers(HttpMethod.PUT, "/api/fleet/trucks/**").hasRole(ROLE_OPERADOR)
+                        .pathMatchers("/api/fleet/tarifas/**").hasRole(ROLE_OPERADOR)
+                        .pathMatchers("/api/fleet/metrics/**").hasRole(ROLE_OPERADOR)
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

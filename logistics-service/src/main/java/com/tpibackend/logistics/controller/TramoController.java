@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tpibackend.logistics.dto.request.AsignarCamionRequest;
+import com.tpibackend.logistics.dto.request.RegistrarFinTramoRequest;
+import com.tpibackend.logistics.dto.request.RegistrarInicioTramoRequest;
 import com.tpibackend.logistics.dto.response.TramoResponse;
 import com.tpibackend.logistics.service.TramoService;
 
@@ -43,7 +45,7 @@ public class TramoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA')")
     @Operation(summary = "Listar tramos",
             description = "Obtiene los tramos operativos, permitiendo filtrar por camión asignado. Requiere rol OPERADOR o TRANSPORTISTA.")
     public ResponseEntity<java.util.List<TramoResponse>> listar(@RequestParam(required = false) Long camionId) {
@@ -51,7 +53,7 @@ public class TramoController {
     }
 
         @GetMapping("/camion/{camionId}")
-        @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
+        @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA')")
         @Operation(summary = "Listar tramos por camión",
                         description = "Obtiene los tramos asignados a un camión específico. Requiere rol OPERADOR o TRANSPORTISTA.")
         public ResponseEntity<java.util.List<TramoResponse>> listarPorCamion(@PathVariable Long camionId) {
@@ -59,7 +61,7 @@ public class TramoController {
         }
 
     @GetMapping("/{tramoId}")
-    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA','ADMIN')")
+    @PreAuthorize("hasAnyRole('OPERADOR','TRANSPORTISTA')")
     @Operation(summary = "Detalle de tramo",
             description = "Devuelve el detalle del tramo con su estado actual. Requiere rol OPERADOR o TRANSPORTISTA.")
     public ResponseEntity<TramoResponse> obtenerDetalle(@PathVariable Long tramoId) {
@@ -67,7 +69,7 @@ public class TramoController {
     }
 
     @PostMapping("/{tramoId}/asignaciones")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Asignar camión a tramo",
             description = "Asigna un camión disponible a un tramo. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -96,7 +98,7 @@ public class TramoController {
     }
 
     @PostMapping("/{tramoId}/inicios")
-    @PreAuthorize("hasAnyRole('TRANSPORTISTA','ADMIN')")
+    @PreAuthorize("hasAnyRole('TRANSPORTISTA','OPERADOR')")
     @Operation(summary = "Marcar inicio del tramo",
             description = "Marca el inicio efectivo del tramo asignado. Requiere rol TRANSPORTISTA.",
             responses = {
@@ -114,13 +116,18 @@ public class TramoController {
                     @ApiResponse(responseCode = "400", description = "Tramo sin camión asignado"),
                     @ApiResponse(responseCode = "409", description = "Estado inválido")
             })
-    public ResponseEntity<TramoResponse> iniciarTramo(@PathVariable Long tramoId) {
-        log.debug("Marcando inicio del tramo {}", tramoId);
-        return ResponseEntity.ok(tramoService.iniciarTramo(tramoId));
+    public ResponseEntity<TramoResponse> iniciarTramo(@PathVariable Long tramoId,
+            @RequestBody(required = false) RegistrarInicioTramoRequest request) {
+                log.debug("Marcando inicio del tramo {}", tramoId);
+                log.debug("Request body iniciarTramo para tramo {}: {}", tramoId, request);
+                if (request != null) {
+                        log.debug("Request.fechaHoraInicio: {}", request.fechaHoraInicio());
+                }
+        return ResponseEntity.ok(tramoService.iniciarTramo(tramoId, request));
     }
 
     @PostMapping("/{tramoId}/finalizaciones")
-    @PreAuthorize("hasAnyRole('TRANSPORTISTA','ADMIN')")
+    @PreAuthorize("hasAnyRole('TRANSPORTISTA','OPERADOR')")
     @Operation(summary = "Marcar fin del tramo",
             description = "Registra la finalización del tramo en curso tomando la telemetría interna. Requiere rol TRANSPORTISTA.",
             responses = {
@@ -138,9 +145,14 @@ public class TramoController {
                     @ApiResponse(responseCode = "400", description = "Tramo no iniciado"),
                     @ApiResponse(responseCode = "409", description = "Estado inválido")
             })
-    public ResponseEntity<TramoResponse> finalizarTramo(@PathVariable Long tramoId) {
-        log.debug("Marcando fin del tramo {}", tramoId);
-        return ResponseEntity.ok(tramoService.finalizarTramo(tramoId));
+    public ResponseEntity<TramoResponse> finalizarTramo(@PathVariable Long tramoId,
+            @RequestBody(required = false) RegistrarFinTramoRequest request) {
+                log.debug("Marcando fin del tramo {}", tramoId);
+                log.debug("Request body finalizarTramo para tramo {}: {}", tramoId, request);
+                if (request != null) {
+                        log.debug("Request.fechaHoraFin: {}", request.fechaHoraFin());
+                }
+        return ResponseEntity.ok(tramoService.finalizarTramo(tramoId, request));
     }
 
 }

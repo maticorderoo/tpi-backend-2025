@@ -12,6 +12,4 @@ public interface RutaTentativaRepository extends JpaRepository<RutaTentativa, Lo
     List<RutaTentativa> findBySolicitudIdOrderByCreatedAtAsc(Long solicitudId);
 
     Optional<RutaTentativa> findByIdAndSolicitudId(Long id, Long solicitudId);
-
-    void deleteBySolicitudId(Long solicitudId);
 }

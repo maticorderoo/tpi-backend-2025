@@ -37,14 +37,14 @@ public class TarifaController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Listado de tarifas", description = "Obtiene todas las tarifas configuradas. Requiere rol OPERADOR.")
     public List<TarifaResponse> listar() {
         return tarifaService.findAll();
     }
 
     @GetMapping("/activa")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Tarifa activa",
             description = "Obtiene la última tarifa creada para usar en cálculos de costos. Requiere rol OPERADOR.")
     public TarifaResponse obtenerActiva() {
@@ -53,14 +53,14 @@ public class TarifaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Crear tarifa", description = "Registra una nueva tarifa. Requiere rol OPERADOR.")
     public TarifaResponse crear(@Valid @RequestBody TarifaRequest request) {
         return tarifaService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar tarifa", description = "Modifica los valores de una tarifa existente. Requiere rol OPERADOR.")
     public TarifaResponse actualizar(@PathVariable Long id, @Valid @RequestBody TarifaRequest request) {
         return tarifaService.update(id, request);

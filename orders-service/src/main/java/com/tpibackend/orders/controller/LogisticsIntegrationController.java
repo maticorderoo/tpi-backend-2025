@@ -95,6 +95,7 @@ public class LogisticsIntegrationController {
         BigDecimal volumen = dto.getContenedor() != null ? dto.getContenedor().getVolumen() : null;
         String estadoSolicitud = dto.getEstado() != null ? dto.getEstado().name() : null;
         String clienteEmail = dto.getCliente() != null ? dto.getCliente().getEmail() : null;
+        String clienteIdentificador = dto.getCliente() != null ? dto.getCliente().getCuit() : null;
         SolicitudLogisticsView.Contenedor contenedor = null;
         if (dto.getContenedor() != null) {
             contenedor = new SolicitudLogisticsView.Contenedor(
@@ -103,6 +104,6 @@ public class LogisticsIntegrationController {
                     dto.getContenedor().getEstado() != null ? dto.getContenedor().getEstado().name() : null);
         }
         return new SolicitudLogisticsView(dto.getId(), estadoSolicitud, origen, destino, peso, volumen, contenedor,
-                clienteEmail);
+                clienteEmail, clienteIdentificador);
     }
 }

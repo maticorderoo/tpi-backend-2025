@@ -17,4 +17,7 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
     @Override
     @EntityGraph(attributePaths = {"cliente", "contenedor"})
     List<Solicitud> findAll();
+
+    @EntityGraph(attributePaths = {"cliente", "contenedor"})
+    List<Solicitud> findAllByClienteCuit(String cuit);
 }

@@ -228,14 +228,14 @@ public class SeguimientoService {
         if (authentication == null || !authentication.isAuthenticated()) {
             return;
         }
-        if (tieneRol(authentication, "OPERADOR") || tieneRol(authentication, "ADMIN")) {
+        if (tieneRol(authentication, "OPERADOR")) {
             return;
         }
         if (tieneRol(authentication, "CLIENTE")) {
-            String emailUsuario = obtenerEmailDesdeToken(authentication);
-            String clienteEmail = solicitud != null ? solicitud.clienteEmail() : null;
-            if (StringUtils.hasText(emailUsuario) && StringUtils.hasText(clienteEmail)
-                    && clienteEmail.equalsIgnoreCase(emailUsuario)) {
+            String clienteId = obtenerClienteIdDesdeToken(authentication);
+            String clienteSolicitud = solicitud != null ? solicitud.clienteIdentificador() : null;
+            if (StringUtils.hasText(clienteId) && StringUtils.hasText(clienteSolicitud)
+                    && clienteSolicitud.equalsIgnoreCase(clienteId)) {
                 return;
             }
             throw new AccessDeniedException("El cliente autenticado no puede acceder al seguimiento solicitado");
@@ -251,15 +251,11 @@ public class SeguimientoService {
                 .anyMatch(granted -> expected.equals(granted.getAuthority()));
     }
 
-    private String obtenerEmailDesdeToken(Authentication authentication) {
+    private String obtenerClienteIdDesdeToken(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            String email = jwtAuth.getToken().getClaimAsString("email");
-            if (StringUtils.hasText(email)) {
-                return email;
-            }
-            String preferred = jwtAuth.getToken().getClaimAsString("preferred_username");
-            if (StringUtils.hasText(preferred)) {
-                return preferred;
+            String clienteId = jwtAuth.getToken().getClaimAsString("clienteId");
+            if (StringUtils.hasText(clienteId)) {
+                return clienteId;
             }
         }
         return null;

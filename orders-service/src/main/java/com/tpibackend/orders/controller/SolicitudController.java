@@ -6,6 +6,7 @@ import com.tpibackend.orders.dto.response.SeguimientoResponseDto;
 import com.tpibackend.orders.dto.response.SolicitudResponseDto;
 import com.tpibackend.orders.service.SolicitudService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
@@ -40,7 +42,7 @@ public class SolicitudController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('CLIENTE','ADMIN')")
+    @PreAuthorize("hasRole('CLIENTE')")
     @Operation(
             summary = "Crear una nueva solicitud",
             description = "Registra una solicitud nueva creando el cliente y el contenedor en caso de que no existan. Requiere rol CLIENTE.",
@@ -108,8 +110,22 @@ public class SolicitudController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
+    @Operation(summary = "Listar solicitudes",
+            description = "Devuelve las solicitudes del cliente autenticado o todas si el rol es OPERADOR.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Listado recuperado",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    array = @io.swagger.v3.oas.annotations.media.ArraySchema(
+                                            schema = @Schema(implementation = SolicitudResponseDto.class))))
+            })
+    public ResponseEntity<List<SolicitudResponseDto>> listarSolicitudes() {
+        return ResponseEntity.ok(solicitudService.listarSolicitudes());
+    }
+
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR','ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
     @Operation(summary = "Obtener detalle de la solicitud",
             description = "Recupera el detalle de una solicitud existente. Requiere rol CLIENTE u OPERADOR.",
             responses = {
@@ -133,7 +149,7 @@ public class SolicitudController {
     }
 
     @GetMapping("/{id}/tracking")
-    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR','ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENTE','OPERADOR')")
     @Operation(summary = "Obtener seguimiento de una solicitud por contenedor",
             description = "Devuelve el estado del contenedor y la ruta asociada a una solicitud. Requiere rol CLIENTE u OPERADOR.",
             responses = {
@@ -157,7 +173,7 @@ public class SolicitudController {
     }
 
     @PutMapping("/{id}/costo")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar costo final de una solicitud",
             description = "Actualiza el costo y tiempo real de la solicitud. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

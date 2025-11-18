@@ -44,7 +44,7 @@ public class CamionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Listado de camiones", description = "Obtiene el listado de camiones filtrando por disponibilidad. Requiere roles OPERADOR o TRANSPORTISTA.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Listado recuperado",
@@ -66,7 +66,7 @@ public class CamionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Detalle de camión",
             description = "Recupera el detalle de un camión. Requiere roles OPERADOR o TRANSPORTISTA.",
             responses = {
@@ -89,7 +89,7 @@ public class CamionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Crear camión",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = CamionRequest.class),
@@ -115,7 +115,7 @@ public class CamionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar camión",
             description = "Actualiza los datos de un camión existente. Requiere rol OPERADOR.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -139,7 +139,7 @@ public class CamionController {
     }
 
     @PutMapping("/{id}/disponibilidad")
-    @PreAuthorize("hasAnyRole('OPERADOR','ADMIN')")
+    @PreAuthorize("hasRole('OPERADOR')")
     @Operation(summary = "Actualizar disponibilidad de camión",
             description = "Modifica el estado de disponibilidad de un camión. Requiere rol OPERADOR. Si otros servicios necesitan modificarlo, deben pasar por Gateway.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

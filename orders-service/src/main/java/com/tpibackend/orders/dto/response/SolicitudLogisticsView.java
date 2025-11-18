@@ -10,7 +10,8 @@ public record SolicitudLogisticsView(
         BigDecimal pesoContenedor,
         BigDecimal volumenContenedor,
         Contenedor contenedor,
-        String clienteEmail
+        String clienteEmail,
+        String clienteIdentificador
 ) {
     public record Punto(String descripcion, Double latitud, Double longitud) {
     }
