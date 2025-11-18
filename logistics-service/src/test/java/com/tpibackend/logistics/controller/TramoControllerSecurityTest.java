@@ -86,7 +86,8 @@ class TramoControllerSecurityTest {
 
     @Test
     void iniciarTramoConTransportistaDevuelve200() throws Exception {
-        when(tramoService.iniciarTramo(any())).thenReturn(tramoResponse());
+        when(tramoService.iniciarTramo(any(Long.class), any(com.tpibackend.logistics.dto.request.RegistrarInicioTramoRequest.class)))
+            .thenReturn(tramoResponse());
 
         mockMvc.perform(post("/logistics/tramos/2/inicios")
                 .with(jwtWithRoles("TRANSPORTISTA"))
@@ -111,7 +112,8 @@ class TramoControllerSecurityTest {
 
     @Test
     void finalizarTramoConTransportistaDevuelve200() throws Exception {
-        when(tramoService.finalizarTramo(any())).thenReturn(tramoResponse());
+        when(tramoService.finalizarTramo(any(Long.class), any(com.tpibackend.logistics.dto.request.RegistrarFinTramoRequest.class)))
+            .thenReturn(tramoResponse());
 
         mockMvc.perform(post("/logistics/tramos/2/finalizaciones")
                 .with(jwtWithRoles("TRANSPORTISTA"))
